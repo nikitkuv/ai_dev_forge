@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This document defines the global rules for the bootstrap process used by the AI Coding Framework 24.
+This document defines the global rules for the bootstrap process used by the AI Dev Forge.
 
 The bootstrap process prepares a repository for long-term AI-assisted software development.
 

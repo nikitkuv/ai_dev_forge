@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This document defines the conventions used across all bootstrap steps in the AI Coding Framework 24.
+This document defines the conventions used across all bootstrap steps in the AI Dev Forge.
 
 These conventions ensure:
 

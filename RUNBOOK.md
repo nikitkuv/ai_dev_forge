@@ -1,4 +1,4 @@
-# AI Coding Framework — Developer Workflow Guide
+# AI Dev Forge — Developer Workflow Guide
 
 ---
 
@@ -271,3 +271,4 @@ SPEC обновляется, если:
 
 ```text
 SPEC → ARCHITECTURE → BACKLOG → execution → code
+```
