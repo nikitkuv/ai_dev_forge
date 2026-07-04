@@ -61,6 +61,27 @@
 2. Запусти bootstrap
 3. AI проанализирует код и построит систему поверх него
 
+### Добавление `.ai/` через git (рекомендуемый способ)
+
+Забираем только папку `.ai` из репозитория фреймворка в свой проект:
+
+```bash
+# в папке вашего проекта
+git remote add forge https://github.com/nikitkuv/ai_dev_forge.git
+git fetch forge
+
+# забираем ТОЛЬКО папку .ai в рабочий каталог
+git checkout forge/main -- .ai
+
+git add .ai
+git commit -m "Add .ai framework from ai_dev_forge"
+
+# если обновления больше не нужны — убираем remote
+git remote remove forge
+```
+
+Чтобы позже подтянуть обновления фреймворка — оставьте remote и повторите `git checkout forge/main -- .ai`.
+
 ---
 
 # ⚙️ Как работает система
