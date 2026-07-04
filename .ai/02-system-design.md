@@ -45,13 +45,14 @@ Not execution.
 
 # Overview
 
-This step consists of five phases:
+This step consists of six phases:
 
 1. Analyze SPEC.md
 2. Design system architecture
 3. Resolve architectural uncertainties
 4. Validate architecture with user
 5. Generate ARCHITECTURE.md
+6. Initialize the decision log (DECISIONS.md + decisions/)
 
 All phases are mandatory.
 
@@ -274,6 +275,33 @@ It must be understandable by:
 
 ---
 
+# Phase 6 — Initialize the Decision Log
+
+Architecture design produces decisions. Capture them as ADRs.
+
+Create the decision log structure:
+
+```text
+DECISIONS.md            # ADR index (navigation only)
+decisions/              # atomic ADR records
+    ADR-001-<name>.md
+```
+
+Initialize `DECISIONS.md` as a lightweight index listing every ADR (ID, title, status, file link). It contains no decision content.
+
+Seed `decisions/` with one ADR per significant architectural decision made during this step. Typical first records:
+
+- primary technology / framework choice
+- data store selection
+- communication pattern (sync / async / event-driven)
+- deployment model
+
+Each ADR follows the standard record structure (see `.ai/templates/ADR.md`).
+
+Only record decisions that involve a real trade-off. Do not log trivial or obvious choices. If no significant decision was made, create the index and folder anyway and leave them ready for runtime.
+
+---
+
 # Recommended Structure of ARCHITECTURE.md
 
 - System Overview
@@ -308,6 +336,8 @@ During this step, strictly prohibit:
 - duplicating SPEC.md content
 - referencing execution layer
 
+Logging a decision in `DECISIONS.md` / `decisions/` is allowed and expected.
+
 ---
 
 # Definition of Done
@@ -321,6 +351,8 @@ This step is complete only if:
 - user has approved the architecture
 - ARCHITECTURE.md is generated
 - document contains no implementation details
+- `DECISIONS.md` index exists
+- `decisions/` exists, with at least one ADR (or empty if no significant decision was made)
 
 ---
 
@@ -329,6 +361,8 @@ This step is complete only if:
 Create or update:
 
 - ARCHITECTURE.md
+- DECISIONS.md
+- decisions/
 
 No other files may be modified.
 

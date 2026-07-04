@@ -13,19 +13,21 @@ project/
 ├── SPEC.md                   # Что представляет продукт (WHAT)
 ├── ARCHITECTURE.md          # Как система устроена (HOW)
 ├── BACKLOG.md               # Глобальный список Epics (WHAT WILL BE DONE)
-├── DECISIONS.md             # Архитектурные решения (ADR log)
+├── DECISIONS.md             # ADR индекс — навигация по решениям
+├── decisions/               # Атомарные ADR-записи (ADR-NNN-name.md)
 │
 ├── execution/               # Runtime слой (текущее выполнение)
 │   ├── active/
-│   │    ├── EPIC-001-name/
+│   │    ├── EPIC-001-short-name/
 │   │    │      ├── plan.md
 │   │    │      └── tasks/
-│   │    │            ├── TASK-001.md
-│   │    │            ├── TASK-002.md
+│   │    │            ├── TASK-001-short-name.md
+│   │    │            ├── TASK-002-short-name.md
 │   │    │            └── ...
 │   │
 │   └── completed/
 │
+├── .claude/agents/          # Субагенты (Implementation, Validation, ...)
 ├── docs/                    # Документация (knowledge layer)
 ├── references/              # Внешние материалы, исследования
 ├── tests/                   # Тесты
@@ -43,12 +45,14 @@ project/
 | SPEC.md | Описание продукта (WHAT) | AI + человек | Step 01 |
 | ARCHITECTURE.md | Архитектура (HOW) | AI + человек | Step 02 |
 | BACKLOG.md | Список Epics (WHAT WILL BE DONE) | AI + человек | Step 03 |
-| DECISIONS.md | Архитектурные решения (ADR log) | AI + человек | По мере решений |
+| DECISIONS.md | ADR индекс (навигация) | AI + человек | Step 02 |
+| decisions/ | Атомарные ADR-записи | AI + человек | Step 02, далее по мере решений |
 | execution/ | Runtime слой разработки | AI | Step 04 |
 | plan.md | План Epic | AI | Step 04 |
-| TASK-XXX.md | Атомарные задачи | AI | Step 04 |
-| docs/ | Документация | Documentation Agent | По мере разработки |
-| references/ | Внешние материалы | Человек | По необходимости |
+| TASK-NNN-name.md | Атомарные задачи | AI | Step 04 |
+| .claude/agents/ | Субагенты (Implementation, Validation, ...) | AI | Step 05 |
+| docs/ | Документация | Documentation Agent | Step 04 (пустая), наполняется по мере |
+| references/ | Внешние материалы | Человек | Step 04 (пустая), наполняется по мере |
 
 ---
 
@@ -71,8 +75,10 @@ project/
 - проектирование системы
 - определение компонентов и взаимодействий
 - создание ARCHITECTURE.md
+- инициализация журнала решений (DECISIONS.md + decisions/)
 
 👉 ARCHITECTURE = HOW system works
+👉 DECISIONS = принятые архитектурные компромиссы
 
 ---
 
@@ -92,19 +98,21 @@ project/
 ## STEP 04 — Prepare Workspace → execution/
 
 - выбор активного Epic
-- создание execution/active/EPIC
+- создание execution/active/EPIC-NNN-name
 - создание plan.md
-- разбиение на TASK-XXX.md
+- разбиение на TASK-NNN-name.md
+- создание пустых docs/ и references/
 
 👉 execution = WHAT is being built
 
 ---
 
-## STEP 05 — Create AI Environment → CLAUDE.md
+## STEP 05 — Create AI Environment → CLAUDE.md + .claude/agents/
 
 - создание карты проекта
 - описание AI workflow
 - определение правил работы AI
+- создание субагентов в `.claude/agents/` (Implementation, Validation, ...)
 - поддержка опциональных `.ai/rules/`
 
 ⚠️ CLAUDE.md:
@@ -112,6 +120,7 @@ project/
 - ≤ 100 строк
 - только навигация
 - не содержит знаний
+- не содержит определений субагентов (они в `.claude/agents/`)
 
 👉 CLAUDE.md = AI router
 
@@ -142,7 +151,7 @@ Active Epic
 &#x20;   ↓
 execution/active/EPIC/plan.md
 &#x20;   ↓
-TASK-XXX.md
+TASK-NNN-name.md
 &#x20;   ↓
 Codebase
 ```
@@ -194,11 +203,14 @@ AI не чинит результаты сам — только анализир
 
 AI:
 
-- обновляет TASK.md
+- переводит задачу в `IN PROGRESS` перед стартом и в `DONE` по завершении
+- обновляет TASK-NNN-name.md
 - обновляет plan.md
 - обновляет Epic progress
 - при необходимости обновляет BACKLOG.md
-- фиксирует решения в DECISIONS.md
+- фиксирует значимые решения как ADR в `decisions/` и обновляет индекс `DECISIONS.md`
+
+⚠️ одновременно активна только одна задача (`IN PROGRESS`) — это и есть «текущая задача»
 
 ---
 
@@ -209,7 +221,7 @@ AI:
 - перенос в execution/completed/
 - активация следующего Epic
 - создание нового plan.md
-- генерация TASK-XXX.md
+- генерация TASK-NNN-name.md
 
 ---
 

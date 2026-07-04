@@ -109,7 +109,7 @@ Organize Epics into a development roadmap.
 
 For each Epic define:
 
-- ID
+- ID — format `EPIC-NNN` (zero-padded, e.g. `EPIC-001`)
 - Name
 - Short description
 - Priority

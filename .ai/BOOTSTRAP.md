@@ -76,8 +76,11 @@ Each file has one role:
 - SPEC.md → WHAT the product is
 - ARCHITECTURE.md → HOW the system works
 - BACKLOG.md → WHAT will be built (Epics only)
+- DECISIONS.md → index of significant decisions (ADR log)
+- decisions/ → the atomic decision records themselves
 - execution/ → WHAT is currently being built
 - CLAUDE.md → HOW AI navigates the repository
+- .claude/agents/ → the subagents that execute the workflow
 
 No cross-layer duplication is allowed.
 
@@ -172,13 +175,17 @@ Define:
 
 ---
 
-## Step 02 — ARCHITECTURE.md (System Design)
+## Step 02 — ARCHITECTURE.md + DECISIONS.md (System Design)
 
 Define:
 - system structure
 - components
 - interactions
 - technical decisions
+
+Also initialize the decision log:
+- `DECISIONS.md` — ADR index
+- `decisions/` — atomic ADR records (`ADR-NNN-<name>.md`)
 
 ---
 
@@ -196,16 +203,18 @@ Define:
 
 Create runtime structure:
 
-- active Epic
+- active Epic workspace (`EPIC-NNN-<name>/`)
 - plan.md
-- atomic TASK files
+- atomic TASK files (`TASK-NNN-<name>.md`)
 - task decomposition
+
+Also create empty `docs/` and `references/`.
 
 execution = current state of work
 
 ---
 
-## Step 05 — CLAUDE.md (AI Runtime Router)
+## Step 05 — CLAUDE.md + .claude/agents/ (AI Runtime Router)
 
 Create AI entrypoint:
 
@@ -215,6 +224,9 @@ Requirements:
 - no duplicated knowledge
 - contains project map
 - contains AI workflow rules
+- no inlined subagent definitions
+
+Also create subagents in `.claude/agents/*.md` (Context, Code Context, Implementation, Validation, Documentation — at minimum Implementation and Validation).
 
 CLAUDE.md is NOT documentation.
 

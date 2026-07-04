@@ -8,13 +8,13 @@ The purpose of this step is to initialize the AI runtime environment for the rep
 
 This step defines how AI agents navigate, execute and coordinate work inside the project.
 
-The primary output is:
+The primary outputs are:
 
 - CLAUDE.md
+- `.claude/agents/*.md` (subagent definitions)
 
 Optionally:
 
-- AI subagents definitions
 - AI rules in .ai/rules/
 - lightweight runtime configuration
 
@@ -49,12 +49,24 @@ It defines HOW to work, not WHAT the system is.
 
 ## Overview
 
-This step consists of 4 phases:
+This step consists of 5 phases:
 
 1. Analyze repository structure
-2. Define AI execution workflow
-3. Generate CLAUDE.md
-4. Define optional subagents
+2. Define the AI execution workflow
+3. Define subagents → write them to `.claude/agents/`
+4. Generate CLAUDE.md (navigation + workflow + global rules only)
+5. Validate the AI environment
+
+---
+
+## Key Design Rule
+
+Two separate concerns, two separate locations:
+
+- **CLAUDE.md** = the router. Navigation map, execution workflow, global rules, information hierarchy. ≤ 100 lines. No knowledge, no detailed agent definitions.
+- **`.claude/agents/*.md`** = the subagent definitions. One file per agent, with YAML frontmatter and a system prompt. CLAUDE.md only points at this directory.
+
+This keeps CLAUDE.md small while still giving the workflow a concrete, executable agent model.
 
 ---
 
@@ -122,53 +134,69 @@ AI must always prefer:
 
 ---
 
-## Phase 3 — Subagent Workflow (SIMPLIFIED MODEL)
+## Phase 3 — Define Subagents (`.claude/agents/`)
 
-### Agents involved:
+The workflow described in Phase 2 is executed by a fixed set of subagents. Each subagent is a separate file in `.claude/agents/` so it can be invoked deterministically and kept out of CLAUDE.md.
 
-#### 1. Context Agent
+Copy the ready-made subagent files from `.ai/templates/agents/` into `.claude/agents/`:
+
+- `context.md`
+- `code-context.md`
+- `implementation.md`
+- `validation.md`
+- `documentation.md`
+
+Each file has YAML frontmatter (`name`, `description`, optional `tools`, `model`) followed by a system prompt. For any additional custom agent, start from the generic skeleton `.ai/templates/agents/agent.md`.
+
+### Standard subagents
+
+#### 1. Context Agent — `.claude/agents/context.md`
 - reads BACKLOG.md
-- finds active Epic
+- finds the active Epic
 - reads plan.md
-- selects current TASK
-- produces execution summary
+- selects the current task (the single `IN PROGRESS` task, or the first `TODO`)
+- produces an execution summary
 
 ---
 
-#### 2. Code Context Agent
-- analyzes codebase (MCP / search tools)
-- returns concise summary
+#### 2. Code Context Agent — `.claude/agents/code-context.md`
+- analyzes the codebase (MCP / code search)
+- returns a concise summary
+- does not modify code
 
 ---
 
-#### 3. Implementation Agent (MAIN)
-- implements TASK
+#### 3. Implementation Agent (MAIN) — `.claude/agents/implementation.md`
+- implements the current task
 - writes tests
-- stays within scope
+- stays strictly within the task scope
 
 ---
 
-#### 4. Validation Agent
+#### 4. Validation Agent — `.claude/agents/validation.md`
 - runs tests
 - runs lint (ruff, mypy, etc.)
-- reports results only (NO fixes)
+- reports results only — **no fixes**
 
 ---
 
-#### 5. Documentation Agent
-- updates docs/
+#### 5. Documentation Agent — `.claude/agents/documentation.md`
+- updates `docs/`
 - summarizes changes
 - never modifies core logic
 
 ---
 
-### Subagent Rule
+### Subagent Rules
 
 Subagents:
 
 - do NOT modify code unless explicitly assigned
 - do NOT cross responsibilities
 - communicate only via summaries
+- are invoked by the main agent as the workflow requires
+
+Only create the subagents the project actually needs. For small projects, the main agent may perform several roles directly; in that case still create the Implementation and Validation agents, since they enforce the scope and "report, do not fix" invariants.
 
 ---
 
@@ -222,13 +250,13 @@ BACKLOG
 
 ---
 
-### 4. Subagent Execution Model
+### 4. Subagents (pointer only)
 
-Context Agent
-→ Code Context Agent
-→ Implementation Agent
-→ Validation Agent
-→ Documentation Agent
+A single line pointing to the agent definitions:
+
+> Subagents live in `.claude/agents/`. See that directory. Do not inline agent definitions here.
+
+The detailed Context → Code Context → Implementation → Validation → Documentation model is defined in `.claude/agents/*.md`, not in CLAUDE.md.
 
 ---
 
@@ -266,16 +294,18 @@ If rules grow → move to .ai/rules/
 
 ---
 
-## Phase 5 — Optional Subagents
+## Phase 5 — Validate the AI Environment
 
-Only create if needed.
+Verify:
 
-Each must:
+- CLAUDE.md exists and is ≤ 100 lines;
+- CLAUDE.md contains the project map, AI workflow, global rules, and information hierarchy;
+- CLAUDE.md contains no knowledge, no architecture, no detailed agent definitions;
+- `.claude/agents/` exists with at least the Implementation and Validation agents;
+- every subagent file has valid frontmatter and a single responsibility;
+- the navigation path CLAUDE.md → BACKLOG.md → active Epic → plan.md → current task resolves without external guidance.
 
-- have single responsibility
-- be minimal
-- be deterministic
-- not overlap with others
+Fix only structural issues. Do not redesign the workflow.
 
 ---
 
@@ -284,17 +314,19 @@ Each must:
 Create:
 
 - CLAUDE.md
+- `.claude/agents/*.md` (at minimum: Implementation, Validation; typically all five)
 
 Optional:
 
-- .ai/rules/*
-- subagent definitions
+- `.ai/rules/*` (when global rules outgrow CLAUDE.md)
 
 Do not modify:
 
 - SPEC.md
 - ARCHITECTURE.md
 - BACKLOG.md
+- DECISIONS.md
+- decisions/
 - execution/
 - source code
 
@@ -304,11 +336,11 @@ Do not modify:
 
 Step is complete when:
 
-- AI can navigate repo using CLAUDE.md only
-- workflow is deterministic
-- subagent model is defined
-- CLAUDE.md is ≤ 100 lines
-- system is ready for execution
+- AI can navigate the repo using CLAUDE.md only
+- the workflow is deterministic
+- subagents are defined in `.claude/agents/*.md`
+- CLAUDE.md is ≤ 100 lines and contains no agent definitions
+- the system is ready for execution
 
 ---
 

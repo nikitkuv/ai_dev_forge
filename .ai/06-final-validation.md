@@ -66,16 +66,21 @@ Required project files:
 - SPEC.md
 - ARCHITECTURE.md
 - BACKLOG.md
+- DECISIONS.md
 
 Required directories:
 
 - execution/
 - execution/active/
 - execution/completed/
+- decisions/
+- docs/
+- references/
+- .claude/agents/
 
 Verify that:
 
-- naming follows the framework conventions;
+- naming follows the framework conventions (`EPIC-NNN-<name>`, `TASK-NNN-<name>.md`, `ADR-NNN-<name>.md`);
 - directory structure is correct;
 - no required artifact is missing.
 
@@ -176,7 +181,30 @@ Verify that:
 - exactly one active Epic exists;
 - every active Epic contains a `plan.md`;
 - every task belongs to its Epic;
+- every task has a Status field with a valid value;
+- at most one task is `IN PROGRESS` per active Epic (current-task determinism);
 - task ordering matches the implementation plan.
+
+---
+
+## DECISIONS.md + decisions/
+
+Verify that:
+
+- `DECISIONS.md` is a navigation index (no decision content);
+- every entry in `DECISIONS.md` points to an existing record in `decisions/`;
+- every record in `decisions/` is referenced from `DECISIONS.md`;
+- ADR files follow the canonical `ADR-NNN-<name>.md` naming and have a valid status.
+
+---
+
+## .claude/agents/
+
+Verify that:
+
+- at least the Implementation and Validation agents exist;
+- every agent file has valid frontmatter and a single responsibility;
+- CLAUDE.md does not inline agent definitions (it only points to this directory).
 
 ---
 
@@ -189,7 +217,8 @@ Verify that:
 - it contains the project map;
 - it defines the AI workflow;
 - it contains only global repository rules;
-- it does not duplicate other documentation.
+- it does not duplicate other documentation;
+- it does not inline subagent definitions.
 
 ---
 

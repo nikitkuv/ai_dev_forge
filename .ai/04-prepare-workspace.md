@@ -76,13 +76,17 @@ Create the following structure if it does not already exist:
 ```text
 execution/
 &#x20;   active/
-&#x20;       EPIC-XXX-name/
+&#x20;       EPIC-001-<short-name>/
 &#x20;           plan.md
 &#x20;           tasks/
 &#x20;   completed/
+docs/                      # may start empty (.gitkeep)
+references/                # may start empty (.gitkeep)
 ```
 
-The Epic identifier and name must exactly match BACKLOG.md.
+The Epic folder name MUST exactly match the Epic name in BACKLOG.md and follow the canonical naming (`EPIC-NNN-<short-name>`, see CONVENTIONS.md).
+
+`docs/` and `references/` are part of the standard project layout. Create them during this step even if empty (use a `.gitkeep` file so empty directories are tracked by version control). They are filled later, on demand.
 
 If the workspace already exists:
 
@@ -145,9 +149,12 @@ Store them in:
 ```text
 execution/
 &#x20;   active/
-&#x20;       EPIC-XXX/
+&#x20;       EPIC-001-<short-name>/
 &#x20;           tasks/
+&#x20;               TASK-001-<short-name>.md
 ```
+
+File naming follows the canonical convention (`TASK-NNN-<short-name>.md`, see CONVENTIONS.md).
 
 ---
 
@@ -155,6 +162,7 @@ execution/
 
 Each task document should include:
 
+- Status — one of `TODO` / `IN PROGRESS` / `DONE` / `BLOCKED` / `CANCELLED` (see CONVENTIONS.md)
 - Goal
 - Context
 - Scope
@@ -162,6 +170,8 @@ Each task document should include:
 - Acceptance Criteria
 - Progress
 - Notes
+
+Status rule: **at most one** task is `IN PROGRESS` per active Epic. That task is the "current task". To start a task, set it to `IN PROGRESS`; to finish, set it to `DONE`.
 
 Tasks describe **work**, not code.
 
@@ -177,10 +187,14 @@ Verify:
 
 - execution/ exists;
 - exactly one Active Epic exists;
+- the Epic folder name matches the canonical convention and BACKLOG.md;
 - plan.md exists;
-- task files exist;
+- task files exist and follow the canonical `TASK-NNN-<short-name>.md` naming;
 - every task belongs to the Active Epic;
-- task ordering matches the implementation strategy.
+- every task has a Status field with a valid value;
+- at most one task is `IN PROGRESS`;
+- task ordering matches the implementation strategy;
+- `docs/` and `references/` exist (empty is acceptable).
 
 If inconsistencies are found:
 
@@ -224,12 +238,14 @@ Create (if necessary):
 execution/
 execution/active/
 execution/completed/
-execution/active/EPIC-XXX/
-execution/active/EPIC-XXX/plan.md
-execution/active/EPIC-XXX/tasks/
-TASK-001-*.md
-TASK-002-*.md
+execution/active/EPIC-001-<short-name>/
+execution/active/EPIC-001-<short-name>/plan.md
+execution/active/EPIC-001-<short-name>/tasks/
+execution/active/EPIC-001-<short-name>/tasks/TASK-001-<short-name>.md
+execution/active/EPIC-001-<short-name>/tasks/TASK-002-<short-name>.md
 ...
+docs/                       # empty if nothing yet (.gitkeep)
+references/                 # empty if nothing yet (.gitkeep)
 ```
 
 Do not modify source code.
