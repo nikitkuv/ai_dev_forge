@@ -202,7 +202,7 @@ Verify that:
 
 Verify that:
 
-- at least the Implementation and Validation agents exist;
+- at least the Implementation, Validation, Review, and Fuzzing agents exist;
 - every agent file has valid frontmatter and a single responsibility;
 - CLAUDE.md does not inline agent definitions (it only points to this directory).
 
@@ -212,13 +212,14 @@ Verify that:
 
 Verify that:
 
-- it is concise (approximately 100 lines or fewer);
-- it acts as a navigation entrypoint;
+- it acts as a navigation entrypoint (~90 lines);
 - it contains the project map;
-- it defines the AI workflow;
-- it contains only global repository rules;
+- it defines the orchestrator workflow (main agent delegates to subagents);
+- it contains a Context Gathering section;
+- it contains Code Quality rules (modular code, logging, error handling);
 - it does not duplicate other documentation;
-- it does not inline subagent definitions.
+- it does not inline subagent definitions;
+- it does not reference removed agents (context, code-context).
 
 ---
 
@@ -298,7 +299,7 @@ This step is complete only if:
 - exactly one active Epic exists (or none if development has not started);
 - the execution workspace is valid;
 - the AI navigation workflow is unambiguous;
-- CLAUDE.md serves as a reliable entrypoint;
+- CLAUDE.md serves as a reliable entrypoint with orchestrator pattern;
 - the repository is ready for everyday development.
 
 ---

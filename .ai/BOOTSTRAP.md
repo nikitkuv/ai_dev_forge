@@ -219,14 +219,18 @@ execution = current state of work
 Create AI entrypoint:
 
 Requirements:
-- ≤ 100 lines
-- navigation only
-- no duplicated knowledge
-- contains project map
-- contains AI workflow rules
+- ~90 lines, concise
+- contains project map, AI workflow (orchestrator pattern), global rules
+- contains Context Gathering section
+- contains Code Quality rules (modular code, logging, error handling)
 - no inlined subagent definitions
 
-Also create subagents in `.claude/agents/*.md` (Context, Code Context, Implementation, Validation, Documentation — at minimum Implementation and Validation).
+Also create subagents in `.claude/agents/*.md`:
+- `implementation.md` (required) — implements tasks, gathers context
+- `validation.md` (required) — runs tests, reports only
+- `review.md` (required) — post-task code review
+- `fuzzing.md` (required) — post-epic robustness testing
+- `documentation.md` (optional) — updates docs
 
 CLAUDE.md is NOT documentation.
 

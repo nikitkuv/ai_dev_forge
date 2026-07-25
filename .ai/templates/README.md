@@ -18,12 +18,12 @@ the `<placeholders>`. Remove placeholders and comments you do not need.
 | `BACKLOG.md` | `BACKLOG.md` | Step 03 |
 | `plan.md` | `execution/active/EPIC-NNN-<name>/plan.md` | Step 04 |
 | `TASK.md` | `.../tasks/TASK-NNN-<name>.md` | Step 04 |
-| `CLAUDE.md` | `CLAUDE.md` (≤ 100 lines) | Step 05 |
-| `agents/context.md` | `.claude/agents/context.md` | Step 05 |
-| `agents/code-context.md` | `.claude/agents/code-context.md` | Step 05 |
+| `CLAUDE.md` | `CLAUDE.md` (~90 lines) | Step 05 |
 | `agents/implementation.md` | `.claude/agents/implementation.md` | Step 05 |
 | `agents/validation.md` | `.claude/agents/validation.md` | Step 05 |
-| `agents/documentation.md` | `.claude/agents/documentation.md` | Step 05 |
+| `agents/review.md` | `.claude/agents/review.md` | Step 05 |
+| `agents/fuzzing.md` | `.claude/agents/fuzzing.md` | Step 05 |
+| `agents/documentation.md` | `.claude/agents/documentation.md` | Step 05 (optional) |
 | `agents/agent.md` | `.claude/agents/<custom>.md` (skeleton for extra agents) | Step 05, on demand |
 
 ## Conventions baked in
