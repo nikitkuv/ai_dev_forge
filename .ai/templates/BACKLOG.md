@@ -1,36 +1,35 @@
-<!-- TEMPLATE: BACKLOG.md — project control document. Epics only. No tasks, no progress. -->
-<!-- Created in: Bootstrap Step 03 (Release Planning). -->
-<!-- Epic Status: Planned | Active | Completed | Blocked | Cancelled -->
-<!-- Invariant: exactly ONE Epic is Active (or none before execution starts). -->
+---
+document_type: backlog
+document_status: draft
+language: "<language-code>"
+created_at: "<YYYY-MM-DD>"
+approved_at:
+---
 
-# BACKLOG.md — <Product Name>
+# <Product Name> — Backlog
 
-## Project Overview
+## Document Contract
 
-<Short description.>
+This document is the single source of truth for Epic priority, readiness, dependencies, blocking metadata and lifecycle status, and for defect lifecycle state.
 
-## Project Status
+It must not contain Tasks, completion percentages, execution summaries, or a duplicated “current Epic” section. Every retained product idea is an Epic in the roadmap, initially `PLANNED` and optionally `OUTLINE`.
 
-<Planning | Active Development | Maintenance | Completed>
-
-## Current Active Epic
-
-<EPIC-NNN — Name>
-
-<!-- or: None -->
+The user controls `P0`–`P3` priority and row order within each priority. The agent analyzes dependencies and warns when a later Epic blocks an earlier one, but changes priority or order only after explicit user confirmation.
 
 ## Epic Roadmap
 
-| ID | Name | Description | Priority | Status |
-|----|------|-------------|----------|--------|
-| EPIC-001 | <Name> | <short> | <P0/P1/P2> | Active |
-| EPIC-002 | <Name> | <short> | <P1> | Planned |
-| EPIC-003 | <Name> | <short> | <P2> | Planned |
+| ID | Epic and intended outcome | Requirements | Priority | Readiness | Dependencies | Status | Blocked by |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| EPIC-001 | <Name — observable outcome> | <FR-/NFR-/BR-IDs or `TBD` while OUTLINE> | P0 | READY | — | PLANNED | — |
+| EPIC-002 | <Name — observable outcome> | TBD | P1 | OUTLINE | EPIC-001 | PLANNED | EPIC-001 |
 
-## Future Ideas (Optional)
+Readiness and lifecycle values are defined only in `.ai/framework/contracts.yaml`. An `OUTLINE` or dependency-blocked Epic cannot become `ACTIVE`. At most one Epic may be `ACTIVE`.
 
-<Ideas intentionally excluded from the current roadmap.>
+## Defect Queue
 
-## Notes (Optional)
+| ID | Problem | Severity | User priority | Related requirement | Status | Scheduled TASK |
+| --- | --- | --- | --- | --- | --- | --- |
+| BUG-001 | <Observable failure and affected user or system> | <critical/high/medium/low> | P1 | <FR-/NFR-/BR-ID or —> | OPEN | — |
+| BUG-002 | <Observable failure> | <severity> | P2 | <requirement or —> | SCHEDULED | TASK-001 |
 
-<Project-level planning notes.>
+Severity describes impact; user priority controls repair order. Defect lifecycle values are defined only in `.ai/framework/contracts.yaml`. A problem found in an unaccepted Task remains in that Task and does not receive a separate Bug ID.
