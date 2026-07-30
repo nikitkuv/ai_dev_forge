@@ -1,301 +1,86 @@
-# Bootstrap Step 03 — Backlog Generation
-
----
+# Bootstrap Step 03 — Release Planning
 
 ## Purpose
 
-The purpose of this step is to transform the product specification and system architecture into a structured development roadmap.
+Create an approved `BACKLOG.md` containing the Epic Roadmap and Defect Queue. This step decides what should be delivered and in what user-controlled order; it does not create execution plans or Tasks.
 
-The primary output of this step is **BACKLOG.md**.
+Use `.ai/templates/BACKLOG.md`, `.ai/CONVENTIONS.md`, and lifecycle values from `.ai/framework/contracts.yaml`.
 
-BACKLOG.md is the **project control document**.
-
-It serves as the single source of truth for:
-
-- the project's development roadmap;
-- the list of Epics;
-- Epic priorities;
-- the current active Epic.
-
-BACKLOG.md intentionally contains **no implementation details**.
-
-Implementation planning is performed later inside the corresponding Epic workspace.
-
----
-
-# Inputs
+## Preconditions and Inputs
 
 Required:
 
-- BOOTSTRAP.md
-- CONVENTIONS.md
-- SPEC.md
-- ARCHITECTURE.md
+- approved `SPEC.md`;
+- approved `ARCHITECTURE.md`;
+- resolved ADRs relevant to planning;
+- the Backlog template and framework contracts.
 
-Optional:
+Optional evidence includes existing roadmaps, issue trackers, TODO material, code findings, test gaps, and user-provided features or defects. Existing-project findings remain candidates until the user confirms whether to retain them.
 
-- Existing repository
-- Existing issue tracker
-- Existing roadmap
-- Existing backlog
-- Existing TODO lists
+## Build the Candidate Roadmap
 
----
+1. Trace required product outcomes to `FR-*`, `NFR-*`, and `BR-*`.
+2. Group meaningful product, architecture, migration, infrastructure, quality, integration, or documentation outcomes into Epics.
+3. Represent every retained future idea as an Epic; do not create a separate idea list.
+4. Allocate globally unique `EPIC-NNN` identifiers without reusing gaps.
+5. Give every new Epic lifecycle `PLANNED`.
+6. Use readiness:
+   - `OUTLINE` when requirements, boundaries, or dependencies are unresolved;
+   - `READY` only when requirements, scope boundaries, acceptance direction, and dependencies are approved.
+7. Do not activate an Epic in this step. Epic activation belongs to the separate Epic Start gate in Step 04.
 
-# Core Principle
+Do not decompose Epics into Tasks or estimate implementation effort.
 
-> BACKLOG.md defines **what should be built next**, not **how it will be built**.
+## Build the Defect Queue
 
----
+1. Present candidate defects found in code, tests, documents, issues, or user reports.
+2. Add a defect only after the user confirms it should be tracked.
+3. Allocate the next global `BUG-NNN`.
+4. Record impact severity separately from user repair priority.
+5. Use the lifecycle defined in `.ai/framework/contracts.yaml`.
+6. Leave Scheduled TASK empty until an approved planning workflow actually creates the repair Task.
 
-# Overview
+A failure inside unaccepted work stays with that Task and is not added as a separate defect.
 
-This step consists of five phases.
+## Priority, Order, and Dependencies
 
-1. Analyze project scope.
-2. Identify major work items.
-3. Organize work into Epics.
-4. Validate the roadmap.
-5. Generate BACKLOG.md.
+The user owns the **user-defined priority** (`P0`–`P3`) and row order within each priority.
 
-All phases are mandatory.
+The agent must:
 
----
+1. build a dependency graph across Epics and relevant external or decision dependencies;
+2. compare that graph with the user's proposed order;
+3. warn when a later Epic blocks an earlier Epic;
+4. explain the impact and propose a concrete reorder;
+5. ask whether the user wants to change the order;
+6. reorder only after explicit confirmation.
 
-# Phase 1 — Analyze the Project
+If the user preserves the conflicting order, keep the earlier Epic `PLANNED` and record the dependency in `Blocked by`. Blocking is metadata, not a lifecycle status.
 
-Review:
+## Draft and Approval Workflow
 
-- SPEC.md
-- ARCHITECTURE.md
+1. Present the proposed Epic Roadmap, requirement coverage, readiness, dependency warnings, priorities, ordering, and candidate Defect Queue.
+2. Resolve which candidates should be retained.
+3. Create or update `BACKLOG.md` from the template with `document_status: draft`.
+4. Request explicit user approval of the complete roadmap and defect queue.
+5. Only after approval, set `document_status: approved` and `approved_at`.
 
-Identify:
+The agent must not change user priority, order, scope, or retained items silently.
 
-- product capabilities
-- technical initiatives
-- infrastructure work
-- integrations
-- future evolution
+## Completion Gate
 
-Focus on significant units of work.
+This step is complete only when:
 
-Do NOT think about implementation.
+- every retained future idea is a `PLANNED` Epic;
+- every `READY` Epic has approved requirements, boundaries, and dependencies;
+- unresolved work remains `OUTLINE`;
+- dependency conflicts were shown and any reorder was explicitly approved;
+- confirmed defects are separate from Epics and use the Defect Queue;
+- `BACKLOG.md` has explicit user approval and is marked `approved`;
+- no plan, Task file, execution directory, or active Epic was created.
 
----
+Do not start Step 04 automatically. Report the result and request a separate user confirmation.
 
-# Phase 2 — Identify Epics
+## Output
 
-Identify every major development initiative.
-
-Typical Epic categories include:
-
-- product features
-- infrastructure
-- integrations
-- refactoring
-- testing improvements
-- developer experience
-- documentation
-
-Each Epic should represent a meaningful milestone.
-
-Do NOT decompose Epics into tasks.
-
----
-
-# Phase 3 — Organize the Roadmap
-
-Organize Epics into a development roadmap.
-
-For each Epic define:
-
-- ID — format `EPIC-NNN` (zero-padded, e.g. `EPIC-001`)
-- Name
-- Short description
-- Priority
-- Status
-
-Recommended statuses:
-
-- Planned
-- Active
-- Completed
-- Blocked
-- Cancelled
-
-Exactly one Epic may be marked as **Active**.
-
-If implementation has not started:
-
-Active Epic = None.
-
-Do NOT create implementation plans.
-
-Do NOT estimate effort.
-
----
-
-# Phase 4 — Validate the Roadmap
-
-Present the proposed roadmap.
-
-Summarize:
-
-- project phases
-- Epic ordering
-- priorities
-- active Epic (if any)
-
-Ask the user:
-
-> "Is this roadmap correct?"
-
-Do NOT generate BACKLOG.md until approval.
-
-If changes are requested:
-
-- update the roadmap
-- validate again if necessary
-
----
-
-# Phase 5 — Generate BACKLOG.md
-
-After approval:
-
-Generate BACKLOG.md.
-
-The document should contain:
-
-- project overview
-- current project status
-- current active Epic
-- Epic roadmap
-- future ideas (optional)
-
-BACKLOG.md should remain concise.
-
-It is a navigation document, not a planning document.
-
-Detailed planning belongs inside **execution/**.
-
----
-
-# Recommended Structure of BACKLOG.md
-
-## Project Overview
-
-Short description.
-
----
-
-## Project Status
-
-Examples:
-
-- Planning
-- Active Development
-- Maintenance
-- Completed
-
----
-
-## Current Active Epic
-
-Exactly one Epic.
-
-Example:
-
-EPIC-003 — AI Agent Runtime
-
-or
-
-None
-
----
-
-## Epic Roadmap
-
-For each Epic:
-
-- ID
-- Name
-- Description
-- Priority
-- Status
-
-No task lists.
-
-No implementation notes.
-
----
-
-## Future Ideas (Optional)
-
-Ideas intentionally excluded from the current roadmap.
-
----
-
-## Notes (Optional)
-
-Project-level planning notes.
-
----
-
-# Restrictions
-
-During this step, do NOT:
-
-- create execution plans
-- create TASK files
-- create plan.md
-- estimate work
-- assign deadlines
-- write production code
-- duplicate SPEC.md
-- duplicate ARCHITECTURE.md
-
----
-
-# Definition of Done
-
-This step is complete only if:
-
-- all major work is organized into Epics;
-- Epic priorities are defined;
-- at most one Epic is marked as Active;
-- the roadmap is approved by the user;
-- BACKLOG.md is generated;
-- BACKLOG.md contains no implementation details.
-
----
-
-# Outputs
-
-Create or update:
-
-- BACKLOG.md
-
-Do NOT create:
-
-- execution/
-- plan.md
-- TASK files
-
-Those belong to the next bootstrap step.
-
----
-
-# Next Step
-
-Recommend:
-
-Bootstrap Step 04 — Execution Workspace Initialization
-
-Do NOT proceed automatically.
-
-Wait for user confirmation.
-
----
-
-# End of Step
+- `BACKLOG.md`
