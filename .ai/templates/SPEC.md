@@ -1,57 +1,107 @@
-<!-- TEMPLATE: SPEC.md — WHAT the product is. No architecture, no tech, no tasks. -->
-<!-- Created in: Bootstrap Step 01 (Product Discovery) -->
+---
+document_type: spec
+document_status: draft
+language: "<language-code>"
+created_at: "<YYYY-MM-DD>"
+approved_at:
+---
 
-# SPEC.md — <Product Name>
+# <Product Name> — Product Specification
+
+## Document Contract
+
+This document is the single source of truth for the approved target product behavior, including behavior that is not implemented yet.
+
+It must not contain architecture, technology choices, task breakdowns, completion percentages, or implementation status. Update `document_status` to `approved` and set `approved_at` only after explicit user approval.
 
 ## Product Overview
 
-<1–3 sentences: what this is.>
+<Describe the product and its purpose in one to three sentences.>
 
 ## Vision
 
-<Why it exists. What problem it solves.>
+<Describe the problem, desired future state, and why the product should exist.>
 
 ## Goals
 
-- <Goal 1>
-- <Goal 2>
+- <Outcome the product must enable.>
 
 ## Scope
 
-- <In-scope capability>
-- <In-scope capability>
+- <Capability included in the target product.>
 
 ## Out of Scope
 
-- <Explicitly excluded>
+- <Explicit exclusion or product boundary.>
 
 ## Users
 
-- **Primary:** <who>
-- **Secondary:** <who>
-- **Operators / external systems:** <who>
+### <User or actor>
+
+- **Needs:** <What this actor needs.>
+- **Primary value:** <What the product provides.>
+- **Relevant constraints:** <Accessibility, permissions, environment, or other constraints.>
+
+## Key User Journeys
+
+### UJ-001 — <Journey name>
+
+1. <Observable user or system step.>
+2. <Observable response.>
+3. <Expected outcome.>
 
 ## Functional Requirements
 
-- FR-01: <behavior>
-- FR-02: <behavior>
+### FR-001 — <Short requirement name>
+
+**Requirement:** <State observable product behavior without prescribing implementation.>
+
+**Acceptance criteria:**
+
+- <Given/when/then or another objectively verifiable condition.>
 
 ## Non-Functional Requirements
 
-- <Performance / scalability / reliability / security / observability — only what is relevant>
+### NFR-001 — <Quality attribute>
+
+**Requirement:** <State a measurable performance, reliability, security, accessibility, privacy, scalability, or operability target.>
+
+**Measurement and acceptance criteria:**
+
+- <Metric, measurement conditions, threshold, and allowed exclusions.>
+
+## Domain Rules
+
+### BR-001 — <Invariant name>
+
+**Rule:** <State the business or domain invariant that must always hold.>
+
+**Acceptance criteria:**
+
+- <Example or testable condition that proves the invariant.>
 
 ## External Integrations
 
-- <API / database / LLM provider / auth / third-party service>
+### <System or provider>
+
+- **Purpose:** <Why the integration exists.>
+- **Product-facing contract:** <Observable inputs, outputs, and failure behavior.>
+- **Constraints:** <Business, legal, availability, or compatibility constraints.>
 
 ## Constraints
 
-- <Technical / business / legal / operational>
+- <Business, legal, regulatory, operational, budget, schedule, or mandated-platform constraint.>
 
 ## Assumptions
 
-- <Assumption>
+- <Assumption that requires confirmation or may affect scope.>
 
 ## Success Criteria
 
-- <How success is measured>
+- <Measurable product outcome, target, observation window, and data source where known.>
+
+## Glossary
+
+| Term | Meaning |
+| --- | --- |
+| <Term> | <Project-specific definition> |
