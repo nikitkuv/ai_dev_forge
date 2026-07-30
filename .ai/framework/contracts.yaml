@@ -1,0 +1,104 @@
+schema_version: 1
+
+enums:
+  epic_readiness: [OUTLINE, READY]
+  epic_status:
+    [PLANNED, ACTIVE, FUZZING, "AWAITING EPIC ACCEPTANCE", COMPLETED, PAUSED, CANCELLED]
+  task_status:
+    [TODO, "IN PROGRESS", "IN REVIEW", "IN TESTING", "AWAITING USER ACCEPTANCE", DONE, PAUSED, CANCELLED]
+  bug_status: [OPEN, SCHEDULED, RESOLVED, REJECTED, DUPLICATE, WONT_FIX]
+  adr_status: [PROPOSED, ACCEPTED, REJECTED, SUPERSEDED, DEPRECATED]
+  model_tiers: [strong, balanced, fast]
+  fuzzing_outcomes: [PASSED, "HARNESS REQUIRED", FINDINGS, "NOT APPLICABLE"]
+
+# Stable machine-friendly spellings for status values that contain spaces.
+machine_tokens:
+  AWAITING_EPIC_ACCEPTANCE: "AWAITING EPIC ACCEPTANCE"
+  AWAITING_USER_ACCEPTANCE: "AWAITING USER ACCEPTANCE"
+
+transitions:
+  epic_readiness:
+    OUTLINE: [READY]
+  epic_status:
+    PLANNED: [ACTIVE, PAUSED, CANCELLED]
+    ACTIVE: [FUZZING, PAUSED, CANCELLED]
+    FUZZING: ["AWAITING EPIC ACCEPTANCE", ACTIVE, PAUSED, CANCELLED]
+    "AWAITING EPIC ACCEPTANCE": [COMPLETED, ACTIVE, PAUSED, CANCELLED]
+    PAUSED: [PLANNED, ACTIVE, FUZZING, "AWAITING EPIC ACCEPTANCE", CANCELLED]
+  task_status:
+    TODO: ["IN PROGRESS", PAUSED, CANCELLED]
+    "IN PROGRESS": ["IN REVIEW", PAUSED, CANCELLED]
+    "IN REVIEW": ["IN TESTING", "IN PROGRESS", PAUSED, CANCELLED]
+    "IN TESTING": ["AWAITING USER ACCEPTANCE", "IN PROGRESS", PAUSED, CANCELLED]
+    "AWAITING USER ACCEPTANCE": [DONE, "IN PROGRESS", PAUSED, CANCELLED]
+    PAUSED: [TODO, "IN PROGRESS", "IN REVIEW", "IN TESTING", "AWAITING USER ACCEPTANCE", CANCELLED]
+  bug_status:
+    OPEN: [SCHEDULED, REJECTED, DUPLICATE, WONT_FIX]
+    SCHEDULED: [RESOLVED, REJECTED, DUPLICATE, WONT_FIX]
+  adr_status:
+    PROPOSED: [ACCEPTED, REJECTED]
+    ACCEPTED: [SUPERSEDED, DEPRECATED]
+
+gates:
+  task_start:
+    transition: "TODO -> IN PROGRESS"
+    requires: [explicit_user_authorization]
+  task_acceptance:
+    transition: "AWAITING USER ACCEPTANCE -> DONE"
+    requires: [explicit_user_acceptance]
+  next_task_start:
+    requires: [separate_explicit_user_authorization]
+    note: Task acceptance and permission to start the next task are separate gates; one message may authorize both only when it explicitly states both decisions.
+  epic_start:
+    transition: "PLANNED -> ACTIVE"
+    requires: [readiness_READY, approved_plan, dependencies_satisfied, no_unresolved_blockers, explicit_user_authorization]
+  epic_acceptance:
+    transition: "AWAITING EPIC ACCEPTANCE -> COMPLETED"
+    requires: [fuzzing_acceptance_satisfied, explicit_user_acceptance]
+  replan:
+    required_for: [task_scope_change, task_order_change, task_composition_change]
+    requires: [reason, plan_diff, explicit_user_confirmation]
+    not_required_for: [typo_correction, link_correction]
+  adr_approval:
+    transition: "PROPOSED -> ACCEPTED"
+    requires: [explicit_user_approval]
+
+fuzzing:
+  mandatory_after: last_task_acceptance
+  acceptance_gate:
+    id: fuzzing_acceptance_satisfied
+    satisfied_by:
+      - outcome: PASSED
+      - outcome: "NOT APPLICABLE"
+        requires: [rationale, alternative_risk_coverage]
+  outcomes:
+    PASSED:
+      transition: "FUZZING -> AWAITING EPIC ACCEPTANCE"
+    "NOT APPLICABLE":
+      transition: "FUZZING -> AWAITING EPIC ACCEPTANCE"
+      requires: [rationale, alternative_risk_coverage]
+    "HARNESS REQUIRED":
+      transition: "FUZZING -> ACTIVE"
+      task_kind: fuzz_harness
+      post_transition_sequence:
+        - replan_gate
+        - separate_task_start_gate
+        - full_task_lifecycle
+        - "ACTIVE -> FUZZING"
+        - repeated_epic_fuzzing
+    FINDINGS:
+      transition: "FUZZING -> ACTIVE"
+      task_kind: remediation
+      post_transition_sequence:
+        - replan_gate
+        - separate_task_start_gate
+        - full_task_lifecycle
+        - "ACTIVE -> FUZZING"
+        - repeated_epic_fuzzing
+
+invariants:
+  - blocked_by_is_metadata_not_a_lifecycle_status
+  - no_more_than_one_active_epic
+  - no_more_than_one_code_writing_task_in_progress
+  - code_changes_invalidate_prior_review_and_test_results
+  - next_epic_never_starts_automatically
