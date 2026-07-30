@@ -1,267 +1,140 @@
-# Bootstrap Step 04 — Execution Workspace Initialization
-
----
+# Bootstrap Step 04 — Prepare the Active Epic Workspace
 
 ## Purpose
 
-The purpose of this step is to initialize the execution workspace for the current development cycle.
+Prepare one user-approved Epic plan and its initial TASK files, then activate that Epic through the explicit **Epic Start gate**.
 
-This step transforms the selected Epic into an executable workspace that AI coding agents can use for day-to-day development.
+Use:
 
-The primary outputs of this step are:
+- approved `SPEC.md`, `ARCHITECTURE.md`, and `BACKLOG.md`;
+- relevant accepted ADRs;
+- `.ai/templates/plan.md`;
+- `.ai/templates/TASK.md`;
+- `.ai/CONVENTIONS.md`;
+- `.ai/framework/contracts.yaml`.
 
-- execution/
-- the active Epic workspace
-- plan.md
-- atomic task files
+This step prepares execution state only. It does not modify product code, implement a Task, or start the first Task.
 
-After completing this step, the repository is ready for implementation.
+## Select and Validate the Epic
 
----
+The user selects the Epic to prepare. The agent may recommend the first Epic in user-defined Backlog order, but must not select or reorder it silently.
 
-# Inputs
+Before planning, verify:
 
-Required:
+- the Epic exists in `BACKLOG.md`;
+- its lifecycle status is `PLANNED`;
+- its readiness is `READY`;
+- its requirements and boundaries are approved;
+- every dependency is satisfied;
+- `Blocked by` is empty;
+- no other Epic is `ACTIVE`;
+- no conflicting active execution directory exists.
 
-- BOOTSTRAP.md
-- CONVENTIONS.md
-- SPEC.md
-- ARCHITECTURE.md
-- BACKLOG.md
+If the Epic is `OUTLINE`, blocked, has unresolved dependencies, or conflicts with another active Epic, stop and explain the exact conflict. Ask the user how to resolve it; do not activate, reorder, or bypass it automatically.
 
----
+## Prepare the Proposed Plan
 
-# Core Principle
+Build a proposal from the approved canonical documents and repository evidence:
 
-> BACKLOG defines **what should be built**.
+1. define the Epic objective and expected outcome;
+2. identify dependencies, risks, and implementation strategy;
+3. create an ordered Task sequence with explicit `Depends on` relationships;
+4. define Epic acceptance criteria;
+5. define mandatory review, testing, configured quality checks, fuzzing, and user-validation gates.
 
-> execution defines **what is being built now**.
+Use the plan template without adding Task lifecycle state or a duplicated execution-status section.
 
----
+## Prepare the Initial TASK Definitions
 
-# Overview
+Create one proposed TASK definition per planned unit of work.
 
-This step consists of five phases.
+For every TASK:
 
-1. Select the active Epic.
-2. Initialize the execution workspace.
-3. Create the Epic implementation plan.
-4. Decompose the Epic into atomic tasks.
-5. Validate the workspace.
+- allocate the next project-global `TASK-NNN`; numbering never restarts per Epic and retired IDs are not reused;
+- define one clear outcome, context, scope, out of scope, and constraints;
+- add objectively verifiable acceptance criteria;
+- add required Task-specific, affected-component, full-suite, and configured quality checks;
+- add reproducible manual verification;
+- link requirements, architecture sections, ADRs, defects, and the Epic plan where applicable;
+- record dependencies through the ordered plan;
+- initialize lifecycle `status: TODO`;
+- keep `definition_status: draft` until the user approves the complete plan.
 
-All phases are mandatory.
+Do not run a mandatory atomicity classifier. Split or reshape work only when the user requests it or when actual planning or execution reveals a concrete need.
 
----
+## Plan Review and Epic Start Gate
 
-# Phase 1 — Select the Active Epic
+Before writing active execution state:
 
-Read BACKLOG.md.
+1. show the proposed plan and all TASK definitions;
+2. show the exact Backlog and workspace changes that activation will make;
+3. resolve user-requested corrections while definitions remain `draft`;
+4. request explicit approval of the plan and TASK definitions;
+5. request explicit authorization for the **Epic Start gate**.
 
-Locate the Epic marked as **Active**.
+The user may approve the plan without starting the Epic. Do not create active execution state until Epic Start is explicitly authorized. One message may approve both decisions only when it clearly states both.
 
-Rules:
+After plan approval, generated TASK files use `definition_status: approved`. Approval of a TASK definition is not authorization to implement it.
 
-- exactly one Active Epic must exist;
-- if none exists, ask the user;
-- if multiple Active Epics exist, report the inconsistency and stop.
+## Apply the Activation as One State Transition
 
-Do not continue until a single Active Epic has been identified.
+After both plan approval and Epic Start authorization:
 
----
-
-# Phase 2 — Initialize the Execution Workspace
-
-Create the following structure if it does not already exist:
-
-```text
-execution/
-&#x20;   active/
-&#x20;       EPIC-001-<short-name>/
-&#x20;           plan.md
-&#x20;           tasks/
-&#x20;   completed/
-docs/                      # may start empty (.gitkeep)
-references/                # may start empty (.gitkeep)
-```
-
-The Epic folder name MUST exactly match the Epic name in BACKLOG.md and follow the canonical naming (`EPIC-NNN-<short-name>`, see CONVENTIONS.md).
-
-`docs/` and `references/` are part of the standard project layout. Create them during this step even if empty (use a `.gitkeep` file so empty directories are tracked by version control). They are filled later, on demand.
-
-If the workspace already exists:
-
-- preserve existing progress;
-- do not overwrite existing files unless explicitly requested.
-
----
-
-# Phase 3 — Create plan.md
-
-Generate the implementation plan for the active Epic.
-
-The purpose of plan.md is to define **how this Epic will be executed**, not how individual pieces of code will be written.
-
-The plan should include:
-
-- Epic objective
-- expected outcome
-- implementation strategy
-- dependencies
-- technical risks
-- ordered task sequence
-- Epic Definition of Done
-- current execution status
-
-The plan should remain stable even if implementation details change.
-
----
-
-## Recommended Structure of plan.md
-
-- Epic Overview
-- Objective
-- Expected Outcome
-- Dependencies
-- Risks
-- Implementation Strategy
-- Task Sequence
-- Epic Definition of Done
-- Current Status
-
----
-
-# Phase 4 — Create Atomic Tasks
-
-Decompose the Epic into small implementation tasks.
-
-Each task should:
-
-- have a single responsibility;
-- produce one logical outcome;
-- be independently testable;
-- preferably fit within a single development session;
-- have explicit completion criteria.
-
-Create one Markdown file per task.
-
-Store them in:
+1. allocate and verify all final global IDs;
+2. create the workspace:
 
 ```text
 execution/
-&#x20;   active/
-&#x20;       EPIC-001-<short-name>/
-&#x20;           tasks/
-&#x20;               TASK-001-<short-name>.md
+├── active/
+│   └── EPIC-NNN-<short-name>/
+│       ├── plan.md
+│       └── tasks/
+│           ├── TASK-NNN-<short-name>.md
+│           └── ...
+├── paused/
+└── completed/
 ```
 
-File naming follows the canonical convention (`TASK-NNN-<short-name>.md`, see CONVENTIONS.md).
+3. write `plan.md` with `document_status: approved` and approval metadata;
+4. write every TASK with `definition_status: approved` and `status: TODO`;
+5. update only the selected Epic in `BACKLOG.md` from `PLANNED` to `ACTIVE`;
+6. verify Backlog state, directory state, links, IDs, and dependencies together.
 
----
+Treat the Backlog update and active-directory creation as one logical transition. If any write or validation fails, restore the prior Backlog and workspace state instead of leaving a partial activation.
 
-## Recommended Task Structure
+The first TASK remains TODO after workspace creation. Starting it requires the separate Task Start gate.
 
-Each task document should include:
+## Replan Gate
 
-- Status — one of `TODO` / `IN PROGRESS` / `DONE` / `BLOCKED` / `CANCELLED` (see CONVENTIONS.md)
-- Goal
-- Context
-- Scope
-- Constraints
-- Acceptance Criteria
-- Progress
-- Notes
+After the plan is approved, any change to Task scope, order, or composition requires the **Replan gate**:
 
-Status rule: **at most one** task is `IN PROGRESS` per active Epic. That task is the "current task". To start a task, set it to `IN PROGRESS`; to finish, set it to `DONE`.
+1. explain the reason;
+2. show the exact plan and TASK diff;
+3. request explicit user confirmation;
+4. only then add, cancel, split, merge, reorder, or rescope TASK definitions.
 
-Tasks describe **work**, not code.
+Typo and link corrections do not require Replan. Replan approval does not start any new or changed TASK; each still requires its own Task Start gate.
 
-Do not write implementation details.
+## Validation
 
-Do not implement the task.
+Before reporting completion, verify:
 
----
+- exactly one Epic is `ACTIVE`;
+- its directory is the only directory under `execution/active/`;
+- the directory name matches the Backlog Epic ID and stable short name;
+- the plan is approved and contains the same ordered Tasks that exist in `tasks/`;
+- all Epic and Task IDs are globally allocated and unique;
+- all TASK definitions are approved;
+- all TASK lifecycle values remain `TODO`;
+- Task dependencies reference existing IDs and contain no cycle;
+- requirement, architecture, ADR, defect, plan, and Task links resolve;
+- no product code, hooks, MCP configuration, or unrelated documentation changed.
 
-# Phase 5 — Validate the Workspace
+## Outputs
 
-Verify:
+- updated `BACKLOG.md`;
+- `execution/active/EPIC-NNN-<short-name>/plan.md`;
+- `execution/active/EPIC-NNN-<short-name>/tasks/TASK-NNN-<short-name>.md`;
+- structural `execution/paused/` and `execution/completed/` directories when absent.
 
-- execution/ exists;
-- exactly one Active Epic exists;
-- the Epic folder name matches the canonical convention and BACKLOG.md;
-- plan.md exists;
-- task files exist and follow the canonical `TASK-NNN-<short-name>.md` naming;
-- every task belongs to the Active Epic;
-- every task has a Status field with a valid value;
-- at most one task is `IN PROGRESS`;
-- task ordering matches the implementation strategy;
-- `docs/` and `references/` exist (empty is acceptable).
-
-If inconsistencies are found:
-
-Report them before continuing.
-
----
-
-# Restrictions
-
-During this step, do NOT:
-
-- implement production code;
-- modify source code;
-- write tests;
-- create future Epic workspaces;
-- activate additional Epics;
-- generate documentation unrelated to execution.
-
-This step prepares the workspace only.
-
----
-
-# Definition of Done
-
-This step is complete only if:
-
-- execution/ has been initialized;
-- the Active Epic workspace exists;
-- plan.md has been generated;
-- the Epic has been decomposed into atomic tasks;
-- every task has its own Markdown document;
-- the execution workspace is ready for implementation.
-
----
-
-# Outputs
-
-Create (if necessary):
-
-```text
-execution/
-execution/active/
-execution/completed/
-execution/active/EPIC-001-<short-name>/
-execution/active/EPIC-001-<short-name>/plan.md
-execution/active/EPIC-001-<short-name>/tasks/
-execution/active/EPIC-001-<short-name>/tasks/TASK-001-<short-name>.md
-execution/active/EPIC-001-<short-name>/tasks/TASK-002-<short-name>.md
-...
-docs/                       # empty if nothing yet (.gitkeep)
-references/                 # empty if nothing yet (.gitkeep)
-```
-
-Do not modify source code.
-
----
-
-# Next Step
-
-Recommend:
-
-Bootstrap Step 05 — Create AI Environment
-
-Do NOT proceed automatically.
-
-Wait for user confirmation.
-
----
-
-# End of Step
+Do not continue to implementation automatically. Report that the workspace is ready and request a separate Task Start confirmation.
