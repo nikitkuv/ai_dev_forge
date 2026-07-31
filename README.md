@@ -93,6 +93,7 @@ Communicate with me in Russian.
 
 - [Архитектура фреймворка](FRAMEWORK.md)
 - [Операционные сценарии](RUNBOOK.md)
+- [Подробные пошаговые сценарии и диалоги](FRAMEWORK_WORKFLOWS.md)
 - [Утверждённый подробный дизайн](FRAMEWORK_DESIGN.md)
 
 Для продолжения разработки попросите основного агента прочитать соответствующий root router и восстановить состояние из `BACKLOG.md`, execution-файлов и Git.

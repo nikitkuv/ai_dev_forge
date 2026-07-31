@@ -2,3 +2,7 @@
 /CLAUDE.md
 # Note: /CLAUDE.md ignores only the generated root router (local, not shared).
 # The reusable template at .ai/templates/CLAUDE.md stays tracked.
+.venv/
+venv/
+dist/
+build/
