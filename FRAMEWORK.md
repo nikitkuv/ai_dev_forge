@@ -1,4 +1,4 @@
-# AI Development Forge v2 — Architecture
+# AI Development Forge v3 — Architecture
 
 Этот документ описывает реализованную архитектуру фреймворка. Обоснование решений и полный набор согласованных правил находятся в [FRAMEWORK_DESIGN.md](FRAMEWORK_DESIGN.md).
 

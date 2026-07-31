@@ -30,8 +30,6 @@ project/
 |- DECISIONS.md
 |- decisions/
 |- execution/{active,paused,completed}/
-|- docs/
-|- references/
 |- .ai/{project.yaml,framework.lock,custom/}
 |- .codex/
 |- .claude/

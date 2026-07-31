@@ -1,4 +1,4 @@
-# AI Development Forge
+# AI Development Forge v3
 
 AI Development Forge — documentation-first фреймворк для совместной разработки с кодовыми агентами, прежде всего Codex CLI и Claude Code CLI.
 

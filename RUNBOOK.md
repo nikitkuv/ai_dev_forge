@@ -1,4 +1,4 @@
-# AI Development Forge — Runbook
+# AI Development Forge v3 — Runbook
 
 Этот runbook описывает повседневные действия. Детальные алгоритмы находятся в skills; основной агент должен явно выбрать нужный skill и сохранить результат в canonical файлах.
 
