@@ -45,3 +45,34 @@ test("user guide stages GitHub main as .ai-next", () => {
   assert.match(text, /\.ai-next/);
   assert.match(text, /Read \.ai-next\/MIGRATE\.md/);
 });
+
+test("router templates consume durable project overlays", () => {
+  const codex = read(".ai/templates/adapters/codex/AGENTS.md");
+  const claude = read(".ai/templates/adapters/claude/CLAUDE.md");
+  assert.match(codex, /\{\{ custom\.router_shared \}\}/);
+  assert.match(claude, /\{\{ custom\.router_shared \}\}/);
+  assert.match(codex, /\{\{ custom\.codex_router \}\}/);
+  assert.match(claude, /\{\{ custom\.claude_router \}\}/);
+});
+
+test("adapter contract is ID-scoped and local", () => {
+  const combined = [
+    ".ai/framework/manifest.yaml",
+    ".ai/05-create-platform-adapters.md",
+    ".ai/framework/skills/forge-sync-adapters/SKILL.md",
+  ].map(read).join("\n");
+
+  for (const value of [
+    ".codex/agents/",
+    ".agents/skills/",
+    ".claude/agents/",
+    ".claude/skills/",
+  ]) {
+    assert.match(combined, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+
+  assert.match(combined, /preserve/i);
+  assert.match(combined, /unlisted/i);
+  assert.doesNotMatch(combined, /exactly seven/i);
+  assert.doesNotMatch(combined, /exactly fourteen/i);
+});

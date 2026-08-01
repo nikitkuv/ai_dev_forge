@@ -10,7 +10,7 @@
 
 ## Start Here
 
-For framework initialization or migration, read `.ai/BOOTSTRAP.md` first.
+For first initialization or adoption, read `.ai/BOOTSTRAP.md`. For an upgrade staged at `.ai-next/`, read `.ai-next/MIGRATE.md`.
 
 For ongoing work, recover state from canonical files and Git, not session history:
 
@@ -66,4 +66,6 @@ Run no more than one code-writing Task at a time. Independent read-only research
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.
 - Follow the Git policy in `.ai/project.yaml`; `manual` means no commit without explicit user authorization.
 
-{{ custom.codex_router_additions }}
+{{ custom.router_shared }}
+
+{{ custom.codex_router }}

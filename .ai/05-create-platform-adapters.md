@@ -16,7 +16,7 @@ Read:
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex and Claude adapter templates under `.ai/templates/adapters/`;
-- `.ai/custom/`;
+- `.ai/custom/router-shared.md`, `.ai/custom/codex-router.md`, and `.ai/custom/claude-router.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
 
 Stop if source counts, IDs, or framework versions disagree.
@@ -54,10 +54,12 @@ Accept provider aliases or full model IDs. Never invent a model, leave a mapping
 Before rendering:
 
 1. compare existing generated files with hashes in `.ai/framework.lock`;
-2. detect manual changes in `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.claude/`, and `.agents/`;
-3. distinguish generated drift from approved `.ai/custom/` additions;
-4. show the exact regeneration diff;
-5. request explicit user confirmation before overwriting a collision.
+2. derive the managed agent and skill IDs from the manifest;
+3. detect manual changes in root routers and manifest-declared Forge entries;
+4. preserve unlisted agents, skills, and adjacent platform files as project-owned content;
+5. distinguish generated drift from approved `.ai/custom/` overlays;
+6. show the exact regeneration diff;
+7. request explicit user confirmation before overwriting a same-ID collision.
 
 Do not overwrite unrelated project files. Stage both adapter sets in a temporary location or memory so a partial render never replaces only one platform.
 
@@ -77,7 +79,7 @@ AGENTS.md
 .agents/skills/<fourteen-skill-ids>/SKILL.md
 ```
 
-Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus approved Codex custom additions.
+Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus shared and Codex-specific overlays. Do not copy legacy framework sections into an overlay.
 
 For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 
@@ -104,7 +106,7 @@ CLAUDE.md
 .claude/skills/<fourteen-skill-ids>/SKILL.md
 ```
 
-Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus approved Claude custom additions.
+Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus shared and Claude-specific overlays. Do not copy legacy framework sections into an overlay.
 
 For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
@@ -119,11 +121,13 @@ Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 Verify the staged outputs:
 
 - both root routers contain no unresolved placeholder and are no more than 150 lines;
-- each platform has exactly seven agent files and fourteen skills;
+- each platform contains every agent and skill ID declared by the manifest;
+- additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
 - every rendered agent contains its concrete model and Codex agents contain reasoning effort;
 - generated files contain English control text;
-- `.ai/custom/` additions appear only in their intended adapter;
+- shared and platform-specific `.ai/custom/` overlays appear only in their intended routers;
+- `.codex/config.toml`, Claude settings, commands, hooks, and all other unlisted platform files are unchanged;
 - no hook or MCP file was generated.
 
 If either platform fails, replace neither. After both pass, replace both adapter sets as one logical operation and restore the previous sets if replacement validation fails.
@@ -136,7 +140,8 @@ Only after successful replacement, create or update `.ai/framework.lock` with:
 - framework name and version;
 - hash algorithm;
 - hashes of the manifest, contracts, project configuration, neutral agents, portable skills, renderer templates, and custom overlays;
-- generated file paths and per-file hashes for both platforms;
+- managed generated file paths, IDs, and per-file hashes for both platforms;
+- preserved unlisted adapter paths without claiming their content as Forge-owned;
 - generation timestamp;
 - ownership categories needed to detect later collisions and obsolete files.
 

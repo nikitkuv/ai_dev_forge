@@ -8,6 +8,7 @@ adapters: [codex, claude]
 ownership:
   framework_owned_paths:
     - .ai/BOOTSTRAP.md
+    - .ai/MIGRATE.md
     - .ai/01-product-discovery.md
     - .ai/02-system-design.md
     - .ai/03-release-planning.md
@@ -39,6 +40,9 @@ ownership:
   generated_adapter_policy:
     regeneration: adapter sync and framework migration regenerate these outputs from framework sources and project configuration.
     manual_edit_collision: detect manual edits, show the regeneration diff, and require explicit confirmation before overwriting them.
+    managed_membership: only root routers and entries whose IDs are declared in subagents or skills are Forge-managed.
+    unlisted_membership: preserve unlisted agents, skills, and adjacent platform files as project-owned content.
+    protected_platform_files: never generate or replace .codex/config.toml, Claude settings, commands, or hooks.
 
 skills:
   - forge-bootstrap-new
