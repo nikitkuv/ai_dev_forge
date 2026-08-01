@@ -1,42 +1,46 @@
 ---
 name: forge-migrate-framework
-description: Migrate an initialized project to a newly copied AI Development Forge bundle while preserving project-owned files, previewing destructive changes, regenerating both adapters, validating the result, and rolling back on failure.
+description: Use when a consumer repository already contains an older AI Development Forge bundle and a newer release is staged at `.ai-next/`, including legacy installations without a lock.
 ---
 
 # Migrate the Framework
 
 ## Establish a recoverable baseline
 
-1. Read the new `.ai/framework/manifest.yaml`, existing `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, Git status, canonical documents, and generated adapter hashes.
-2. Identify the prior framework version and a recoverable pre-copy baseline from Git or an explicit backup. If the old framework-owned content cannot be recovered, disclose the rollback limitation before any change.
-3. Classify paths as framework-owned, project-owned, or generated adapter outputs.
-4. Detect:
-   - changed and obsolete framework-owned paths;
-   - project changes that collide with the new bundle;
-   - manual edits in generated adapters;
-   - canonical schema changes requiring user action;
-   - model mapping or platform compatibility gaps.
+1. Read `.ai-next/MIGRATE.md` in full and verify that active `.ai/` and staged `.ai-next/` are distinct, complete bundles.
+2. Inspect both manifests, the optional old lock, project configuration, custom overlays, Git state, root routers, local adapters, canonical documents, ADRs, and execution state.
+3. Support a legacy installation without `.ai/framework.lock`. Use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence.
+4. Hash canonical, execution, product, and unrelated project paths before any write.
+5. Identify a recoverable rollback source. Stop if the old bundle and affected adapters cannot be restored.
 
-Never overwrite project-owned canonical documents, `.ai/project.yaml`, `.ai/framework.lock`, or `.ai/custom/` as framework content.
+Never modify canonical documents, canonical schema, ADRs, execution state, project code, tests, data, or unrelated configuration during this workflow.
+
+## Classify routers and adapters
+
+1. Split `AGENTS.md` and `CLAUDE.md` into project-owned context and legacy Forge instructions.
+2. Propose shared, Codex-only, and Claude-only project overlays under `.ai/custom/`.
+3. Derive the new managed adapter membership from the staged manifest IDs.
+4. Recognize legacy Forge agents and skills from the old bundle, old hashes when present, known IDs, and content comparison.
+5. Preserve unlisted agents, skills, platform configuration, settings, commands, hooks, and unknown files.
+6. Treat an ambiguous obsolete path or same-ID custom entry as a collision; do not delete it by inference.
 
 ## Preview and authorize
 
-1. Show a complete migration diff: replacements, deletions, adapter regeneration, collisions, canonical schema changes, and rollback source.
-2. Separate required framework migration from optional canonical document edits.
-3. Request explicit user confirmation before overwriting, deleting, moving, or regenerating files.
-4. Require a separate diff and approval for canonical schema changes.
+Show one complete diff containing framework replacements, recognized obsolete Forge paths, overlay extraction, final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, model/configuration decisions, and rollback source.
+
+Report canonical schema differences only as compatibility findings outside migration scope. Request explicit approval for the exact framework, router, and managed-adapter changes. Approval does not authorize canonical edits, product changes, commits, or pushes.
 
 ## Apply with backup
 
 After approval:
 
-1. create a temporary backup of every affected target, including recoverable prior framework files and current generated adapters;
-2. apply only approved framework-owned replacements and obsolete-file removals;
-3. preserve project-owned files and custom overlays;
-4. invoke `forge-sync-adapters` to regenerate Codex and Claude outputs together;
-5. apply separately approved canonical changes;
-6. run `forge-check-framework`.
+1. back up active `.ai/`, root routers, every affected adapter entry, and the old lock;
+2. build a candidate `.ai/` from the staged release plus approved project configuration and structured overlays;
+3. render both root routers from current templates and overlays;
+4. invoke `forge-sync-adapters` to replace recognized Forge IDs and install the manifest-declared local set while preserving unlisted files;
+5. replace the active bundle and staged outputs as one logical operation;
+6. run `forge-check-framework` and compare all protected-path hashes;
+7. create or update `.ai/framework.lock` only after every check passes;
+8. remove `.ai-next/` only after success and retain the backup until user acknowledgement.
 
-Update `.ai/framework.lock` only after every migration validation passes. Record framework version, source hashes, generated adapter hashes, and ownership data needed for later collision detection.
-
-On any failure, restore the backup, restore the previous lock, and report the failed stage. Remove the temporary backup only after successful validation and user acknowledgement. Do not require a framework CLI, install tools, or create a migration report Markdown file.
+On any failure, restore the old bundle, routers, adapters, and lock, then verify protected hashes again and report the failed stage. Create no report Markdown file and require no framework CLI.

@@ -76,3 +76,23 @@ test("adapter contract is ID-scoped and local", () => {
   assert.doesNotMatch(combined, /exactly seven/i);
   assert.doesNotMatch(combined, /exactly fourteen/i);
 });
+
+test("legacy migration uses .ai-next and never edits canonical schema", () => {
+  const text = read(".ai/framework/skills/forge-migrate-framework/SKILL.md");
+  assert.match(text, /\.ai-next\//);
+  assert.match(text, /without `\.ai\/framework\.lock`/);
+  assert.match(text, /Never modify canonical/);
+  assert.doesNotMatch(text, /apply separately approved canonical changes/);
+});
+
+test("conformance allows project-owned adapter extensions", () => {
+  const combined = [
+    ".ai/framework/skills/forge-check-framework/SKILL.md",
+    ".ai/06-final-validation.md",
+  ].map(read).join("\n").toLowerCase();
+
+  assert.match(combined, /manifest-declared/);
+  assert.match(combined, /additional project-owned/);
+  assert.doesNotMatch(combined, /seven `\.codex/);
+  assert.doesNotMatch(combined, /fourteen `\.agents/);
+});

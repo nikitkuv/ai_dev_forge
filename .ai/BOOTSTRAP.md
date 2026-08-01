@@ -6,6 +6,8 @@ Initialize a consumer product repository for coordinated development with Codex 
 
 Bootstrap does not implement product features or initialize the AI Development Forge source repository itself.
 
+If the repository already has an active Forge `.ai/` and a newer bundle staged at `.ai-next/`, stop bootstrap and read `.ai-next/MIGRATE.md`. Bootstrap is only for first initialization or first adoption.
+
 ## Entry Modes
 
 Determine and record one mode before starting:

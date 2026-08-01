@@ -1,6 +1,6 @@
 ---
 name: forge-check-framework
-description: Perform a read-only conformance check of an initialized AI Development Forge project. Use after bootstrap, resume, adapter synchronization, migration, or suspected lifecycle and ownership inconsistencies.
+description: Use after bootstrap, resume, adapter synchronization, framework upgrade, or suspected lifecycle and ownership inconsistencies in an initialized Forge project.
 ---
 
 # Check Framework Conformance
@@ -16,7 +16,9 @@ Do not repair files during this check.
 - Verify required framework-owned files and project-owned state exist.
 - Detect obsolete framework-owned paths, unexpected overwrites, generated adapter edits, and ownership collisions.
 - Verify both platform adapters were generated from the same source hashes and project configuration.
-- Verify seven agents and fourteen skills exist on both platforms with matching IDs, tiers, role boundaries, and concrete model mappings.
+- Verify every manifest-declared agent and skill exists on both platforms with matching IDs, tiers, role boundaries, and concrete model mappings.
+- Permit additional project-owned agents and skills; verify they and other unlisted platform files are excluded from Forge ownership and remain unchanged.
+- Verify structured router overlays render into their intended routers without copying legacy framework instructions.
 - Verify root `AGENTS.md` and `CLAUDE.md` are each no more than 150 lines.
 - Verify the framework did not create default hooks, MCP configuration, or CLI dependencies.
 
