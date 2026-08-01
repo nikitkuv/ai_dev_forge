@@ -37,7 +37,7 @@ AI Development Forge — репозиторный фреймворк совме�
 7. **Нативные адаптеры, нейтральный источник.** Codex- и Claude-файлы генерируются из общих определений.
 8. **Минимум документов.** Для review, testing, fuzzing и ручной приёмки не создаются отдельные Markdown-отчёты.
 9. **Никаких скрытых переходов.** Изменение приоритета, scope, ADR, начало TASK и приёмка требуют явного решения пользователя.
-10. **Без обязательных внешних интеграций.** Superpowers, hooks и MCP не являются условиями работы core framework.
+10. **Без внешнего lifecycle layer.** Core framework самостоятельно определяет discovery, investigation, implementation, verification и gates; hooks и MCP не являются условиями его работы.
 
 ## 3. Структура репозитория
 
@@ -330,7 +330,6 @@ Communicate with me in Russian.
 - определяет незавершённую инициализацию;
 - собирает model mapping;
 - выбирает Git policy;
-- предлагает optional Superpowers integration;
 - предупреждает о возможной перезаписи пользовательских файлов.
 
 ### 9.3 Шесть этапов
@@ -431,24 +430,16 @@ Mandatory lifecycle не полагается только на implicit skill m
 
 Role-specific implementation/review/testing/fuzzing contracts находятся в agent definitions, а не дублируются отдельными skills.
 
-## 14. Superpowers
+## 14. Forge-native engineering methods
 
-Superpowers является optional integration:
+Engineering methods являются частью существующих lifecycle skills и role-specific agent contracts, а не отдельным слоем оркестрации:
 
-- выключен по умолчанию;
-- включается явно через `.ai/project.yaml`;
-- не устанавливается и не обновляется автоматически;
-- отсутствие Superpowers не блокирует framework;
-- agents не имеют жёсткой зависимости от Superpowers.
+- `forge-intake-feature` восстанавливает контекст, уточняет observable outcome и границы, предлагает альтернативы при материальном выборе и завершает discovery на соответствующем canonical approval gate;
+- `forge-intake-bug` воспроизводит дефект, собирает evidence, трассирует divergence, проверяет минимальные root-cause hypotheses и не меняет production/test files до отдельного Task Start;
+- `forge-run-task` и `implementer` выполняют focused RED/GREEN cycle для bug fixes и meaningful business behavior, с явным not-applicable rationale для documentation, generated artifacts и simple configuration;
+- `reviewer`, `tester`, `forge-run-task` и `forge-complete-task` требуют актуальные revision/fingerprint и fresh evidence перед переходом к user acceptance.
 
-При включении framework может использовать:
-
-- brainstorming при feature discovery;
-- systematic debugging при bug investigation;
-- test-driven development при подходящей implementation TASK;
-- verification before completion перед утверждением результатов.
-
-Core framework содержит достаточные собственные инструкции для работы без Superpowers.
+Forge lifecycle behavior определяется только bundled Forge skills, `.ai/framework/contracts.yaml` и generated agent definitions. Внешние process skills не добавляют gates, canonical или report artifacts, status transitions, agent routing или Git actions.
 
 ## 15. TASK lifecycle
 
@@ -764,7 +755,6 @@ Bootstrap, adapter sync, resume и migration проверяют:
 
 - Framework CLI и команды `forge` как executable.
 - Self-bootstrap framework repository: в нём не создаются project canonical documents, execution workspace или generated root adapters.
-- Автоматическая установка Superpowers.
 - Framework-provided hooks.
 - Framework-provided MCP servers.
 - Параллельные code-writing TASK.
@@ -782,7 +772,7 @@ Bootstrap, adapter sync, resume и migration проверяют:
 3. Одновременно генерируются нативные Codex и Claude adapters.
 4. Семь субагентов имеют согласованные models, permissions и contracts.
 5. Все lifecycle skills доступны на обеих платформах.
-6. Core workflow работает без Superpowers, hooks, MCP и CLI.
+6. Core workflow самостоятельно реализует engineering methods и работает без внешнего lifecycle layer, hooks, MCP и CLI.
 7. TASK хранит все task-level summaries без report-файлов.
 8. Epic проходит mandatory fuzzing и отдельный Epic Acceptance.
 9. Resume восстанавливает процесс только из repository state.

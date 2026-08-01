@@ -11,7 +11,7 @@ description: Initialize AI Development Forge in a new product repository from a 
 2. Confirm this is a consumer product repository. If it is the AI Development Forge source repository itself, stop; never self-bootstrap the framework repository.
 3. Inspect existing root files without overwriting unrelated user work.
 4. Record the user's communication language as the documentation language. Keep framework control text, IDs, statuses, paths, and commands in English.
-5. Prepare `.ai/project.yaml` with both Codex and Claude enabled, Superpowers disabled unless explicitly requested, concrete model mappings to be resolved before adapter generation, and the selected Git policy.
+5. Prepare `.ai/project.yaml` with both Codex and Claude enabled, concrete model mappings to be resolved before adapter generation, and the selected Git policy.
 
 ## Run the gated bootstrap
 
@@ -31,7 +31,7 @@ Require explicit user approval at every document, ADR, Epic Start, and other gat
 - Create canonical documents at the project root, never inside `.ai/`.
 - Write canonical content in the user's language by filling the provided templates; do not translate technical identifiers.
 - Treat `.ai/` as the framework bundle, `.ai/project.yaml`, `.ai/framework.lock`, and `.ai/custom/` as project-owned state, and generated adapters as replaceable derived outputs.
-- Create no default hooks, MCP configuration, framework CLI, or mandatory Superpowers dependency.
+- Create no default hooks, MCP configuration, framework CLI, or external lifecycle dependency.
 - Never create separate progress, research, review, test, fuzzing, security, or validation Markdown reports.
 
 Finish only after Step 06 passes and each required approval is recorded in canonical metadata.

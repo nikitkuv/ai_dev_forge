@@ -38,12 +38,11 @@ Bootstrap не запускается автоматически после ко
 > - язык canonical документов — русский;
 > - генерируем обе платформы — Codex CLI и Claude Code CLI;
 > - Git policy — `manual`;
-> - Superpowers — выключен;
 > - для каждой платформы нужны выбранные вами model mappings для tiers `strong`, `balanced` и `fast`; для Codex также нужен reasoning effort.
 >
 > Подтверждаете эти настройки и выбранные model IDs?
 
-> **Пользователь:** Да. Используй выбранные мной доступные модели для каждого tier. Git policy — `manual`, Superpowers пока не нужен.
+> **Пользователь:** Да. Используй выбранные мной доступные модели для каждого tier. Git policy — `manual`.
 
 **Внутреннее действие**
 
@@ -59,7 +58,6 @@ Bootstrap не запускается автоматически после ко
   platforms.codex.enabled: true
   platforms.claude.enabled: true
   models: конкретные mappings, подтверждённые пользователем
-  integrations.superpowers.enabled: false
   git.policy: manual
 ```
 
@@ -320,4 +318,3 @@ TaskFlow initialized
 ```
 
 ---
-

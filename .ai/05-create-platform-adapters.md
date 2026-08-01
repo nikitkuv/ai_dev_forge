@@ -31,7 +31,6 @@ Require:
 - `documentation_language` to match the user's communication language;
 - `framework_language: en`;
 - an explicit Git policy;
-- `integrations.superpowers.enabled: false` unless the user explicitly enables it;
 - concrete model mappings for every tier.
 
 Model mappings must provide:

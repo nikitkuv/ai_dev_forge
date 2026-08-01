@@ -161,7 +161,7 @@ Framework control layer написан на английском. Канонич
 
 Codex вызывает skill как `$forge-...`, Claude Code — как `/forge-...`. Mandatory lifecycle использует явный skill routing, а не только implicit matching.
 
-Superpowers — опциональное дополнение, выключенное по умолчанию. Оно не устанавливается и не обновляется автоматически.
+Feature discovery и root-cause investigation встроены в intake skills. Test-driven implementation и evidence-before-transition встроены в Task lifecycle и role-specific agent contracts. Внешние process skills не управляют gates, canonical artifacts, status transitions, agent routing или Git actions.
 
 ## TASK lifecycle
 

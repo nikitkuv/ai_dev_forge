@@ -82,12 +82,13 @@ Communicate with me in Russian.
 
 Сгенерированные adapters вручную не редактируются. Проектные дополнения хранятся в `.ai/custom/` и применяются через синхронизацию.
 
-## Опциональные интеграции
+## Внешняя инфраструктура
 
-- Superpowers выключен по умолчанию. Core workflow полностью работает без него.
 - Hooks не создаются автоматически.
 - MCP-конфигурация не создаётся автоматически.
 - Проект может добавить собственные hooks и MCP отдельно.
+
+Feature discovery, root-cause investigation, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Внешние process skills не управляют lifecycle проекта.
 
 ## Дальнейшая работа
 

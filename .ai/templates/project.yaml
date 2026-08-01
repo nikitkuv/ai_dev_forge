@@ -22,9 +22,5 @@ models:
 documentation_language: null
 framework_language: en
 
-integrations:
-  superpowers:
-    enabled: false
-
 git:
   policy: manual

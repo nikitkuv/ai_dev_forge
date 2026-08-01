@@ -9,10 +9,14 @@ description: Add a new feature, product change, or retained future idea to an in
 
 1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, active Epic plan, current TASK, and Git state.
 2. Clarify the desired observable outcome, users, scope, exclusions, acceptance direction, constraints, urgency, and dependencies.
-3. If a TASK is awaiting user acceptance, do not add new scope to it. Ask the user to choose:
+3. Separate confirmed user intent, repository evidence, assumptions, and unresolved decisions. Do not turn an inference into target behavior.
+4. If a material product or design choice remains, present two or three viable approaches with trade-offs and a recommendation. Keep the discussion proportional to the decision; do not create a parallel design artifact.
+5. If a TASK is awaiting user acceptance, do not add new scope to it. Ask the user to choose:
    - accept the current TASK and track the feature separately;
    - expand the active Epic through the Replan gate;
    - defer the idea.
+
+Discovery ends at the applicable canonical approval gate. Do not invoke implementation planning, create implementation files, activate an Epic, start a TASK, or commit discovery artifacts.
 
 ## Create the Backlog identity first
 

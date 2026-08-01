@@ -65,7 +65,7 @@ If no Epic was activated, report that bootstrap is planning-ready but paused bef
 - All rendered agents contain concrete tier mappings; Codex also contains reasoning effort.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
 - No unresolved renderer placeholder remains.
-- Superpowers is optional and its disabled state does not break any Forge workflow.
+- Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
 - The framework generated no hooks, MCP configuration, or CLI dependency. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 
 ## Simulate Recovery

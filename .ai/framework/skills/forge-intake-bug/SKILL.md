@@ -9,7 +9,13 @@ description: Classify and record a reported defect in an initialized Forge proje
 
 1. Read the reported behavior, relevant requirements, active Epic and TASK files, user-validation history, accepted code history, and Git state.
 2. Clarify reproduction conditions, expected behavior, actual behavior, impact, affected versions or environments, and available evidence.
-3. Do not change product requirements merely to match the defect. If expected behavior is genuinely undecided, pause bug intake and use the product-change workflow.
+3. Reproduce the problem consistently when local evidence permits. Capture exact commands, inputs, outputs, error messages, and environmental differences; if it is not reproducible, state the evidence gap instead of guessing.
+4. Inspect relevant recent changes, data flow, component boundaries, dependencies, and similar working behavior. Trace the first point where observed behavior diverges from expected behavior.
+5. Separate observations from hypotheses. Test one minimal root-cause hypothesis at a time using read-only inspection or reversible diagnostics, and record what supports or rejects it.
+6. State the supported root cause, or the narrowest unresolved evidence gap, before proposing remediation.
+7. Do not change product requirements merely to match the defect. If expected behavior is genuinely undecided, pause bug intake and use the product-change workflow.
+
+Investigation before scheduling is read-only with respect to production code and tests. Any diagnostic instrumentation that changes tracked files requires an approved TASK and separate Task Start gate.
 
 ## Classify before allocating an ID
 

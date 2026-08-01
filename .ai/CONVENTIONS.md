@@ -46,7 +46,9 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical documents, decisions, execution state, and project-specific hooks or MCP.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.claude/`, and `.agents/`.
 
-Generated platform adapters are derived files, not project-owned files. Do not edit them manually; put project-specific additions in `.ai/custom/`. Adapter synchronization and framework migration detect manual edits, show the regeneration diff, and require explicit confirmation before overwriting generated outputs. The framework provides no default hooks, MCP server, CLI, or required Superpowers integration.
+Generated platform adapters are derived files, not project-owned files. Do not edit them manually; put project-specific additions in `.ai/custom/`. Adapter synchronization and framework migration detect manual edits, show the regeneration diff, and require explicit confirmation before overwriting generated outputs. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
+
+Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not introduce additional lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
 
 ## Language rules
 

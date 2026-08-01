@@ -41,7 +41,7 @@ Explicitly invoke the matching lifecycle skill; do not rely only on implicit ski
 - Execution: `/forge-prepare-epic`, `/forge-resume-development`, `/forge-run-task`, `/forge-complete-task`, `/forge-complete-epic`.
 - Maintenance: `/forge-migrate-framework`, `/forge-security-audit`, `/forge-check-framework`, `/forge-sync-adapters`.
 
-Core workflow must work without Superpowers. Use optional Superpowers only when `.ai/project.yaml` enables them; never install or update them automatically.
+Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not add lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
 
 ## Subagents
 

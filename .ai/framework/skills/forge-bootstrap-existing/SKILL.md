@@ -33,7 +33,7 @@ Require explicit user approval at every numbered step and every document, ADR, R
 - Preview all canonical replacements and adapter collisions before writing.
 - Do not add discovered candidates to SPEC, architecture, or Backlog without a user decision.
 - Do not initialize execution unless explicitly requested.
-- Do not create default hooks, MCP configuration, CLI dependencies, or required Superpowers integration.
+- Do not create default hooks, MCP configuration, CLI dependencies, or an external lifecycle layer.
 - Keep canonical documents in the user's language and framework control files in English.
 - Create no separate report Markdown files.
 

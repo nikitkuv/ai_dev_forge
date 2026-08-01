@@ -9,8 +9,9 @@ description: Record explicit user acceptance for a verified Forge TASK, close an
 
 1. Require lifecycle `status: AWAITING USER ACCEPTANCE`.
 2. Confirm the implementation revision and fingerprint match current clean review and testing evidence.
-3. Confirm required manual verification was presented and any full-suite exception was explicitly accepted with its risk.
-4. Ask for explicit Task Acceptance. Do not infer acceptance from positive feedback that does not clearly accept the TASK.
+3. Confirm the recorded test evidence contains exact commands and current results for TASK-specific, affected, full-suite, and configured quality checks, or an explicitly accepted exception with its risk.
+4. Confirm required manual verification was presented and any full-suite exception was explicitly accepted with its risk.
+5. Ask for explicit Task Acceptance. Verification evidence proves eligibility for acceptance; it never constitutes acceptance. Do not infer acceptance from passing checks or positive feedback that does not clearly accept the TASK.
 
 If the user requests changes, record the feedback, return the TASK to `IN PROGRESS`, and use the full implementation-review-testing loop again.
 

@@ -25,9 +25,8 @@ If the user intent or repository type is ambiguous, ask. Never infer that an exi
    - documentation language;
    - both enabled platforms: Codex and Claude;
    - concrete `strong`, `balanced`, and `fast` model mappings for each platform, plus Codex reasoning effort;
-   - Git policy: `manual` or `auto_commit_after_acceptance`;
-   - optional Superpowers integration, disabled by default.
-5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, model mappings, Git policy, and optional integration so interrupted bootstrap can recover without conversation history. Step 05 revalidates this configuration before rendering.
+   - Git policy: `manual` or `auto_commit_after_acceptance`.
+5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, model mappings, and Git policy so interrupted bootstrap can recover without conversation history. Step 05 revalidates this configuration before rendering.
 6. Detect collisions with existing canonical files, project configuration, custom overlays, or generated adapters. Show the exact affected paths and request confirmation before overwriting project work.
 7. Create no framework hooks, MCP configuration, or CLI dependency. Existing project-owned hooks or MCP remain outside framework ownership.
 
