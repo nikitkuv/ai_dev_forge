@@ -1,70 +1,115 @@
-<!-- TEMPLATE: ARCHITECTURE.md — HOW the system is organized. Derived strictly from SPEC.md. -->
-<!-- Created in: Bootstrap Step 02 (System Design). No implementation details, no tasks. -->
+---
+document_type: architecture
+document_status: draft
+language: "<language-code>"
+created_at: "<YYYY-MM-DD>"
+approved_at:
+---
 
-# ARCHITECTURE.md — <Product Name>
+# <Product Name> — Architecture
 
-## System Overview
+## Document Contract
 
-<1 short paragraph: how the system is structured at a high level.>
+This document is the single source of truth for the approved target architecture. It explains how the system satisfies the drivers in `SPEC.md`, including architecture that is not implemented yet.
 
-## Design Goals
+It may define technical boundaries and decisions, but it must not contain task-level implementation steps, task status, completion percentages, or execution summaries. Significant long-lived or difficult-to-reverse decisions belong in ADR files.
 
-- <Goal>
+## System Context and Boundaries
+
+<Describe the system, its actors, external systems, responsibilities, and explicit boundary. Add a context diagram when useful.>
+
+## Requirement Drivers
+
+| Requirement | Architectural implication |
+| --- | --- |
+| <FR-/NFR-/BR-ID> | <Constraint or capability the architecture must provide> |
 
 ## Architectural Principles
 
-- <Principle>
+- <Principle and the behavior it requires from the design.>
 
-## High-Level System Architecture
+## Components and Boundaries
 
-<Diagram or textual description of major components and their relationships.>
+### <Component>
 
-## Components
+- **Responsibility:** <Owned capability.>
+- **Boundary:** <What is inside and outside.>
+- **Owned data:** <Data this component authoritatively manages.>
+- **Interfaces:** <Exposed commands, queries, APIs, or events.>
 
-- **<Component A>** — <responsibility>
-- **<Component B>** — <responsibility>
+## Dependency Rules
 
-## Component Responsibilities
+- <Allowed dependency direction and prohibited coupling.>
+- <How boundary violations are detected or prevented.>
 
-- <Component>: <boundary, single responsibility>
+## Data Ownership
+
+| Data or aggregate | Authoritative owner | Readers and writers | Retention or consistency rules |
+| --- | --- | --- | --- |
+| <Data> | <Component or external system> | <Access rules> | <Rules> |
 
 ## Data Flow
 
-<user → entry point → internal services → background → external>
+### <Flow name>
 
-## External Integrations
+1. <Source and input.>
+2. <Processing boundary.>
+3. <Persistence, event, or external call.>
+4. <Result and failure path.>
 
-- <LLM provider / DB / storage / auth / third-party API>
+## Interfaces and Events
 
-## Cross-Cutting Concerns
+### <Interface or event>
 
-- Auth, logging, monitoring, config, secrets, error handling, retries, rate limiting
+- **Owner:** <Component.>
+- **Consumers:** <Components or external systems.>
+- **Contract:** <Request/event and response/result shape.>
+- **Compatibility:** <Versioning and change policy.>
+- **Failure behavior:** <Timeout, retry, idempotency, rejection, or degradation rules.>
 
-## Deployment Overview
+## Trust Boundaries and Security
 
-<Where and how it runs.>
+- <Trust boundary, protected assets, actor or threat, and required control.>
+- <Authentication, authorization, secret handling, privacy, audit, or supply-chain constraint.>
 
-## Scalability Strategy
+## Runtime and Deployment
 
-<Expected scale, bottlenecks, horizontal scaling.>
+- **Runtime topology:** <Processes, services, workers, clients, or devices.>
+- **Environments:** <Development, test, staging, production, or other environments.>
+- **Deployment model:** <Hosting, packaging, rollout, configuration, and rollback.>
+- **External dependencies:** <Required infrastructure and operational ownership.>
 
-## Reliability Strategy
+## Reliability
 
-<Failure modes, fault tolerance, recovery, degradation.>
+- **Failure modes:** <Expected failures and impact.>
+- **Resilience:** <Timeouts, retries, idempotency, isolation, degradation, and recovery.>
+- **Continuity targets:** <Availability, recovery, durability, or data-loss targets linked to NFRs.>
 
-## Security Considerations
+## Observability
 
-<High-level only. Do not implement mechanisms here.>
+- **Signals:** <Logs, metrics, traces, events, or audit records.>
+- **Health and alerting:** <What is monitored and when action is required.>
+- **Diagnostic context:** <Correlation, identifiers, and privacy constraints.>
 
-## Risks & Trade-offs
+## Testing Strategy
 
-- <Risk / trade-off>
+- **Unit and component:** <Boundaries and important invariants.>
+- **Integration and contract:** <Interfaces, data stores, and external systems.>
+- **End-to-end:** <Critical user journeys.>
+- **Non-functional:** <Performance, reliability, security, fuzzing, or other required validation.>
 
-## Future Evolution
+## Migration and Compatibility
 
-<Direction the architecture may take.>
+- <Current-to-target migration, data changes, compatibility window, rollout, and rollback.>
 
-<!--
-Significant trade-offs in this document should be captured as ADRs
-in decisions/ (see DECISIONS.md template).
--->
+## Risks and Known Limitations
+
+| Risk or limitation | Impact | Mitigation or decision needed |
+| --- | --- | --- |
+| <Risk> | <Impact> | <Mitigation> |
+
+## ADR References
+
+| ADR | Decision | Affected components |
+| --- | --- | --- |
+| <ADR-NNN> | <Short decision title> | <Components> |

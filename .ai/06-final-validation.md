@@ -1,337 +1,99 @@
 # Bootstrap Step 06 — Final Validation
 
----
-
 ## Purpose
 
-The purpose of this step is to verify that the project foundation is complete, internally consistent, and ready for day-to-day development.
+Perform a read-only final conformance check and prove that a new orchestrator can recover the project state without session history.
 
-This is a validation step.
+Do not redesign, implement, silently repair canonical state, or create a validation report file.
 
-No new architecture, planning, or implementation should be introduced.
+## Required Inputs
 
-Only verify and, if necessary, correct inconsistencies within the bootstrap outputs.
+Read the framework manifest and contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, both generated adapter sets, custom overlays, and Git state.
 
----
+If an earlier step is incomplete, return to that step and its approval gate.
 
-# Inputs
+## Validate Canonical Documents
 
-Required:
+- Required root files exist for the completed bootstrap stage.
+- Root `README.md` contains confirmed setup/run/test orientation and links to canonical documents plus both platform routers, without becoming a source of product, architecture, or execution truth.
+- SPEC, ARCHITECTURE, BACKLOG, and plan frontmatter has valid `document_status`, language, dates, and approval metadata.
+- TASK frontmatter separates `definition_status` from lifecycle `status`.
+- ADR status uses the decision lifecycle and `DECISIONS.md` exactly reflects ADR frontmatter.
+- Approved documents contain no unresolved template placeholders.
+- Canonical documents use the project documentation language; technical IDs, statuses, paths, commands, and model IDs remain English.
+- SPEC owns target product behavior and contains no architecture, Tasks, or implementation status.
+- ARCHITECTURE owns target architecture and contains no task-level execution steps.
+- BACKLOG owns Epic priority/readiness/status and defect state, with no Task list or execution summaries.
+- Each plan owns Epic strategy and Task order but no Task lifecycle state.
+- Each TASK owns its lifecycle and compact implementation, review, testing, and user-validation evidence.
+- No separate framework-generated progress, checkpoint, review, testing, fuzzing, security, recovery, or validation Markdown report exists.
 
-- BOOTSTRAP.md
-- CONVENTIONS.md
-- SPEC.md
-- ARCHITECTURE.md
-- BACKLOG.md
-- execution/
-- CLAUDE.md
+## Validate IDs, References, and Decisions
 
-Optional:
+- `EPIC-*`, `TASK-*`, `BUG-*`, and `ADR-*` IDs are globally unique by type, zero-padded, allocated from the prior maximum, and never reused.
+- TASK numbering does not restart per Epic.
+- Every requirement, Epic, Task, Bug, ADR, architecture component, plan, and canonical path reference resolves or is explicitly marked as an approved external reference.
+- Every ADR index row points to one ADR and every ADR appears once in the generated index.
+- Accepted ADRs are not rewritten to change decisions; supersession links are consistent.
 
-- docs/
-- references/
-- DECISIONS.md
+## Validate Lifecycle and Execution
 
----
+- Every enum and transition matches `.ai/framework/contracts.yaml`.
+- Blocking is stored in `Blocked by` or `blocked_by`, never as a lifecycle status.
+- At most one Epic is `ACTIVE` and at most one code-writing TASK is `IN PROGRESS`.
+- Backlog Epic status matches its directory under `execution/active`, `execution/paused`, or `execution/completed`.
+- The active plan's ordered Task list exactly matches its TASK files and dependencies contain no cycle.
+- Review and testing revision/fingerprint evidence matches current implementation; code changes invalidate older evidence.
+- Fuzzing evidence is absent before required, or current for the accepted Epic revision.
+- Task Acceptance, next Task Start, Epic Start, Replan, ADR Approval, and Epic Acceptance remain separate explicit gates.
 
-# Core Principle
+If no Epic was activated, report that bootstrap is planning-ready but paused before Epic Start. Do not claim development readiness.
 
-> If an AI coding agent cannot reliably navigate from `CLAUDE.md` to the current development task without additional user guidance, the bootstrap process is incomplete.
+## Validate Ownership State
 
----
+- Framework-owned, project-owned, and generated paths match `.ai/framework/manifest.yaml`.
+- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical documents, ADRs, and execution state were not overwritten as framework release content.
+- Lock source hashes match the current neutral sources, renderers, configuration, and custom overlays.
+- Generated adapter hashes match current outputs or the collision is explicitly reported.
+- Obsolete framework-owned files, including the former Step 05, are absent.
 
-# Overview
+## Validate Both Platform Adapters
 
-This step consists of four phases.
+- Root `AGENTS.md` and `CLAUDE.md` both exist, act only as lifecycle routers, and are each no more than 150 lines.
+- Codex contains every manifest-declared agent under `.codex/agents/` and every manifest-declared skill under `.agents/skills/`.
+- Claude contains every manifest-declared agent under `.claude/agents/` and every manifest-declared skill under `.claude/skills/`.
+- Additional project-owned agents and skills are allowed, excluded from Forge parity counts, and unchanged.
+- Unlisted platform configuration, settings, commands, and hooks are preserved and remain outside Forge ownership.
+- All rendered agents contain concrete tier mappings; Codex also contains reasoning effort.
+- IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
+- No unresolved renderer placeholder remains; structured shared and platform overlays appear only in their intended routers.
+- Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
+- The framework generated no hooks, MCP configuration, or CLI dependency. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 
-1. Validate the project structure.
-2. Validate the AI workflow.
-3. Validate documentation consistency.
-4. Correct minor inconsistencies.
+## Simulate Recovery
 
-Do not redesign the project.
+Ignore conversation history and reconstruct:
 
-Do not introduce new functionality.
+1. project language and configuration from `.ai/project.yaml`;
+2. target behavior from `SPEC.md`;
+3. target architecture and decisions from `ARCHITECTURE.md` and ADRs;
+4. priority, readiness, Epic state, and defects from `BACKLOG.md`;
+5. active or paused Epic strategy and Task order from `plan.md`;
+6. current TASK and pending gate from TASK statuses and Workflow State;
+7. unfinished changes from Git status and diff;
+8. adapter provenance from `.ai/framework.lock`.
 
----
+The same repository state must yield the same current gate. Missing persisted agent evidence means that stage must be rerun.
 
-# Phase 1 — Structural Validation
+## Completion
 
-Verify that the repository contains all required artifacts.
+Return a concise pass/fail result in the conversation with exact paths and violated invariants for any failure. Do not create a Markdown report.
 
-Required project files:
+When every check passes:
 
-- README.md
-- CLAUDE.md
-- SPEC.md
-- ARCHITECTURE.md
-- BACKLOG.md
-- DECISIONS.md
+- mark no additional lifecycle state;
+- state that bootstrap is complete;
+- identify the first eligible TASK, which must remain `TODO`;
+- ask for a separate explicit Task Start authorization.
 
-Required directories:
-
-- execution/
-- execution/active/
-- execution/completed/
-- decisions/
-- docs/
-- references/
-- .claude/agents/
-
-Verify that:
-
-- naming follows the framework conventions (`EPIC-NNN-<name>`, `TASK-NNN-<name>.md`, `ADR-NNN-<name>.md`);
-- directory structure is correct;
-- no required artifact is missing.
-
----
-
-# Phase 2 — AI Workflow Validation
-
-Simulate a completely new AI coding session.
-
-Verify that the following navigation path is possible:
-
-```text
-CLAUDE.md
-&#x20;   ↓
-BACKLOG.md
-&#x20;   ↓
-Active Epic
-&#x20;   ↓
-plan.md
-&#x20;   ↓
-Current Task
-&#x20;   ↓
-Relevant Documentation
-&#x20;   ↓
-Source Code
-```
-
-Ensure that:
-
-- the active Epic is clearly identified;
-- the current task is unambiguous;
-- the next development action is obvious.
-
-If any navigation step is unclear, improve the documentation rather than adding explanations elsewhere.
-
----
-
-# Phase 3 — Consistency Validation
-
-Verify that every document has a single responsibility.
-
-## SPEC.md
-
-Verify that it contains:
-
-- product definition;
-- goals;
-- requirements;
-- constraints.
-
-Verify that it does not contain:
-
-- architecture;
-- implementation plans;
-- backlog;
-- tasks.
-
----
-
-## ARCHITECTURE.md
-
-Verify that it contains:
-
-- system structure;
-- architectural components;
-- responsibilities;
-- high-level data flow.
-
-Verify that it does not contain:
-
-- product requirements;
-- task breakdowns;
-- implementation details.
-
----
-
-## BACKLOG.md
-
-Verify that it contains:
-
-- project roadmap;
-- Epic list;
-- Epic priorities;
-- current active Epic.
-
-Verify that it does not contain:
-
-- implementation plans;
-- task lists;
-- execution progress.
-
----
-
-## execution/
-
-Verify that:
-
-- exactly one active Epic exists;
-- every active Epic contains a `plan.md`;
-- every task belongs to its Epic;
-- every task has a Status field with a valid value;
-- at most one task is `IN PROGRESS` per active Epic (current-task determinism);
-- task ordering matches the implementation plan.
-
----
-
-## DECISIONS.md + decisions/
-
-Verify that:
-
-- `DECISIONS.md` is a navigation index (no decision content);
-- every entry in `DECISIONS.md` points to an existing record in `decisions/`;
-- every record in `decisions/` is referenced from `DECISIONS.md`;
-- ADR files follow the canonical `ADR-NNN-<name>.md` naming and have a valid status.
-
----
-
-## .claude/agents/
-
-Verify that:
-
-- at least the Implementation, Validation, Review, and Fuzzing agents exist;
-- every agent file has valid frontmatter and a single responsibility;
-- CLAUDE.md does not inline agent definitions (it only points to this directory).
-
----
-
-## CLAUDE.md
-
-Verify that:
-
-- it acts as a navigation entrypoint (~90 lines);
-- it contains the project map;
-- it defines the orchestrator workflow (main agent delegates to subagents);
-- it contains a Context Gathering section;
-- it contains Code Quality rules (modular code, logging, error handling);
-- it does not duplicate other documentation;
-- it does not inline subagent definitions;
-- it does not reference removed agents (context, code-context).
-
----
-
-# Phase 4 — Correct Minor Inconsistencies
-
-If inconsistencies are found, apply only the minimum necessary corrections.
-
-Allowed corrections include:
-
-- fixing document structure;
-- aligning naming conventions;
-- removing duplicated information;
-- correcting navigation references;
-- synchronizing related documents.
-
-Do not:
-
-- redesign the architecture;
-- change the product scope;
-- introduce new Epics;
-- rewrite major documentation sections without user approval.
-
----
-
-# Validation Criteria
-
-After validation, the repository should satisfy the following principles.
-
-## 1. Navigability
-
-An AI coding agent can navigate from `CLAUDE.md` to the current task without external guidance.
-
----
-
-## 2. Determinism
-
-Given the same repository state:
-
-- the same active Epic is identified;
-- the same current task is selected;
-- the same workflow is followed.
-
----
-
-## 3. Separation of Concerns
-
-Each document has a single responsibility.
-
-- SPEC.md → What the product is
-- ARCHITECTURE.md → How the system is organized
-- BACKLOG.md → What should be built next
-- execution/ → What is currently being implemented
-- CLAUDE.md → How the AI navigates the repository
-
-Information should not be duplicated across layers.
-
----
-
-## 4. Minimal Cognitive Load
-
-Each artifact should:
-
-- have one clear purpose;
-- avoid duplicated information;
-- remain concise;
-- be easy to navigate.
-
----
-
-# Definition of Done
-
-This step is complete only if:
-
-- all required project artifacts exist;
-- the repository structure follows the framework;
-- documentation is internally consistent;
-- exactly one active Epic exists (or none if development has not started);
-- the execution workspace is valid;
-- the AI navigation workflow is unambiguous;
-- CLAUDE.md serves as a reliable entrypoint with orchestrator pattern;
-- the repository is ready for everyday development.
-
----
-
-# Outputs
-
-Update documentation only if required to resolve inconsistencies.
-
-Do not create new architectural artifacts.
-
-Do not modify source code.
-
----
-
-# Bootstrap Completion
-
-If all validation checks pass, report:
-
-> Bootstrap Complete — Repository Ready for Development
-
----
-
-# Post-Bootstrap State
-
-After successful bootstrap:
-
-- project planning is managed through `BACKLOG.md`;
-- active development is managed through `execution/`;
-- documentation evolves together with the project;
-- AI agents navigate the repository exclusively through `CLAUDE.md`;
-- future work follows the standard development workflow defined by this framework.
-
----
-
-# End of Step
+Do not start implementation, invoke the implementer, or commit automatically.

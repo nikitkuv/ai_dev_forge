@@ -1,326 +1,82 @@
 # Bootstrap Step 01 — Product Discovery
 
----
-
 ## Purpose
 
-The purpose of this step is to collaboratively build a complete and unambiguous understanding of the product before any architecture, planning or implementation begins.
+Create an approved `SPEC.md` that describes target product behavior in the user's communication language. This step discovers what the product must be; it does not design architecture or plan implementation.
 
-The output of this step is a **SPEC.md** document.
+Use `.ai/templates/SPEC.md` and the shared rules in `.ai/CONVENTIONS.md`. Do not reproduce or invent a competing document structure.
 
-This is a discovery process, not a documentation or design task.
-
-The goal is to eliminate ambiguity and define **what the product is**, not how it is built.
-
----
-
-# Inputs
+## Inputs
 
 Required:
 
-- BOOTSTRAP.md
-- CONVENTIONS.md
+- the user's initial description, linked product brief, or interview answers;
+- `.ai/CONVENTIONS.md`;
+- `.ai/templates/SPEC.md`.
 
-Optional:
+For an existing project, also inspect available code, tests, documentation, configuration, issue material, and Git state.
 
-- Existing repository
-- Existing documentation
-- README.md
-- Issues / tickets
-- Prior requirements
-- User notes
+## Select the Discovery Path
 
----
+### New Project
 
-# Core Principle
+1. Extract facts and open questions from the user's prompt or referenced product description.
+2. If the description is incomplete, conduct an iterative product interview.
+3. Ask a small, focused set of questions at a time and adapt later questions to earlier answers.
+4. Resolve product goals, users, journeys, scope, exclusions, observable requirements, domain invariants, constraints, assumptions, integrations, and success criteria.
 
-> Do not design the system. Understand the product.
+### Existing Project
 
----
+1. Analyze the repository before interviewing the user.
+2. Build an evidence summary of apparent behavior, supported workflows, constraints, missing coverage, contradictions, and unclear intent.
+3. Distinguish explicitly between:
+   - behavior confirmed by the user as desired target behavior;
+   - current implementation evidence that may be legacy or accidental;
+   - documentation claims;
+   - unresolved conflicts.
+4. Present conflicts between code, tests, documents, and user intent. Ask which behavior is authoritative.
+5. Treat discovered bugs, technical debt, missing tests, dependency risks, and architecture violations only as candidates. Do not add them to the product specification or Backlog without a user decision.
 
-# Overview
+Repository behavior is evidence, not product truth.
 
-This step consists of five phases:
+## Shared Discovery Rules
 
-1. Repository analysis
-2. Product discovery interview
-3. Ambiguity resolution
-4. Understanding validation
-5. SPEC.md generation
+- Describe target behavior, including approved behavior that is not implemented yet.
+- Keep requirements observable and acceptance criteria verifiable.
+- Use globally allocated `FR-*`, `NFR-*`, and `BR-*` identifiers.
+- Record unknowns as questions; never silently invent product intent.
+- Do not choose technologies, components, libraries, deployment, Tasks, Epics, estimates, or implementation status.
+- Keep framework instructions in English, but write the generated canonical document in the language recorded for the project.
 
-All phases are mandatory.
+## Draft and Approval Workflow
 
----
+1. Summarize the current understanding and unresolved questions.
+2. Iterate with the user until material ambiguities are resolved.
+3. Create or update `SPEC.md` from `.ai/templates/SPEC.md` with:
+   - `document_status: draft`;
+   - the project documentation language;
+   - target-state requirements and acceptance criteria;
+   - no architecture, backlog, tasks, or execution state.
+4. Show the user the material assumptions, scope boundaries, and requirements.
+5. Request explicit user approval of `SPEC.md`.
+6. Only after approval, set `document_status: approved` and `approved_at`.
 
-# Phase 1 — Repository Analysis
+Corrections keep the document in `draft` and repeat the approval workflow.
 
-Before asking questions:
+## Completion Gate
 
-Analyze existing materials:
+This step is complete only when:
 
-- README.md (if exists)
-- existing codebase (if exists)
-- existing documentation
-- existing issues / notes
+- product conflicts and unknowns are resolved or explicitly recorded;
+- all retained requirements are testable at the product boundary;
+- `SPEC.md` contains no architecture or implementation tracking;
+- the user has explicitly approved the document;
+- `SPEC.md` is marked `approved`.
 
-Identify:
+Do not start Step 02 automatically. Report the result and request a separate user confirmation.
 
-- apparent product purpose
-- existing functionality
-- implicit constraints
-- current system behavior (if any)
+## Output
 
-Do NOT create SPEC.md yet.
+- `SPEC.md`
 
-Goal: reduce unnecessary questions.
-
----
-
-# Phase 2 — Product Discovery Interview
-
-Conduct a structured but adaptive interview with the user.
-
-Do NOT ask exhaustive questionnaires.
-
-Only ask questions that improve understanding.
-
----
-
-## 2.1 Product Vision
-
-Clarify:
-
-- What problem does the product solve?
-- Why does it exist?
-- What value does it provide?
-- Why now?
-
----
-
-## 2.2 Target Users
-
-Identify:
-
-- primary users
-- secondary users
-- system operators
-- external systems (if relevant)
-
----
-
-## 2.3 Functional Requirements (WHAT the product does)
-
-Clarify behavior:
-
-- core functionality
-- expected workflows
-- user interactions
-- system behaviors
-
-Explicitly capture:
-
-- in-scope functionality
-- out-of-scope functionality
-
-Do NOT discuss implementation.
-
----
-
-## 2.4 Non-Functional Requirements
-
-Clarify constraints:
-
-- performance expectations
-- scalability requirements
-- reliability expectations
-- security requirements
-- observability needs
-- compliance constraints
-
-Only include what is relevant.
-
----
-
-## 2.5 External Dependencies
-
-Identify integrations:
-
-- APIs
-- databases
-- LLM providers
-- authentication systems
-- third-party services
-- messaging systems
-
----
-
-## 2.6 Constraints
-
-Capture constraints:
-
-- technical
-- business
-- legal
-- operational
-
----
-
-## 2.7 Success Criteria
-
-Define how success is measured:
-
-- user success metrics
-- business outcomes
-- system-level outcomes
-
----
-
-## 2.8 Existing System Behavior (if applicable)
-
-If a system already exists:
-
-- what currently works
-- what must not change
-- known limitations
-- pain points
-- desired evolution direction
-
----
-
-# Phase 3 — Ambiguity Resolution
-
-If any uncertainty exists:
-
-- ask follow-up questions
-- iterate until clarity is reached
-
-Rules:
-
-- never assume
-- never infer silently
-- never fabricate missing information
-
----
-
-# Phase 4 — Understanding Validation
-
-Before generating SPEC.md:
-
-Provide a structured summary:
-
-- Product overview
-- Target users
-- Core functionality
-- External integrations
-- Constraints
-- Success criteria
-
-Then ask the user:
-
-> “Is this understanding correct?”
-
-Do NOT proceed until user confirms.
-
-If corrections are provided:
-
-- update understanding
-- repeat validation
-
----
-
-# Phase 5 — Generate SPEC.md
-
-After confirmation, generate SPEC.md.
-
-SPEC.md defines:
-
-- what the product is
-- what problems it solves
-- who uses it
-- what behavior it provides
-- constraints
-- success criteria
-
----
-
-## SPEC.md MUST NOT contain:
-
-- system architecture
-- technology choices
-- implementation details
-- backlog or epics
-- task breakdown
-- development workflow
-- execution planning
-
----
-
-## Recommended Structure of SPEC.md
-
-- Product Overview
-- Vision
-- Goals
-- Scope
-- Out of Scope
-- Users
-- Functional Requirements
-- Non-Functional Requirements
-- External Integrations
-- Constraints
-- Assumptions
-- Success Criteria
-
-Additional sections allowed only if they improve clarity.
-
----
-
-# Restrictions
-
-During this step, strictly prohibit:
-
-- system design
-- architecture decisions
-- tech stack selection
-- backlog creation
-- planning implementation
-- task decomposition
-- coding
-- estimation
-- execution modeling
-
----
-
-# Definition of Done
-
-This step is complete only if:
-
-- product understanding is complete
-- ambiguities are resolved
-- user confirms understanding
-- SPEC.md is generated
-- SPEC.md contains only product-level information
-- SPEC.md contains no design or implementation details
-
----
-
-# Outputs
-
-Create or update:
-
-- SPEC.md
-
-No other files may be modified.
-
----
-
-# Next Step
-
-Recommend:
-
-Bootstrap Step 02 — System Design
-
-Do NOT proceed automatically.
-
-Wait for user confirmation.
-
----
+Do not modify other canonical documents in this step.

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Новый проект — AI Development Forge</title>
+  <style>
+    :root{--ink:#102a43;--muted:#627d98;--paper:#f6f9fc;--line:#cbd9e7;--accent:#106a8c;--accent2:#16a6a1;--gate:#d17800;--gatebg:#fff4df;--artifact:#e8f3fb}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Inter,Segoe UI,Arial,sans-serif}.page{max-width:1220px;margin:auto;padding:44px 24px 72px}.eyebrow{color:var(--accent);font-weight:800;letter-spacing:.12em;font-size:.72rem;text-transform:uppercase}h1{font-size:clamp(2rem,5vw,4rem);line-height:1.02;letter-spacing:-.055em;margin:.35rem 0 1rem}p.lead{max-width:760px;color:var(--muted);font-size:1.1rem}.legend{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0 42px}.legend span,.tag{border-radius:99px;padding:5px 10px;font-size:.75rem;font-weight:700;white-space:nowrap}.stage .tag{background:#e8f5f4;color:#075a57}.gate .tag{background:var(--gatebg);color:#8c5100}.artifact{background:var(--artifact);color:#075a8d}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;position:relative}.card{background:#fff;border:1px solid #dce6ef;border-radius:18px;padding:20px;box-shadow:0 8px 24px #102a4309;position:relative;min-height:176px}.card:not(:last-child):after{content:'→';position:absolute;right:-19px;top:49%;z-index:2;color:var(--accent);font-size:1.7rem;font-weight:300}.card h2{font-size:1.1rem;line-height:1.2;margin:12px 0 8px}.card p{font-size:.89rem;color:var(--muted);margin:0}.gate{border-color:#efc784;background:#fffaf1}.gate h2{color:#8c5100}.artifacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}.note{margin-top:20px;padding:16px 18px;border-left:4px solid var(--accent2);background:#fff;border-radius:0 12px 12px 0;color:var(--muted)}.branch{grid-column:2/5;border:1px dashed #9cb9c8;background:#faffff;min-height:auto}.branch:before{content:'↩';color:var(--accent2);font-size:1.3rem;margin-right:8px}@media(max-width:800px){.flow{grid-template-columns:1fr}.card:not(:last-child):after{content:'↓';right:auto;left:48%;top:auto;bottom:-27px}.branch{grid-column:auto}.page{padding:30px 18px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body><main class="page">
+  <div class="eyebrow">AI Development Forge · сценарий 01</div>
+  <h1>Новый проект:<br>от пустого репозитория к готовому Epic</h1>
+  <p class="lead">Bootstrap создаёт единый набор canonical-документов, но ни один следующий этап не стартует без отдельного решения пользователя.</p>
+  <div class="legend"><span class="stage tag">Рабочий этап</span><span class="gate tag">Пользовательский gate</span><span class="artifact tag">Создаваемый артефакт</span></div>
+  <section class="flow" aria-label="Поток инициализации нового проекта">
+    <article class="card"><span class="tag">Старт</span><h2>1. Явный bootstrap</h2><p>Пользователь копирует <b>.ai/</b> и просит инициализировать новый проект. Оркестратор читает правила и проверяет чистоту контекста.</p></article>
+    <article class="card gate"><span class="tag">Подтверждение</span><h2>2. Preflight и конфигурация</h2><p>Язык, платформы, модели и Git policy фиксируются до создания продуктовых документов.</p><div class="artifacts"><span class="tag artifact">.ai/project.yaml</span></div></article>
+    <article class="card"><span class="tag">Discovery</span><h2>3. Product Discovery</h2><p>Интервью превращает цели в наблюдаемые FR, измеримые NFR и бизнес-инварианты.</p><div class="artifacts"><span class="tag artifact">SPEC.md · draft</span></div></article>
+    <article class="card gate"><span class="tag">Подтверждение</span><h2>4. SPEC Approval</h2><p>Только явное одобрение делает <b>SPEC.md</b> источником истины о поведении продукта.</p><div class="artifacts"><span class="tag artifact">SPEC.md · approved</span></div></article>
+    <article class="card"><span class="tag">Design</span><h2>5. System Design</h2><p>Архитектурное интервью задаёт границы, данные, интерфейсы, надёжность и стратегию тестирования.</p><div class="artifacts"><span class="tag artifact">ARCHITECTURE.md</span><span class="tag artifact">ADR</span><span class="tag artifact">DECISIONS.md</span></div></article>
+    <article class="card gate"><span class="tag">Подтверждение</span><h2>6. ADR и Architecture Approval</h2><p>Долгоживущие решения принимаются по одному; затем утверждается архитектура целиком.</p></article>
+    <article class="card"><span class="tag">Planning</span><h2>7. Release Planning</h2><p>Требования становятся Epic roadmap с приоритетами, зависимостями и уровнем готовности.</p><div class="artifacts"><span class="tag artifact">BACKLOG.md</span></div></article>
+    <article class="card gate"><span class="tag">Подтверждение</span><h2>8. Plan Approval</h2><p>Пользователь утверждает стратегию и состав задач. Затем адаптеры синхронизируются и проходят проверку.</p><div class="artifacts"><span class="tag artifact">Codex + Claude adapters</span><span class="tag artifact">framework.lock</span></div></article>
+    <article class="card"><span class="tag">Готово</span><h2>9. Validation → READY</h2><p>Проверки и preflight фиксируют согласованное состояние. Epic ещё не активен: нужен отдельный Epic Start.</p></article>
+    <aside class="card branch"><b>Пунктирная ветвь: до любого approval</b> — замечания пользователя возвращают соответствующий draft на уточнение. Одобрение одного gate не заменяет следующий.</aside>
+  </section>
+  <p class="note"><b>Ключевое правило:</b> документы создают память процесса, а не разрешение писать код. Epic и первая TASK запускаются только отдельными явными командами.</p>
+</main></body></html>

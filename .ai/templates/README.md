@@ -1,33 +1,43 @@
-# Templates
+# <Product Name>
 
-Canonical, fill-in templates for every artifact the bootstrap produces.
-They exist so bootstrap output is **reproducible** (a stated framework goal):
-the agent fills a form rather than inventing structure each run.
+<Briefly explain what the product does and who it is for. Keep detailed product behavior in `SPEC.md`.>
 
-## Usage
+## Setup
 
-During bootstrap, copy the relevant template to its target location and fill
-the `<placeholders>`. Remove placeholders and comments you do not need.
+### Prerequisites
 
-| Template | Becomes | Created in |
-|----------|---------|-----------|
-| `SPEC.md` | `SPEC.md` | Step 01 |
-| `ARCHITECTURE.md` | `ARCHITECTURE.md` | Step 02 |
-| `DECISIONS.md` | `DECISIONS.md` (index) | Step 02 |
-| `ADR.md` | `decisions/ADR-NNN-<name>.md` | Step 02, runtime |
-| `BACKLOG.md` | `BACKLOG.md` | Step 03 |
-| `plan.md` | `execution/active/EPIC-NNN-<name>/plan.md` | Step 04 |
-| `TASK.md` | `.../tasks/TASK-NNN-<name>.md` | Step 04 |
-| `CLAUDE.md` | `CLAUDE.md` (~90 lines) | Step 05 |
-| `agents/implementation.md` | `.claude/agents/implementation.md` | Step 05 |
-| `agents/validation.md` | `.claude/agents/validation.md` | Step 05 |
-| `agents/review.md` | `.claude/agents/review.md` | Step 05 |
-| `agents/fuzzing.md` | `.claude/agents/fuzzing.md` | Step 05 |
-| `agents/documentation.md` | `.claude/agents/documentation.md` | Step 05 (optional) |
-| `agents/agent.md` | `.claude/agents/<custom>.md` (skeleton for extra agents) | Step 05, on demand |
+- <Required runtime, tool, service, or account and its supported version.>
 
-## Conventions baked in
+### Installation
 
-- Canonical naming: `EPIC-NNN-<name>`, `TASK-NNN-<name>.md`, `ADR-NNN-<name>.md`
-- Status vocabularies (Epic / Task / ADR) — see `../CONVENTIONS.md`
-- Single responsibility per artifact; no cross-layer duplication
+```text
+<Reproducible installation commands>
+```
+
+### Configuration
+
+1. <Copy or create the local configuration file.>
+2. <Set required environment variables or secrets without committing secret values.>
+
+## Run
+
+```text
+<Command that starts the product locally>
+```
+
+## Test
+
+```text
+<Primary command that runs the project test suite>
+```
+
+## Project Documentation
+
+- [Product specification](SPEC.md) — target product behavior.
+- [Architecture](ARCHITECTURE.md) — target system architecture.
+- [Backlog](BACKLOG.md) — Epic priority, readiness, lifecycle, and defects.
+- [Decision index](DECISIONS.md) — navigation to authoritative ADR files.
+- [Codex instructions](AGENTS.md) — Codex CLI project workflow.
+- [Claude Code instructions](CLAUDE.md) — Claude Code project workflow.
+
+This README is operational orientation, not a canonical source for product requirements, architecture, execution status, or architectural decisions. Follow the linked canonical documents when information differs.

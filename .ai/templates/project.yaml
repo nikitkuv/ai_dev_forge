@@ -1,0 +1,26 @@
+schema_version: 1
+framework:
+  name: ai-dev-forge
+  version: 3.0.0
+
+platforms:
+  codex:
+    enabled: true
+  claude:
+    enabled: true
+
+models:
+  codex:
+    strong: {model: null, reasoning_effort: null}
+    balanced: {model: null, reasoning_effort: null}
+    fast: {model: null, reasoning_effort: null}
+  claude:
+    strong: {model: null}
+    balanced: {model: null}
+    fast: {model: null}
+
+documentation_language: null
+framework_language: en
+
+git:
+  policy: manual

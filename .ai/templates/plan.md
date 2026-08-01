@@ -1,48 +1,80 @@
-<!-- TEMPLATE: execution/active/EPIC-NNN-<name>/plan.md — HOW this Epic is executed. -->
-<!-- Created in: Bootstrap Step 04. Stable even if implementation details change. -->
+---
+document_type: epic_plan
+document_status: draft
+language: "<language-code>"
+epic_id: EPIC-NNN
+created_at: "<YYYY-MM-DD>"
+approved_at:
+---
 
-# Plan — <EPIC-NNN — Name>
+# EPIC-NNN — <Epic Name> — Execution Plan
 
-## Epic Overview
+## Document Contract
 
-<What this Epic delivers and why.>
+This plan is the single source of truth for the Epic strategy, ordered Task sequence, acceptance criteria, quality gates, fuzzing summary, and Epic-level user-validation history.
 
-## Objective
+Lifecycle state for each individual work item belongs only in its corresponding TASK file.
 
-<The single outcome this Epic achieves.>
+Epic priority, readiness, blocking metadata and lifecycle status belong only in `BACKLOG.md`.
+
+## Epic Objective
+
+<State the single product or system objective of this Epic.>
 
 ## Expected Outcome
 
-<Observable result when the Epic is done.>
+<Describe the observable result after the Epic is accepted.>
 
 ## Dependencies
 
-- <Upstream Epic / external system / decision (ADR-NNN)>
+| Dependency | Type | Why required | Resolution condition |
+| --- | --- | --- | --- |
+| <EPIC-/ADR-/external dependency> | <product/architecture/external> | <Reason> | <Condition> |
 
 ## Risks
 
-- <Risk + mitigation>
+| Risk | Likelihood and impact | Mitigation | Trigger or owner |
+| --- | --- | --- | --- |
+| <Risk> | <Assessment> | <Mitigation> | <Signal or owner> |
 
 ## Implementation Strategy
 
-<High-level approach. Not per-line code.>
+<Describe the high-level delivery approach, boundaries, sequencing rationale, and relevant architecture. Do not include line-by-line coding instructions or execution state.>
 
-## Task Sequence
+## Ordered Task Sequence
 
-| Task | Title | Status |
-|------|-------|--------|
-| TASK-001 | <title> | TODO |
-| TASK-002 | <title> | TODO |
-| TASK-003 | <title> | TODO |
+| Order | Task | Intended outcome | Depends on |
+| --- | --- | --- | --- |
+| 1 | TASK-NNN — <Title> | <One independently verifiable outcome> | — |
+| 2 | TASK-NNN — <Title> | <One independently verifiable outcome> | TASK-NNN |
 
-<!-- Task Status: TODO | IN PROGRESS | DONE | BLOCKED | CANCELLED -->
-<!-- Invariant: at most ONE task is IN PROGRESS at a time. -->
+Changing Task scope, order, or composition after plan approval requires the Replan gate defined in `.ai/framework/contracts.yaml`.
 
-## Epic Definition of Done
+## Epic Acceptance Criteria
 
-- <Criterion 1>
-- <Criterion 2>
+- [ ] <Observable criterion linked to requirements.>
 
-## Current Status
+## Mandatory Quality Gates
 
-<What is happening right now. Reference the current task.>
+- [ ] Every Task completed its implementation, independent review, full testing, and explicit Task Acceptance gates.
+- [ ] Configured lint, typecheck, build, and project-wide test commands passed, or an explicitly accepted exception records the risk.
+- [ ] Requirement, architecture, ADR, Backlog, plan, and Task references are consistent.
+- [ ] Epic fuzzing produced an accepted outcome under `.ai/framework/contracts.yaml`.
+- [ ] Epic-level manual validation is recorded below.
+
+## Fuzzing Summary
+
+- **Outcome:**
+- **Targets and harnesses:** <Targets exercised and harness identifiers.>
+- **Tools, seeds, and budgets:** <Reproducible configuration.>
+- **Crashing inputs and reproduction:** <Stored locations and reproduction result, or —.>
+- **Findings and disposition:** <Compact summary and linked remediation Tasks, or —.>
+- **Not-applicable rationale:** <Why no suitable target exists, or —.>
+- **Alternative risk coverage:** <Required when outcome is NOT APPLICABLE, otherwise —.>
+- **Last run:** <YYYY-MM-DD or pending>
+
+## Epic User Validation History
+
+| Date | Validator | Scope | Result | Feedback or follow-up |
+| --- | --- | --- | --- | --- |
+| <YYYY-MM-DD> | <User or role> | <What was validated> | <pending/accepted/changes requested> | <Compact notes or TASK reference> |

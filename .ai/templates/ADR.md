@@ -1,31 +1,60 @@
-<!-- TEMPLATE: decisions/ADR-NNN-<short-name>.md — one atomic decision record. -->
-<!-- Created in: Bootstrap Step 02 (first architectural decisions) and during runtime. -->
-<!-- Single responsibility + Minimal Context: an agent reads only this file. -->
+---
+id: ADR-NNN
+title: "<Decision title>"
+status: PROPOSED
+created_at: "<YYYY-MM-DD>"
+decided_at:
+supersedes: []
+superseded_by:
+related_requirements: []
+related_components: []
+---
 
-# ADR-NNN — <Decision title>
-
-- **Status:** Proposed | Accepted | Superseded | Deprecated | Rejected
-- **Date:** <YYYY-MM-DD>
-- **Superseded by:** <ADR-NNN or — >
+# ADR-NNN — <Decision Title>
 
 ## Context
 
-<Why is this decision needed? What forces are at play? Reference SPEC.md / ARCHITECTURE.md.>
+<Explain the problem, relevant constraints, current state, and why a decision is required. Link rather than duplicate canonical product or architecture content.>
+
+## Decision Drivers
+
+- <Requirement, quality attribute, constraint, risk, or operational force.>
 
 ## Decision
 
-<What we decided. Be concrete and unambiguous.>
+<State the chosen direction precisely, including its scope and boundaries.>
 
 ## Consequences
 
-- <Positive consequence>
-- <Negative / trade-off>
-- <New work introduced>
+### Positive
+
+- <Expected benefit.>
+
+### Negative or Accepted Trade-offs
+
+- <Cost, limitation, risk, or operational burden.>
+
+### Follow-up Implications
+
+- <Required architectural, migration, documentation, or backlog implication without tracking task status here.>
 
 ## Alternatives Considered
 
-### <Alternative A>
-<Why not chosen.>
+### <Alternative>
 
-### <Alternative B>
-<Why not chosen.>
+- **Description:** <Option considered.>
+- **Why not selected:** <Reason based on the decision drivers.>
+
+## Migration and Compatibility
+
+<Describe transition, compatibility, data migration, rollout, and rollback implications. Use “Not applicable” with a reason when appropriate.>
+
+## Verification
+
+- <Evidence or observable condition that will demonstrate the decision works as intended.>
+
+## References
+
+- <SPEC requirement, ARCHITECTURE section, another ADR, or external authoritative reference.>
+
+An `ACCEPTED` ADR is not rewritten to change the decision. Create a new ADR, reference the old ID in `supersedes`, and update `superseded_by` on the old record.

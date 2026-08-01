@@ -1,118 +1,100 @@
-# AI Dev Forge
+# AI Development Forge v3
 
----
+AI Development Forge — documentation-first фреймворк для совместной разработки с кодовыми агентами, прежде всего Codex CLI и Claude Code CLI.
 
-# 🧠 Что это
+Фреймворк хранит продуктовый и execution-контекст в репозитории, использует сильную основную модель как оркестратор и генерирует нативных субагентов и skills для обеих платформ.
 
-Это AI-first фреймворк для разработки программного обеспечения.
+## Что создаётся
 
-Он превращает любой проект в структурированный процесс разработки, где:
+После полного bootstrap целевой проект содержит:
 
-- задачи управляются через Epics и Tasks
-- AI работает по строго определённому workflow
-- весь контекст проекта формализован в документах
-- разработка идёт детерминированно, а не “в голове”
+```text
+README.md
+AGENTS.md
+CLAUDE.md
+SPEC.md
+ARCHITECTURE.md
+BACKLOG.md
+DECISIONS.md
+decisions/ADR-NNN-<name>.md
+execution/{active,paused,completed}/
+.ai/
+.codex/agents/
+.agents/skills/
+.claude/agents/
+.claude/skills/
+```
 
----
+`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются источниками истины. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
 
-# 📦 Основные компоненты
+## Установка
 
-- `.ai/` — bootstrap система (инициализация проекта)
-- `CLAUDE.md` — навигация для AI
-- `SPEC.md` — описание продукта (что строим)
-- `ARCHITECTURE.md` — архитектура системы (как устроено)
-- `BACKLOG.md` — список Epics (что будет сделано)
-- `execution/` — текущее выполнение задач
-- `RUNBOOK.md` — инструкция для разработчика (как пользоваться системой)
+1. Скопируйте папку `.ai/` из этого репозитория в корень целевого проекта.
+2. Откройте проект в Codex CLI или Claude Code CLI.
+3. Отправьте один из bootstrap-промптов ниже.
+4. Отвечайте на вопросы и подтверждайте каждый из шести этапов отдельно.
 
----
+Исполняемого CLI у фреймворка нет: установка выполняется копированием `.ai/` и инструкцией агенту.
 
-# 🚀 Быстрый старт
+Не запускайте bootstrap внутри самого репозитория `ai_dev_forge`: он хранит исходный framework bundle, а не является проектом-потребителем.
 
 ## Новый проект
 
-1. Открой AI агент (Claude Code)
-2. Напиши:
+```text
+Read .ai/BOOTSTRAP.md and initialize this repository as a new project.
+Create both Codex and Claude Code adapters.
+Communicate with me in Russian and start the product interview.
+```
 
-Запусти bootstrap процесс согласно .ai/BOOTSTRAP.md
-
-⚠️ Bootstrap — **интерактивный** процесс. Агент будет задавать уточняющие вопросы и после каждого из 6 шагов спрашивать подтверждение. Не запускай его «в фоне».
-
----
-
-# 🤖 Совместимость с другими агентами
-
-Точка входа по умолчанию — `CLAUDE.md` (для Claude Code). Для других AI‑агентов используется тот же набор артефворков, меняется только файл навигации:
-
-| Агент | Файл навигации |
-|-------|----------------|
-| Claude Code | `CLAUDE.md` |
-| Cursor | `.cursor/rules/` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Универсальный | `AGENTS.md` |
-
-При bootstrap укажи целевого агента — навигация будет сгенерирована в нужном файле, структура SPEC/ARCHITECTURE/BACKLOG/execution остаётся общей.
-
----
+Если описание продукта уже существует, вставьте его в сообщение или приложите/укажите файл. Если описания недостаточно, агент проведёт итеративное product interview.
 
 ## Существующий проект
 
-1. Скопируй `.ai/` в репозиторий
-2. Запусти bootstrap
-3. AI проанализирует код и построит систему поверх него
-
-### Добавление `.ai/` через git (рекомендуемый способ)
-
-Забираем только папку `.ai` из репозитория фреймворка в свой проект:
-
-```bash
-# в папке вашего проекта
-git remote add forge https://github.com/nikitkuv/ai_dev_forge.git
-git fetch forge
-
-# забираем ТОЛЬКО папку .ai в рабочий каталог
-git checkout forge/main -- .ai
-
-git add .ai
-git commit -m "Add .ai framework from ai_dev_forge"
-
-# если обновления больше не нужны — убираем remote
-git remote remove forge
+```text
+Read .ai/BOOTSTRAP.md and initialize this existing repository.
+Analyze the current code and documentation before starting the interview.
+Create both Codex and Claude Code adapters.
+Communicate with me in Russian.
 ```
 
-Чтобы позже подтянуть обновления фреймворка — оставьте remote и повторите `git checkout forge/main -- .ai`.
+Код, тесты и прежняя документация рассматриваются как evidence, а не как автоматическая продуктовая истина. Конфликты показываются пользователю; найденные баги и technical debt попадают в Backlog только после подтверждения.
 
----
+## Шесть этапов bootstrap
 
-# ⚙️ Как работает система
+1. Product Discovery → утверждённый `SPEC.md`.
+2. System Design → `ARCHITECTURE.md`, ADR и генерируемый `DECISIONS.md`.
+3. Release Planning → `BACKLOG.md` с Epic Roadmap и Defect Queue.
+4. Prepare Workspace → утверждённый Epic plan и TASK-файлы, затем отдельный Epic Start.
+5. Create Platform Adapters → оба native adapter-набора и `.ai/framework.lock`.
+6. Final Validation → проверка структуры, lifecycle, ownership, parity и восстановления без истории сессии.
 
-Разработка всегда идёт по цепочке:
+Первая TASK после bootstrap остаётся `TODO` и требует отдельного Task Start.
 
-SPEC → ARCHITECTURE → BACKLOG → execution → code
+## Нативные адаптеры
 
----
+| Codex CLI | Claude Code CLI |
+| --- | --- |
+| `AGENTS.md` | `CLAUDE.md` |
+| `.codex/agents/*.toml` | `.claude/agents/*.md` |
+| `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-# 🧭 Работа с AI
+Нейтральные определения находятся в `.ai/framework/`. Конкретные модели для tiers `strong`, `balanced` и `fast` задаются один раз в `.ai/project.yaml`; генератор записывает их в нативные agent-файлы обеих платформ.
 
-После bootstrap всегда начинай с:
+Сгенерированные adapters вручную не редактируются. Проектные дополнения хранятся в `.ai/custom/` и применяются через синхронизацию.
 
-Продолжи работу по текущему BACKLOG и active Epic
+## Внешняя инфраструктура
 
----
+- Hooks не создаются автоматически.
+- MCP-конфигурация не создаётся автоматически.
+- Проект может добавить собственные hooks и MCP отдельно.
 
-# 🐛 Фичи и баги
+Feature discovery, root-cause investigation, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Внешние process skills не управляют lifecycle проекта.
 
-Все изменения попадают в BACKLOG:
+## Дальнейшая работа
 
-- новые фичи → Epics / Tasks
-- баги → Tasks внутри Epic
+- [Архитектура фреймворка](FRAMEWORK.md)
+- [Операционные сценарии](RUNBOOK.md)
+- [Подробные пошаговые сценарии и диалоги](FRAMEWORK_WORKFLOWS.md)
+- [Утверждённый подробный дизайн](FRAMEWORK_DESIGN.md)
 
----
-
-# 🟢 Итог
-
-Этот фреймворк позволяет:
-
-- управлять разработкой через структуру, а не память
-- сохранять полный контекст проекта
-- работать с AI как с детерминированным инженером
+Для продолжения разработки попросите основного агента прочитать соответствующий root router и восстановить состояние из `BACKLOG.md`, execution-файлов и Git.

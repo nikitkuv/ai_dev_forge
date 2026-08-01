@@ -1,16 +1,12 @@
-<!-- TEMPLATE: DECISIONS.md — ADR INDEX (navigation only). No decision content here. -->
-<!-- Created in: Bootstrap Step 02. Grows during runtime. -->
-<!-- Individual records live in decisions/ADR-NNN-<name>.md (see ADR.md template). -->
+<!-- GENERATED FILE: navigation only. ADR frontmatter is authoritative. -->
+<!-- Regenerate this table from decisions/ADR-*.md; do not add decision content here. -->
 
-# DECISIONS.md — Decision Log Index
+# Decision Index
 
-| ID | Title | Status | Date | Record |
-|----|-------|--------|------|--------|
-| ADR-001 | <short title> | Accepted | <YYYY-MM-DD> | [decisions/ADR-001-<name>.md](decisions/ADR-001-<name>.md) |
+| ID | Title | Status | Date | Supersedes | Record |
+| --- | --- | --- | --- | --- | --- |
+| ADR-001 | <Decision title> | PROPOSED | <YYYY-MM-DD> | — | [ADR-001](decisions/ADR-001-<short-name>.md) |
 
-<!--
-Status vocabulary: Proposed | Accepted | Superseded | Deprecated | Rejected
-When adding an ADR:
-1. Create decisions/ADR-NNN-<short-name>.md from the ADR.md template.
-2. Add one row to this index.
--->
+Allowed lifecycle values are defined only in `.ai/framework/contracts.yaml`.
+
+An ADR file is the single source of truth for its decision. This generated index is disposable navigation and must never override ADR metadata or content.

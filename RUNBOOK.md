@@ -1,274 +1,233 @@
-# AI Dev Forge — Developer Workflow Guide
+# AI Development Forge v3 — Runbook
 
----
+Этот runbook описывает повседневные действия. Детальные алгоритмы находятся в skills; основной агент должен явно выбрать нужный skill и сохранить результат в canonical файлах.
 
-# 🧠 Общая идея
+## Вызов skills
 
-Этот фреймворк превращает разработку в управляемый AI-процесс:
+| Действие | Codex CLI | Claude Code |
+| --- | --- | --- |
+| Явный skill | `$forge-skill-name` | `/forge-skill-name` |
+| Root router | `AGENTS.md` | `CLAUDE.md` |
 
-- SPEC = что строим
-- ARCHITECTURE = как устроено
-- BACKLOG = что делаем
-- execution = что делаем сейчас
-- CLAUDE.md = навигация для AI
+Можно формулировать запрос обычным языком. Оркестратор всё равно должен явно маршрутизировать обязательный lifecycle через соответствующий Forge skill.
 
-Все изменения в проекте проходят через BACKLOG и execution, а не напрямую через код.
+## 1. Новый проект
 
----
-
-# 🚀 1. Новый проект (с нуля)
-
-## 1.1 Если есть идея в виде одного предложения
-
-Ты начинаешь так:
-
-👉 просто описываешь идею в одном предложении
-
-Пример:
-
-"Я хочу сделать AI ассистента для поддержки клиентов банка"
-
----
-
-### Что делает AI:
-
-1. проводит Product Discovery
-2. задаёт уточняющие вопросы
-3. расширяет понимание идеи до полноценного SPEC.md
-4. формирует ARCHITECTURE.md
-5. создаёт BACKLOG.md (Epics)
-6. подготавливает execution/
-7. создаёт CLAUDE.md
-
----
-
-### Результат:
-
-У тебя появляется:
-
-- полностью описанный продукт
-- архитектура
-- список Epics
-- первый рабочий Epic с задачами
-
----
-
-## 1.2 Если идея уже расписана и находится в файле
-
-Ты начинаешь так:
-
-👉 передаёшь файл с описанием продукта (или вставляешь его в контекст)
-
-Пример:
-
-- PRD.md
-- idea.md
-- notes.md
-- any product description document
-
----
-
-### Что делает AI:
-
-1. анализирует файл с идеей
-2. извлекает продуктовую сущность (что строим и зачем)
-3. проводит уточнение недостающих деталей (если нужно)
-4. формирует SPEC.md на основе документа
-5. создаёт ARCHITECTURE.md
-6. создаёт BACKLOG.md (Epics)
-7. подготавливает execution/
-8. создаёт CLAUDE.md
-
----
-
-### Результат:
-
-Фреймворк превращает "черновик идеи" в:
-
-- структурированный SPEC
-- архитектуру
-- roadmap (Epics)
-- первый executable Epic
-
----
-
-## 1.3 Если идеи нет (пустой старт)
-
-Ты говоришь:
-
-"У меня нет чёткой идеи, помоги сформировать продукт"
-
----
-
-AI делает:
-
-- задаёт вопросы
-- предлагает варианты продукта
-- помогает сформировать SPEC.md итеративно
-
----
-
-# 🏗 2. Существующий проект (есть код)
-
-## Как подключить фреймворк
-
-Ты говоришь:
-
-"Подключи фреймворк к существующему репозиторию"
-
----
-
-## Что делает AI:
-
-### 1. Анализирует код
-- структуру проекта
-- текущую архитектуру
-- существующие функции
-
----
-
-### 2. Формирует SPEC.md
-- описывает текущее состояние системы
-- без изменения кода
-
----
-
-### 3. Создаёт ARCHITECTURE.md
-- описывает как система устроена сейчас
-
----
-
-### 4. Создаёт BACKLOG.md
-- формирует Epics на основе текущего состояния + улучшений
-
----
-
-### 5. Создаёт execution/
-- первый активный Epic
-- план
-- задачи
-
----
-
-### 6. Создаёт CLAUDE.md
-- навигация для AI + orchestrator pattern + правила кодирования
-
----
-
-## Результат:
-
-Старый проект превращается в управляемую систему задач.
-
----
-
-# 🐛 3. Новые идеи и баги
-
-## Как добавлять новые изменения
-
-Ты НЕ редактируешь BACKLOG вручную.
-
-Ты просто пишешь:
-
-👉 "Добавь новую фичу: ..."
-👉 "Зафиксируй баг: ..."
-
----
-
-## Что делает AI:
-
-### 1. Классификация
-Определяет тип:
-
-- Feature
-- Bug
-- Tech debt
-
----
-
-### 2. Размещение в системе
-
-AI решает:
-
-- в какой Epic добавить
-- или нужно ли создать новый Epic
-
----
-
-### 3. Обновление BACKLOG.md
-
-- добавляет или обновляет Epic
-- фиксирует приоритет
-- обновляет статус
-
----
-
-### 4. Обновление execution (если нужно)
-
-Если Epic активен:
-
-- создаёт TASK.md
-- или обновляет существующие задачи
-
----
-
-# 🐞 Важно про баги
-
-## Да — баги живут в BACKLOG
-
-Баг = полноценная задача разработки.
-
----
-
-## Как выглядит структура:
-
-Epic: Authentication
-  - Feature: Login with OAuth
-  - Bug: Fix token refresh issue
-
----
-
-## Почему так сделано:
-
-- баги = часть roadmap
-- они конкурируют с фичами по приоритету
-- они проходят тот же execution pipeline
-
----
-
-# 🔄 4. Обновление SPEC.md
-
-## Когда обновлять
-
-SPEC обновляется, если:
-
-- появляется новая фича
-- меняется поведение системы
-- меняются требования
-
----
-
-## Как это делается
-
-Ты пишешь:
-
-👉 "Обнови SPEC.md: добавить X"
-
----
-
-## Что делает AI:
-
-- анализирует влияние
-- обновляет SPEC.md
-- при необходимости обновляет:
-  - ARCHITECTURE.md
-  - BACKLOG.md
-
----
-
-# ⚙️ Основной принцип системы
-
-Любое изменение проходит цепочку:
+1. Скопируйте `.ai/` в корень проекта.
+2. Отправьте:
 
 ```text
-SPEC → ARCHITECTURE → BACKLOG → execution → code
+Read .ai/BOOTSTRAP.md and initialize this repository as a new project.
+Create both Codex and Claude Code adapters.
+Communicate with me in Russian and start the product interview.
 ```
+
+3. Утверждайте отдельно SPEC, архитектуру/ADR, Backlog, Epic plan, Epic Start, adapters и final validation.
+4. После bootstrap первая TASK остаётся `TODO`.
+
+Skill: `forge-bootstrap-new`.
+
+## 2. Существующий проект
+
+После копирования `.ai/` отправьте:
+
+```text
+Read .ai/BOOTSTRAP.md and initialize this existing repository.
+Analyze the current code and documentation before starting the interview.
+Create both Codex and Claude Code adapters.
+Communicate with me in Russian.
+```
+
+Агент сначала собирает evidence из кода, тестов, документов и Git. Он показывает конфликты с намерением пользователя до создания canonical target state. Найденные проблемы остаются кандидатами, пока пользователь не решит добавить их в Backlog.
+
+Skill: `forge-bootstrap-existing`.
+
+## 3. Продолжение разработки
+
+Пример запроса:
+
+```text
+Read the project router, recover development state from canonical files and Git, and report the current gate.
+```
+
+Skill `forge-resume-development` определяет:
+
+- active/paused Epic;
+- TASK statuses и blockers;
+- текущий gate;
+- актуальность implementation/review/test/fuzz fingerprints;
+- незавершённый Git diff.
+
+История сессии необязательна. Если результат агента не сохранён в TASK или plan, соответствующий этап выполняется повторно.
+
+## 4. Новая feature или идея
+
+Запрос:
+
+```text
+Добавь новую фичу: <описание>.
+```
+
+Skill `forge-intake-feature`:
+
+1. уточняет target behavior;
+2. после подтверждения создаёт `PLANNED/OUTLINE` Epic;
+3. показывает SPEC diff;
+4. при необходимости показывает ARCHITECTURE/ADR diff;
+5. переводит Epic в `READY` только после утверждения requirements, boundaries и dependencies;
+6. не изменяет active work без Replan.
+
+Новая функция не добавляется незаметно в TASK, которую пользователь тестирует вручную.
+
+## 5. Новый баг
+
+Запрос:
+
+```text
+Зафиксируй баг: <ожидаемое и фактическое поведение>.
+```
+
+Skill `forge-intake-bug` сначала определяет происхождение:
+
+- баг в непринятой TASK возвращает ту же TASK в `IN PROGRESS` без нового `BUG-ID`;
+- баг в ранее принятом коде после подтверждения получает `BUG-*` со status `OPEN`.
+
+Пользователь отдельно выбирает severity/priority и способ планирования: Replan активного Epic, новый Bugfix Epic или оставить Bug открытым.
+
+## 6. Переприоритизация
+
+Skill `forge-reprioritize-backlog` строит dependency graph и сравнивает его с пользовательским порядком.
+
+Если более поздний Epic блокирует более ранний, оркестратор:
+
+1. объясняет конфликт;
+2. предлагает перестановку;
+3. спрашивает пользователя;
+4. меняет порядок только после подтверждения.
+
+Если порядок сохраняется, Epic остаётся `PLANNED` с `Blocked by`. Active work не меняется как побочный эффект.
+
+## 7. Подготовка Epic
+
+Skill `forge-prepare-epic` требует:
+
+- status `PLANNED`;
+- readiness `READY`;
+- удовлетворённые dependencies;
+- отсутствие blockers и другого active Epic.
+
+Оркестратор показывает plan и все TASK definitions. После отдельного утверждения plan и Epic Start создаются `execution/active/...`, approved plan и TASK-файлы со status `TODO`.
+
+## 8. Запуск и выполнение TASK
+
+Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria и required tests.
+
+Skill `forge-run-task` запускает цикл:
+
+```text
+Task Start
+→ implementer
+→ strong reviewer
+→ tester
+→ AWAITING USER ACCEPTANCE
+```
+
+Implementer пишет production-код и тесты. Reviewer не исправляет код и возвращает findings оркестратору. Tester не пишет тесты и запускает:
+
+1. новые/изменённые тесты;
+2. affected-component tests;
+3. полный test suite;
+4. configured lint, typecheck и build.
+
+После любого исправления review и testing выполняются заново. Исключение для полного suite возможно только при объективной невозможности запуска и явном принятии риска пользователем.
+
+## 9. Ручная проверка и Task Acceptance
+
+Пока пользователь тестирует, TASK остаётся `AWAITING USER ACCEPTANCE` без таймаута.
+
+Возможные ответы:
+
+- принять TASK;
+- запросить исправления;
+- продолжить ручную проверку.
+
+Skill `forge-complete-task` переводит TASK в `DONE` только после явного Task Acceptance и записывает решение в тот же TASK-файл.
+
+Task Acceptance и следующий Task Start — разные gates. Одно сообщение может разрешить оба действия только если явно содержит оба решения.
+
+## 10. Replan
+
+Изменение scope, порядка или состава TASK активного Epic требует:
+
+1. причины;
+2. точного diff plan/TASK;
+3. подтверждения пользователя;
+4. только затем изменения файлов.
+
+Опечатки и исправления ссылок Replan не требуют. Новая или изменённая TASK всё равно требует собственного Task Start.
+
+## 11. Завершение Epic и fuzzing
+
+После принятия последней TASK skill `forge-complete-epic` переводит Epic в `FUZZING` и автоматически вызывает read-only fuzzer для существующих harnesses.
+
+Результаты:
+
+- `PASSED` → ожидание Epic Acceptance;
+- `NOT APPLICABLE` → требуются rationale и alternative risk coverage;
+- `HARNESS REQUIRED` → Replan и отдельная harness TASK;
+- `FINDINGS` → Replan и remediation TASK.
+
+После любых изменений повторяются review, полный testing и fuzzing.
+
+Пользователь отдельно выполняет Epic validation и даёт Epic Acceptance. Только затем Epic становится `COMPLETED` и перемещается в `execution/completed/`. Следующий Epic не запускается автоматически.
+
+## 12. Pause и resume
+
+Приостановка active work требует подтверждения пользователя. Соответствующие Epic/TASK получают `PAUSED`, а Epic directory перемещается согласованно с Backlog.
+
+Для продолжения используйте `forge-resume-development`. Возврат к работе также требует явного разрешения; статус не восстанавливается по догадке.
+
+## 13. Security audit
+
+Запускайте `forge-security-audit` только явным запросом с точным scope.
+
+По умолчанию strong security auditor:
+
+- local и read-only;
+- без установки инструментов;
+- без network;
+- без production/external scanning.
+
+Расширение каждого ограничения требует отдельного разрешения. Пользователь решает, какие findings превратить в Bug, TASK или Epic. Отдельный security report не создаётся.
+
+## 14. Adapter sync
+
+Используйте `forge-sync-adapters` после изменения:
+
+- neutral agents или skills;
+- model mappings;
+- `.ai/custom/`;
+- framework release.
+
+Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет parity и обновляет `.ai/framework.lock`.
+
+## 15. Git policy
+
+`.ai/project.yaml` поддерживает:
+
+- `manual` — оркестратор предлагает commit, но ждёт явного разрешения;
+- `auto_commit_after_acceptance` — commit разрешён только после clean review, testing, Task Acceptance и перехода TASK в `DONE`.
+
+В commit нельзя включать посторонние пользовательские изменения.
+
+## 16. Проверка фреймворка
+
+`forge-check-framework` выполняет read-only проверку:
+
+- ownership и hashes;
+- IDs, frontmatter, links и transitions;
+- Backlog/execution alignment;
+- adapter parity и лимит routers;
+- восстановимость текущего gate без истории сессии.
+
+Исправления выполняются отдельным подходящим skill и через необходимые user gates.

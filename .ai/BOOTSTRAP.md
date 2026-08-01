@@ -1,303 +1,82 @@
-# BOOTSTRAP.md
-
----
+# AI Development Forge Bootstrap Router
 
 ## Purpose
 
-This document defines the global rules for the bootstrap process used by the AI Dev Forge.
+Initialize a consumer product repository for coordinated development with Codex CLI and Claude Code CLI. Bootstrap creates approved canonical documents, one gated execution workspace, both native adapter sets, and recoverable project configuration.
 
-The bootstrap process prepares a repository for long-term AI-assisted software development.
+Bootstrap does not implement product features or initialize the AI Development Forge source repository itself.
 
-Its purpose is **not to implement product features**.
+If the repository already has an active Forge `.ai/` and a newer bundle staged at `.ai-next/`, stop bootstrap and read `.ai-next/MIGRATE.md`. Bootstrap is only for first initialization or first adoption.
 
-Its purpose is to construct a complete, deterministic engineering workspace that enables AI coding agents to operate with minimal external context across the entire lifecycle of the project.
+## Entry Modes
 
-Bootstrap is executed only during:
-- project initialization
-- migration of an existing repository into this framework
+Determine and record one mode before starting:
 
----
+- **new** — begin from the user's product description, linked brief, or iterative interview;
+- **existing** — inspect repository evidence before interviewing and adopting target-state canonical documents.
 
-# Core Principles
+If the user intent or repository type is ambiguous, ask. Never infer that an existing implementation is the desired product.
 
----
+## Preflight
 
-## 1. Documentation Before Implementation
+1. Confirm `.ai/framework/manifest.yaml`, `.ai/framework/contracts.yaml`, `.ai/CONVENTIONS.md`, numbered steps, neutral agents, portable skills, and templates belong to the same framework release.
+2. Confirm the repository is a consumer project. If it is the framework source repository, stop without creating root canonical documents or generated adapters.
+3. Inspect root canonical files, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, generated adapters, Git state, and unrelated user files.
+4. Determine with the user:
+   - bootstrap mode;
+   - documentation language;
+   - both enabled platforms: Codex and Claude;
+   - concrete `strong`, `balanced`, and `fast` model mappings for each platform, plus Codex reasoning effort;
+   - Git policy: `manual` or `auto_commit_after_acceptance`.
+5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, model mappings, and Git policy so interrupted bootstrap can recover without conversation history. Step 05 revalidates this configuration before rendering.
+6. Detect collisions with existing canonical files, project configuration, custom overlays, or generated adapters. Show the exact affected paths and request confirmation before overwriting project work.
+7. Create no framework hooks, MCP configuration, or CLI dependency. Existing project-owned hooks or MCP remain outside framework ownership.
 
-No production code is written during bootstrap.
+## Interrupted Bootstrap Recovery
 
-The system must first define:
+Session history is not authoritative.
 
-- what the product is (SPEC)
-- how the system works (ARCHITECTURE)
-- what will be built (BACKLOG)
-- how work is executed (execution/)
-- how AI navigates the repository (CLAUDE.md)
+Before starting or repeating a step:
 
-Implementation begins only after this structure exists.
+1. inspect canonical frontmatter and approval metadata;
+2. inspect `.ai/project.yaml`, `.ai/framework.lock`, adapter hashes, directory state, and Git diff;
+3. identify the first incomplete or invalid numbered step;
+4. preserve approved outputs and resume from that step;
+5. rerun any validation or generation stage whose durable result is missing or stale.
 
----
+Do not recreate approved documents merely because the current session did not create them.
 
-## 2. Documentation Is the Source of Truth
+## Six Gated Steps
 
-During bootstrap, documentation is authoritative.
+Run these files in order and read each one in full before acting:
 
-Never invent information.
+1. [Product Discovery](01-product-discovery.md) — create approved target `SPEC.md`.
+2. [System Design](02-system-design.md) — create approved `ARCHITECTURE.md`, ADRs, and generated `DECISIONS.md`.
+3. [Release Planning](03-release-planning.md) — create approved Epic Roadmap and Defect Queue in `BACKLOG.md`.
+4. [Prepare Workspace](04-prepare-workspace.md) — approve one Epic plan and TASK definitions, then use the Epic Start gate.
+5. [Create Platform Adapters](05-create-platform-adapters.md) — write project configuration and generate both native adapter sets.
+6. [Final Validation](06-final-validation.md) — verify canonical state, lifecycle, ownership, adapters, and recovery.
 
-If required information is missing:
+Each step has its own explicit user approval. Report its proposed outputs and wait before entering the next step. Approval of one step never implies Task Start or another later gate.
 
-- ask the user
-- inspect the repository
-- mark unknowns explicitly as `TODO`
+## Ownership and Language
 
-Do not fabricate:
-- requirements
-- architecture
-- system behavior
+- Framework-owned release content stays under `.ai/` as declared by the manifest.
+- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical documents, ADRs, and execution state are project-owned.
+- Root routers and native agent/skill directories are generated adapter outputs; detect manual edits before regeneration.
+- Write framework control text, generated routers, agent contracts, and skills in English.
+- Write root canonical documents in the user's documentation language. Keep IDs, statuses, paths, model IDs, and commands in English.
 
----
+## Bootstrap Boundaries
 
-## 3. Progressive Refinement
+Do not:
 
-Bootstrap is iterative.
+- write or refactor product code;
+- invent requirements, architecture, priority, acceptance, or model mappings;
+- create report, progress, checkpoint, review, testing, fuzzing, security, or validation Markdown files;
+- modify canonical scope or decisions without the applicable approval gate;
+- commit unless the configured Git policy and user authorization permit it.
 
-Each step refines system understanding.
+## Completion
 
-No generated document is assumed final until validation step.
-
-All artifacts may be revised before proceeding.
-
----
-
-## 4. Single Responsibility per Artifact
-
-Each file has one role:
-
-- SPEC.md → WHAT the product is
-- ARCHITECTURE.md → HOW the system works
-- BACKLOG.md → WHAT will be built (Epics only)
-- DECISIONS.md → index of significant decisions (ADR log)
-- decisions/ → the atomic decision records themselves
-- execution/ → WHAT is currently being built
-- CLAUDE.md → HOW AI navigates the repository
-- .claude/agents/ → the subagents that execute the workflow
-
-No cross-layer duplication is allowed.
-
-Documents must reference each other instead of repeating content.
-
----
-
-## 5. Repository First Principle
-
-Prefer existing repository information in this order:
-
-1. Source code
-2. Existing documentation
-3. Tests
-4. User input
-
-Never overwrite existing valid documentation unless explicitly required.
-
----
-
-## 6. Ask Before Assuming
-
-If critical information is missing:
-
-→ ask the user
-
-Do not guess.
-
-Do not infer missing requirements.
-
----
-
-## 7. Human Validation Gate
-
-All major decisions require user confirmation:
-
-- product scope (SPEC)
-- system design (ARCHITECTURE)
-- roadmap (BACKLOG)
-
-Bootstrap may propose, but not decide unilaterally.
-
----
-
-## 8. Consistency Requirement
-
-All artifacts must remain consistent:
-
-- SPEC ↔ ARCHITECTURE
-- BACKLOG ↔ execution
-- execution ↔ plan.md ↔ TASK.md
-- CLAUDE.md ↔ navigation model
-
-Any inconsistency must be reported and resolved immediately.
-
----
-
-## 9. AI-Oriented Documentation Design
-
-All documents are optimized for AI reasoning.
-
-They must be:
-
-- structured
-- explicit
-- unambiguous
-- navigable
-- minimal but complete
-
-Avoid prose-heavy explanations.
-
-Prefer:
-- headings
-- lists
-- deterministic structure
-
----
-
-# Bootstrap Workflow
-
-Bootstrap consists of 6 sequential steps:
-
----
-
-## Step 01 — SPEC.md (Product Definition)
-
-Define:
-- what the product is
-- constraints
-- requirements
-- goals
-
----
-
-## Step 02 — ARCHITECTURE.md + DECISIONS.md (System Design)
-
-Define:
-- system structure
-- components
-- interactions
-- technical decisions
-
-Also initialize the decision log:
-- `DECISIONS.md` — ADR index
-- `decisions/` — atomic ADR records (`ADR-NNN-<name>.md`)
-
----
-
-## Step 03 — BACKLOG.md (Epic Planning)
-
-Define:
-- Epics only
-- no tasks
-- no execution state
-- no progress tracking
-
----
-
-## Step 04 — execution/ (Workspace Initialization)
-
-Create runtime structure:
-
-- active Epic workspace (`EPIC-NNN-<name>/`)
-- plan.md
-- atomic TASK files (`TASK-NNN-<name>.md`)
-- task decomposition
-
-Also create empty `docs/` and `references/`.
-
-execution = current state of work
-
----
-
-## Step 05 — CLAUDE.md + .claude/agents/ (AI Runtime Router)
-
-Create AI entrypoint:
-
-Requirements:
-- ~90 lines, concise
-- contains project map, AI workflow (orchestrator pattern), global rules
-- contains Context Gathering section
-- contains Code Quality rules (modular code, logging, error handling)
-- no inlined subagent definitions
-
-Also create subagents in `.claude/agents/*.md`:
-- `implementation.md` (required) — implements tasks, gathers context
-- `validation.md` (required) — runs tests, reports only
-- `review.md` (required) — post-task code review
-- `fuzzing.md` (required) — post-epic robustness testing
-- `documentation.md` (optional) — updates docs
-
-CLAUDE.md is NOT documentation.
-
-It is a routing layer for AI.
-
----
-
-## Step 06 — Final Validation
-
-Validate:
-
-- structure correctness
-- navigation completeness
-- workflow determinism
-- consistency across artifacts
-- readiness for execution
-
-Fix only inconsistencies, do not redesign system.
-
----
-
-# Scope
-
-Bootstrap MAY:
-
-- analyze repository
-- generate documentation
-- structure project layout
-- define execution system
-- configure AI navigation layer
-
-Bootstrap MUST NOT:
-
-- implement features
-- refactor production systems
-- introduce speculative architecture
-- expand product scope
-
----
-
-# Definition of Done
-
-Bootstrap is complete when:
-
-- all required artifacts exist
-- system structure is consistent
-- execution workflow is operational
-- AI navigation via CLAUDE.md is functional
-- at least one Epic is ready for execution
-- repository is ready for daily AI-driven development
-
----
-
-# Success Criteria
-
-A new AI session must be able to understand and execute the project using ONLY:
-
-CLAUDE.md
-↓
-BACKLOG.md
-↓
-Active Epic (execution/)
-↓
-Current TASK
-
-Without requiring additional user explanation.
-
----
-
-# End of Bootstrap Specification
+Bootstrap is complete only when Step 06 passes. If an Epic was activated, every initial TASK must still be `TODO`; end by asking for a separate Task Start authorization.

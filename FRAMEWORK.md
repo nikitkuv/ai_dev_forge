@@ -1,279 +1,240 @@
-# AI Dev Forge
+# AI Development Forge v3 — Architecture
 
----
+Этот документ описывает реализованную архитектуру фреймворка. Обоснование решений и полный набор согласованных правил находятся в [FRAMEWORK_DESIGN.md](FRAMEWORK_DESIGN.md).
 
-# 🧠 Структура проекта
+## Назначение
+
+AI Development Forge превращает репозиторий в долговременную среду разработки, где:
+
+- продуктовые и архитектурные цели утверждаются пользователем;
+- execution-состояние восстанавливается из файлов, а не из истории чата;
+- сильная основная модель оркестрирует специализированных субагентов;
+- Codex CLI и Claude Code CLI получают нативные adapters из одного нейтрального источника;
+- каждый lifecycle-переход имеет явный gate.
+
+## Структура проекта-потребителя
 
 ```text
 project/
-│
-├── README.md                  # Введение для человека
-├── CLAUDE.md                  # Навигация и входная точка для AI (≤100 строк)
-│
-├── SPEC.md                   # Что представляет продукт (WHAT)
-├── ARCHITECTURE.md          # Как система устроена (HOW)
-├── BACKLOG.md               # Глобальный список Epics (WHAT WILL BE DONE)
-├── DECISIONS.md             # ADR индекс — навигация по решениям
-├── decisions/               # Атомарные ADR-записи (ADR-NNN-name.md)
-│
-├── execution/               # Runtime слой (текущее выполнение)
-│   ├── active/
-│   │    ├── EPIC-001-short-name/
-│   │    │      ├── plan.md
-│   │    │      └── tasks/
-│   │    │            ├── TASK-001-short-name.md
-│   │    │            ├── TASK-002-short-name.md
-│   │    │            └── ...
-│   │
+├── README.md
+├── AGENTS.md
+├── CLAUDE.md
+├── SPEC.md
+├── ARCHITECTURE.md
+├── BACKLOG.md
+├── DECISIONS.md
+├── decisions/
+│   └── ADR-NNN-<name>.md
+├── execution/
+│   ├── active/EPIC-NNN-<name>/
+│   │   ├── plan.md
+│   │   └── tasks/TASK-NNN-<name>.md
+│   ├── paused/
 │   └── completed/
-│
-├── .claude/agents/          # Субагенты (implementation, validation, review, fuzzing)
-├── docs/                    # Документация (knowledge layer)
-├── references/              # Внешние материалы, исследования
-├── tests/                   # Тесты
-├── src/                     # Кодовая база
+├── .ai/
+├── .codex/agents/
+├── .agents/skills/
+├── .claude/agents/
+└── .claude/skills/
 ```
 
----
+Эта структура относится к целевому проекту. Репозиторий исходников Forge не проходит собственный bootstrap.
 
-# 📄 Назначение документов
+## Источники истины
 
-| Файл | Назначение | Кто создает | Когда |
-|------|-----------|-------------|-------|
-| README.md | Введение для человека | AI + человек | Сразу |
-| CLAUDE.md | Карта проекта + AI навигация | AI | После bootstrap |
-| SPEC.md | Описание продукта (WHAT) | AI + человек | Step 01 |
-| ARCHITECTURE.md | Архитектура (HOW) | AI + человек | Step 02 |
-| BACKLOG.md | Список Epics (WHAT WILL BE DONE) | AI + человек | Step 03 |
-| DECISIONS.md | ADR индекс (навигация) | AI + человек | Step 02 |
-| decisions/ | Атомарные ADR-записи | AI + человек | Step 02, далее по мере решений |
-| execution/ | Runtime слой разработки | AI | Step 04 |
-| plan.md | План Epic | AI | Step 04 |
-| TASK-NNN-name.md | Атомарные задачи | AI | Step 04 |
-| .claude/agents/ | Субагенты (implementation, validation, review, fuzzing) | AI | Step 05 |
-| docs/ | Документация | AI / documentation agent | Step 04 (пустая), наполняется по мере |
-| references/ | Внешние материалы | Человек | Step 04 (пустая), наполняется по мере |
+| Информация | Единственный владелец |
+| --- | --- |
+| Целевое поведение продукта | `SPEC.md` |
+| Целевая архитектура | `ARCHITECTURE.md` |
+| Epic, приоритет, readiness, status и дефекты | `BACKLOG.md` |
+| Содержание одного архитектурного решения | соответствующий ADR |
+| Навигация по решениям | генерируемый `DECISIONS.md` |
+| Стратегия Epic, порядок TASK, Epic fuzzing и validation | `plan.md` |
+| TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
+| История файлов | Git |
 
----
+`README.md`, root routers, agent-файлы и `SKILL.md` являются инфраструктурой, но не владельцами execution-состояния.
 
-# 🚀 Bootstrap процесс (как создается проект)
+## Слой `.ai/`
 
-## STEP 01 — Product Discovery → SPEC.md
+`.ai/` — копируемый framework bundle:
 
-- совместно формируется понимание продукта
-- задаются вопросы
-- уточняются требования
-- создается SPEC.md
+- `BOOTSTRAP.md` и шесть numbered workflows;
+- `CONVENTIONS.md`;
+- `framework/manifest.yaml` с release, ownership, agent и skill IDs;
+- `framework/contracts.yaml` с lifecycle, transitions, gates и fuzzing outcomes;
+- семь нейтральных agent definitions;
+- четырнадцать portable skills;
+- canonical и adapter templates.
 
-👉 SPEC = WHAT is the product
+Ownership разделён на три категории:
 
----
+- framework-owned release files поставляются текущей версией Forge;
+- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical и execution-файлы сохраняются;
+- generated adapters пересоздаются после collision preview.
 
-## STEP 02 — System Design → ARCHITECTURE.md
+## Канонические документы
 
-- анализ SPEC.md
-- проектирование системы
-- определение компонентов и взаимодействий
-- создание ARCHITECTURE.md
-- инициализация журнала решений (DECISIONS.md + decisions/)
+`SPEC.md` описывает утверждённое target behavior через наблюдаемые `FR-*`, измеримые `NFR-*` и инварианты `BR-*`.
 
-👉 ARCHITECTURE = HOW system works
-👉 DECISIONS = принятые архитектурные компромиссы
+`ARCHITECTURE.md` связывает requirement drivers с компонентами, dependency rules, data ownership, interfaces, trust boundaries, runtime, reliability, observability, testing и эволюцией данных.
 
----
+`BACKLOG.md` содержит только:
 
-## STEP 03 — Release Planning → BACKLOG.md
+- Epic Roadmap;
+- Defect Queue.
 
-- анализ SPEC + ARCHITECTURE
-- выделение Epics
-- формирование roadmap
-- определение приоритетов
+Все сохранённые будущие идеи становятся `PLANNED` Epic. `OUTLINE` разрешает сохранить неполную идею; `READY` требуется для активации.
 
-⚠️ BACKLOG содержит только Epics (без задач и прогресса)
+ADR является авторитетным решением. `DECISIONS.md` генерируется из ADR frontmatter и служит только индексом.
 
-👉 BACKLOG = WHAT will be built
+`plan.md` не хранит TASK status. TASK-файл хранит единственный lifecycle status, revision/fingerprint evidence и компактные summaries.
 
----
+## Идентификаторы и язык
 
-## STEP 04 — Prepare Workspace → execution/
-
-- выбор активного Epic
-- создание execution/active/EPIC-NNN-name
-- создание plan.md
-- разбиение на TASK-NNN-name.md
-- создание пустых docs/ и references/
-
-👉 execution = WHAT is being built
-
----
-
-## STEP 05 — Create AI Environment → CLAUDE.md + .claude/agents/
-
-- создание карты проекта
-- описание AI workflow
-- определение правил работы AI
-- создание субагентов в `.claude/agents/` (implementation, validation, review, fuzzing)
-- поддержка опциональных `.ai/rules/`
-
-⚠️ CLAUDE.md:
-
-- ~90 строк
-- навигация + orchestrator pattern + правила
-- не содержит определений субагентов (они в `.claude/agents/`)
-
-👉 CLAUDE.md = AI router
-
----
-
-## STEP 06 — Final Validation
-
-- проверка структуры
-- проверка навигации
-- проверка consistency
-- проверка workflow
-- исправление минимальных несоответствий
-
-👉 система готова к разработке
-
----
-
-# 🧭 Навигация AI (runtime workflow)
-
-Каждая новая сессия следует фиксированному пути:
+ID глобальны внутри проекта и не переиспользуются:
 
 ```text
-CLAUDE.md
-&#x20;   ↓
-BACKLOG.md
-&#x20;   ↓
-Active Epic
-&#x20;   ↓
-execution/active/EPIC/plan.md
-&#x20;   ↓
-TASK-NNN-name.md
-&#x20;   ↓
-Codebase
+EPIC-001
+TASK-001
+BUG-001
+ADR-001
 ```
 
----
+Следующий ID равен максимальному существующему ID данного типа плюс один. TASK numbering не начинается заново в каждом Epic.
 
-# ⚙️ Workflow разработки (Orchestrator Pattern)
+Framework control layer написан на английском. Канонические документы генерируются на языке общения пользователя. Технические IDs, status values, paths, commands и model IDs остаются английскими.
 
-Главный агент — **оркестратор**. Он не пишет код, а делегирует субагентам.
+## Dual-platform generation
 
-## 1. Оркестратор читает контекст
+Один набор neutral sources генерирует:
 
-- читает CLAUDE.md
-- находит active Epic в BACKLOG.md
-- открывает plan.md
-- определяет текущую TASK (IN PROGRESS или первый TODO)
+| Codex | Claude Code |
+| --- | --- |
+| `AGENTS.md` | `CLAUDE.md` |
+| `.codex/agents/*.toml` | `.claude/agents/*.md` |
+| `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-## 2. Оркестратор запускает implementation субагента
+Оба root router ограничены 150 строками. `.ai/project.yaml` сопоставляет tiers с конкретными моделями:
 
-- передаёт субагенту файл таски + контекст (ARCHITECTURE.md, plan.md)
-- субагент сам собирает контекст
-- субагент реализует задачу и пишет тесты
-- если задачи независимы (разные файлы) → несколько субагентов параллельно
+- `strong`;
+- `balanced`;
+- `fast`.
 
-## 3. Субагент отчитывается оркестратору
+Для Codex отдельно задаётся reasoning effort. Aliases и полные model IDs поддерживаются; скрытая замена tier запрещена.
 
-- статус: DONE / IN PROGRESS
-- список файлов
-- результаты тестов
+`.ai/framework.lock` хранит версии и hashes neutral sources и generated outputs, чтобы обнаруживать drift и ручные изменения.
 
-## 4. Оркестратор запускает review субагента
+## Оркестратор и субагенты
 
-- review проверяет код: архитектура, качество, баги, acceptance criteria
-- если найдены критические проблемы → оркестратор запускает implementation для доработки
-- если всё ок → таска остаётся DONE
+Основная сессия — сильный оркестратор. Для неё нет subagent-файла. Только оркестратор:
 
-## 5. Оркестратор переходит к следующей таске
+- общается с пользователем;
+- вызывает skills и agents;
+- маршрутизирует findings;
+- изменяет canonical status;
+- управляет gates.
 
-- повторяет шаги 2-4 для каждой таски эпика
+| Agent | Tier | Ответственность |
+| --- | --- | --- |
+| `context-collector` | fast | локальное canonical/execution/Git/code evidence |
+| `documentation-researcher` | fast | официальная внешняя документация |
+| `implementer` | balanced | одна TASK, production-код и тесты |
+| `reviewer` | strong | независимый read-only review |
+| `tester` | fast | targeted, affected, full tests и configured checks |
+| `fuzzer` | balanced | воспроизводимый Epic fuzzing без исправлений |
+| `security-auditor` | strong | явный on-demand local security audit |
 
-## 6. Завершение Epic
+Субагенты не вызывают друг друга. Одновременно выполняется не более одной code-writing TASK; независимый read-only research может выполняться параллельно.
 
-- когда все таски DONE → оркестратор запускает fuzzing субагента
-- fuzzing тестирует функции на устойчивость
-- если краши → создаёт Bug таски
-- Epic → Completed, перенос в execution/completed/
+## Skills
 
----
+Четырнадцать skills сгруппированы по назначению:
 
-# 🧠 Ключевые принципы системы
+- bootstrap нового и существующего проекта;
+- feature/bug intake и reprioritization;
+- Epic preparation и durable resume;
+- Task execution/completion и Epic completion;
+- security audit;
+- framework conformance check;
+- adapter synchronization.
 
-## 1. Separation of Concerns
+Codex вызывает skill как `$forge-...`, Claude Code — как `/forge-...`. Mandatory lifecycle использует явный skill routing, а не только implicit matching.
 
-- SPEC → WHAT
-- ARCHITECTURE → HOW
-- BACKLOG → WHAT WILL BE DONE
-- execution → WHAT IS BEING DONE
-- CLAUDE.md → HOW TO NAVIGATE
+Feature discovery и root-cause investigation встроены в intake skills. Test-driven implementation и evidence-before-transition встроены в Task lifecycle и role-specific agent contracts. Внешние process skills не управляют gates, canonical artifacts, status transitions, agent routing или Git actions.
 
----
-
-## 2. Orchestrator Delegation
-
-- главный агент — оркестратор, не пишет код
-- 1 задача = 1 субагент
-- независимые задачи → параллельные субагенты
-- зависимые задачи → последовательно
-
----
-
-## 3. Deterministic AI Behavior
-
-При одинаковом состоянии:
-
-- AI всегда находит один и тот же Epic
-- всегда одну и ту же TASK
-- всегда один и тот же workflow
-
----
-
-## 4. Minimal Context Principle
-
-AI никогда не читает весь проект:
-
-- только путь выполнения
-- только необходимый контекст
-
----
-
-## 5. CLAUDE.md Constraint
-
-- ~90 строк
-- навигация + orchestrator pattern + правила
-- не содержит определений субагентов
-
----
-
-## 6. Rule Delegation
-
-Если правил становится много:
+## TASK lifecycle
 
 ```text
-.ai/rules/
+TODO
+  → IN PROGRESS
+  → IN REVIEW
+  → IN TESTING
+  → AWAITING USER ACCEPTANCE
+  → DONE
 ```
 
-CLAUDE.md не расширяется.
+Также поддерживаются `PAUSED` и `CANCELLED`. Блокировка хранится отдельно в `blocked_by`.
 
----
+Цикл выполнения:
 
-# 📌 Итог
+1. отдельный Task Start;
+2. implementer пишет код и необходимые тесты;
+3. strong reviewer проверяет только назначенную TASK;
+4. tester запускает targeted, affected и полный suite, затем lint/typecheck/build;
+5. пользователь тестирует вручную;
+6. отдельный Task Acceptance переводит TASK в `DONE`.
 
-Эта система превращает разработку в:
+Любое изменение кода инвалидирует прежние review и test fingerprints. Task Acceptance не запускает следующую TASK без отдельного разрешения.
 
-> deterministic execution pipeline for AI coding agents
+## Epic lifecycle и fuzzing
 
----
+```text
+PLANNED → ACTIVE → FUZZING → AWAITING EPIC ACCEPTANCE → COMPLETED
+```
 
-# 🟢 Результат
+Также поддерживаются `PAUSED` и `CANCELLED`.
 
-После bootstrap:
+После принятия последней TASK автоматически запускается read-only fuzzer:
 
-- проект полностью описан
-- структура готова
-- AI может работать без внешней памяти
-- контекст всегда локализован
-- выполнение строго детерминировано
+- `PASSED`;
+- `NOT APPLICABLE` с rationale и alternative risk coverage;
+- `HARNESS REQUIRED`;
+- `FINDINGS`.
+
+Harness или remediation создаются как новые TASK через Replan и собственный Task Start. После изменений повторяются review, полный testing и fuzzing.
+
+Только отдельный Epic Acceptance завершает Epic и перемещает его каталог в `execution/completed/`. Следующий Epic автоматически не активируется.
+
+## Defect Queue
+
+Дефект в непринятой TASK остаётся частью этой TASK. Дефект в принятом коде получает `BUG-*` после решения пользователя.
+
+Основной переход:
+
+```text
+OPEN → SCHEDULED → RESOLVED
+```
+
+Severity описывает последствия, а priority задаётся пользователем.
+
+## Security
+
+`security-auditor` вызывается только явно пользователем и использует tier `strong`. По умолчанию он:
+
+- работает локально и read-only;
+- не устанавливает инструменты;
+- не использует network;
+- не сканирует production или внешние targets.
+
+Расширение scope требует отдельного точного разрешения. Принятые findings превращаются в существующую TASK, Bug или Epic; отдельный security report не создаётся.
+
+## Синхронизация адаптеров
+
+Adapter sync пересоздаёт обе платформы как одну операцию, проверяет parity и обновляет lock только после успеха.
+
+## Внешние интеграции
+
+Фреймворк не генерирует hooks или MCP-конфигурацию. Проект может добавить их отдельно как project-owned инфраструктуру.
+
+Подробные пользовательские сценарии приведены в [RUNBOOK.md](RUNBOOK.md).

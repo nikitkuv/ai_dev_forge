@@ -1,0 +1,68 @@
+framework:
+  name: ai-dev-forge
+  version: 3.0.0
+  schema_version: 1
+
+adapters: [codex, claude]
+
+ownership:
+  framework_owned_paths:
+    - .ai/BOOTSTRAP.md
+    - .ai/MIGRATE.md
+    - .ai/01-product-discovery.md
+    - .ai/02-system-design.md
+    - .ai/03-release-planning.md
+    - .ai/04-prepare-workspace.md
+    - .ai/05-create-platform-adapters.md
+    - .ai/06-final-validation.md
+    - .ai/CONVENTIONS.md
+    - .ai/framework/
+    - .ai/templates/
+  project_owned_paths:
+    - .ai/project.yaml
+    - .ai/framework.lock
+    - .ai/custom/
+    - README.md
+    - SPEC.md
+    - ARCHITECTURE.md
+    - BACKLOG.md
+    - DECISIONS.md
+    - decisions/
+    - execution/
+    - hooks/
+    - mcp/
+  generated_adapter_outputs:
+    - AGENTS.md
+    - CLAUDE.md
+    - .codex/
+    - .claude/
+    - .agents/
+  generated_adapter_policy:
+    regeneration: adapter sync and framework migration regenerate these outputs from framework sources and project configuration.
+    manual_edit_collision: detect manual edits, show the regeneration diff, and require explicit confirmation before overwriting them.
+    managed_membership: only root routers and entries whose IDs are declared in subagents or skills are Forge-managed.
+    unlisted_membership: preserve unlisted agents, skills, and adjacent platform files as project-owned content.
+    protected_platform_files: never generate or replace .codex/config.toml, Claude settings, commands, or hooks.
+
+skills:
+  - forge-bootstrap-new
+  - forge-bootstrap-existing
+  - forge-intake-feature
+  - forge-intake-bug
+  - forge-reprioritize-backlog
+  - forge-prepare-epic
+  - forge-resume-development
+  - forge-run-task
+  - forge-complete-task
+  - forge-complete-epic
+  - forge-migrate-framework
+  - forge-security-audit
+  - forge-check-framework
+  - forge-sync-adapters
+
+subagents: [context-collector, documentation-researcher, implementer, reviewer, tester, fuzzer, security-auditor]
+
+optional_capabilities:
+  hooks: false
+  mcp: false
+  cli: false

@@ -1,383 +1,76 @@
 # Bootstrap Step 02 — System Design
 
----
-
 ## Purpose
 
-The purpose of this step is to design the high-level architecture of the system.
+Create an approved target `ARCHITECTURE.md`, authoritative ADR records, and the generated `DECISIONS.md` navigation index in the user's communication language.
 
-The output of this step is **ARCHITECTURE.md**.
+Use `.ai/templates/ARCHITECTURE.md`, `.ai/templates/ADR.md`, `.ai/templates/DECISIONS.md`, and `.ai/CONVENTIONS.md`. Reference these templates rather than duplicating their complete structures here.
 
-This step defines **how the system is structured and organized**, not how it is implemented.
-
-Architecture is derived strictly from **SPEC.md**.
-
----
-
-# Inputs
+## Preconditions and Inputs
 
 Required:
 
-- BOOTSTRAP.md
-- CONVENTIONS.md
-- SPEC.md
+- an explicitly approved `SPEC.md`;
+- `.ai/CONVENTIONS.md`;
+- the architecture and decision templates.
 
-Optional:
+For an existing project, inspect relevant code, tests, configuration, deployment material, data schemas, interfaces, and existing decisions. Current implementation is evidence and a migration constraint, not automatic target architecture.
 
-- Existing repository
-- Existing documentation
-- Existing system diagrams
-- Existing deployment setup
+If `SPEC.md` is missing, still `draft`, or materially inconsistent, return to Step 01.
 
----
+## Architecture Interview
 
-# Core Principle
+1. Derive architectural drivers from functional requirements, NFRs, domain rules, constraints, integrations, scale, and trust boundaries.
+2. For an existing project, compare target drivers with current structure and surface gaps, compatibility risks, and migration constraints.
+3. Ask focused questions about system boundaries, ownership, deployment, data, security, reliability, observability, testing, and compatibility.
+4. When more than one viable design exists, propose concrete alternatives with consequences and recommend one with a stated rationale.
+5. Confirm decisions with the user instead of choosing silently.
 
-> Architecture is a translation of requirements into system structure.
+The architecture describes target structure and may differ from the current implementation. It must not contain Task decomposition, execution status, estimates, or line-level implementation instructions.
 
-Not implementation.
+## ADR Criteria and Approval
 
-Not planning.
+Create an ADR candidate when a decision is significant, long-lived, cross-cutting, difficult to reverse, or has multiple viable alternatives with meaningful trade-offs.
 
-Not execution.
+Do not create ADRs for local implementation details, obvious defaults, or easily reversible choices.
 
----
+For each candidate:
 
-# Overview
+1. allocate the next global `ADR-NNN`;
+2. create the ADR from `.ai/templates/ADR.md` with `status: PROPOSED`;
+3. present its context, drivers, alternatives, recommendation, consequences, migration, and verification;
+4. invoke the **ADR Approval** gate and request explicit user approval;
+5. change the status to `ACCEPTED` only after approval; use `REJECTED` when the user rejects the recorded proposal.
 
-This step consists of six phases:
+Never rewrite an accepted decision to change its meaning. A later change requires a new ADR with `supersedes`.
 
-1. Analyze SPEC.md
-2. Design system architecture
-3. Resolve architectural uncertainties
-4. Validate architecture with user
-5. Generate ARCHITECTURE.md
-6. Initialize the decision log (DECISIONS.md + decisions/)
+## Architecture Draft and Approval
 
-All phases are mandatory.
+1. Create or update `ARCHITECTURE.md` from its template with `document_status: draft`.
+2. Link requirement drivers and relevant ADRs instead of duplicating their content.
+3. Check component boundaries, dependency direction, data ownership, interfaces, trust boundaries, runtime, reliability, observability, testing, migration, compatibility, and known risks.
+4. Present the target design, alternatives, unresolved risks, and current-to-target differences.
+5. Request explicit user approval of the architecture.
+6. Only after approval, set `document_status: approved` and `approved_at`.
+7. Generate `DECISIONS.md` from ADR frontmatter. The index is navigation only; ADR files remain authoritative.
 
----
+Corrections keep the architecture in `draft`. Unresolved required ADRs block architecture approval.
 
-# Phase 1 — Analyze SPEC.md
+## Completion Gate
 
-Read SPEC.md completely.
+This step is complete only when:
 
-Extract:
+- every approved requirement has an architectural response or an explicit non-architectural classification;
+- target and current-state evidence are clearly distinguished;
+- significant decisions passed the ADR Approval gate;
+- `ARCHITECTURE.md` has explicit user approval and is marked `approved`;
+- `DECISIONS.md` matches ADR frontmatter;
+- no Task-level plan or execution state was created.
 
-- system goals
-- functional requirements
-- non-functional requirements
-- constraints
-- external dependencies
-- expected scale
+Do not start Step 03 automatically. Report the result and request a separate user confirmation.
 
-Identify implicit architectural requirements.
+## Outputs
 
-Do NOT design yet.
-
-Do NOT propose solutions.
-
----
-
-# Phase 2 — System Design
-
-Design the system at a **high level of abstraction**.
-
-Focus on:
-
-- structure
-- responsibilities
-- boundaries
-- communication patterns
-
----
-
-## 2.1 System Components
-
-Identify major system components such as:
-
-- API layer
-- Backend services
-- AI agents / orchestration layer
-- Workers / async processing
-- Databases
-- Caches
-- Vector stores
-- External integrations
-- Observability stack
-
-Only include components that are necessary.
-
----
-
-## 2.2 Component Responsibilities
-
-For each component:
-
-- define its responsibility
-- define its boundaries
-- ensure single responsibility per component
-
-Avoid overlapping responsibilities.
-
----
-
-## 2.3 Communication Model
-
-Define how components interact:
-
-- synchronous vs asynchronous
-- request/response flows
-- event-driven flows
-- external API interactions
-
-Focus on **data flow**, not implementation.
-
----
-
-## 2.4 Data Flow
-
-Describe how data moves through the system:
-
-- user → system entry point
-- internal service communication
-- background processing
-- external integrations
-
----
-
-## 2.5 External Dependencies
-
-Identify external systems:
-
-- LLM providers
-- databases
-- storage systems
-- authentication providers
-- third-party APIs
-- infrastructure services
-
----
-
-## 2.6 Cross-Cutting Concerns
-
-Define system-wide concerns:
-
-- authentication
-- authorization
-- logging
-- monitoring
-- configuration
-- secrets management
-- error handling
-- retries
-- rate limiting
-
----
-
-## 2.7 Scalability Model
-
-Define:
-
-- expected system scale
-- bottlenecks
-- horizontal scaling strategy
-- state management approach
-
----
-
-## 2.8 Reliability Model
-
-Define:
-
-- failure modes
-- fault tolerance strategy
-- recovery behavior
-- degradation strategies
-
----
-
-## 2.9 Security Model
-
-High-level only:
-
-- authentication approach
-- authorization model
-- data protection strategy
-- secret management approach
-
-Do NOT implement security mechanisms.
-
----
-
-# Phase 3 — Resolve Architectural Questions
-
-If any ambiguity exists:
-
-Ask the user before proceeding.
-
-Rules:
-
-- do NOT assume requirements
-- do NOT invent constraints
-- do NOT choose architecture based on preference
-
-Architecture must reflect SPEC.md only.
-
----
-
-# Phase 4 — Architecture Validation
-
-Before generating ARCHITECTURE.md:
-
-Provide a structured summary:
-
-- System components
-- Responsibilities
-- Communication model
-- Data flow overview
-- External dependencies
-- Key architectural trade-offs
-
-Then ask:
-
-> “Is this architecture correct?”
-
-Do NOT proceed without explicit confirmation.
-
-If changes are requested:
-
-- update architecture
-- re-validate if necessary
-
----
-
-# Phase 5 — Generate ARCHITECTURE.md
-
-After approval:
-
-Generate ARCHITECTURE.md.
-
-The document must describe:
-
-- system structure
-- component responsibilities
-- communication patterns
-- architectural decisions
-- constraints
-- trade-offs
-
-It must be understandable by:
-
-- developers
-- maintainers
-- AI coding agents
-
----
-
-# Phase 6 — Initialize the Decision Log
-
-Architecture design produces decisions. Capture them as ADRs.
-
-Create the decision log structure:
-
-```text
-DECISIONS.md            # ADR index (navigation only)
-decisions/              # atomic ADR records
-    ADR-001-<name>.md
-```
-
-Initialize `DECISIONS.md` as a lightweight index listing every ADR (ID, title, status, file link). It contains no decision content.
-
-Seed `decisions/` with one ADR per significant architectural decision made during this step. Typical first records:
-
-- primary technology / framework choice
-- data store selection
-- communication pattern (sync / async / event-driven)
-- deployment model
-
-Each ADR follows the standard record structure (see `.ai/templates/ADR.md`).
-
-Only record decisions that involve a real trade-off. Do not log trivial or obvious choices. If no significant decision was made, create the index and folder anyway and leave them ready for runtime.
-
----
-
-# Recommended Structure of ARCHITECTURE.md
-
-- System Overview
-- Design Goals
-- Architectural Principles
-- High-Level System Architecture
-- Components
-- Component Responsibilities
-- Data Flow
-- External Integrations
-- Cross-Cutting Concerns
-- Deployment Overview
-- Scalability Strategy
-- Reliability Strategy
-- Security Considerations
-- Risks & Trade-offs
-- Future Evolution
-
----
-
-# Restrictions
-
-During this step, strictly prohibit:
-
-- creating backlog items
-- defining Epics or tasks
-- writing implementation details
-- designing classes or functions
-- selecting libraries without justification
-- estimating work
-- planning execution
-- duplicating SPEC.md content
-- referencing execution layer
-
-Logging a decision in `DECISIONS.md` / `decisions/` is allowed and expected.
-
----
-
-# Definition of Done
-
-This step is complete only if:
-
-- architecture fully covers SPEC.md requirements
-- system components are clearly defined
-- responsibilities are non-overlapping
-- communication model is clear
-- user has approved the architecture
-- ARCHITECTURE.md is generated
-- document contains no implementation details
-- `DECISIONS.md` index exists
-- `decisions/` exists, with at least one ADR (or empty if no significant decision was made)
-
----
-
-# Outputs
-
-Create or update:
-
-- ARCHITECTURE.md
-- DECISIONS.md
-- decisions/
-
-No other files may be modified.
-
----
-
-# Next Step
-
-Recommend:
-
-Bootstrap Step 03 — Backlog Generation
-
-Do NOT proceed automatically.
-
-Wait for user confirmation.
-
----
-
-# End of Step
+- `ARCHITECTURE.md`
+- `DECISIONS.md`
+- `decisions/ADR-NNN-<short-name>.md` for significant decisions

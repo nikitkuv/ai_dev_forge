@@ -1,377 +1,67 @@
-# CONVENTIONS.md
-
----
+# AI Development Forge Conventions
 
 ## Purpose
 
-This document defines the conventions used across all bootstrap steps in the AI Dev Forge.
+This document is the human-readable companion to the machine-readable framework contracts. `.ai/framework/contracts.yaml` is the single source of truth for lifecycle enums, transitions, gates, fuzzing outcomes, and invariants. Do not duplicate or locally redefine lifecycle status lists.
 
-These conventions ensure:
+## Naming and global identifiers
 
-- consistency
-- determinism
-- maintainability
-- AI-readability
+Identifiers are globally unique within a project and zero-padded to three digits. Allocate each entity type independently by taking its maximum existing ID and adding one; do not fill gaps. Task numbering is project-global and never restarts for an Epic. Never reuse an ID that was deleted, cancelled, skipped, or otherwise retired:
 
-All bootstrap steps MUST follow these rules.
-
----
-
-# Naming Conventions
-
-## Bootstrap Steps
-
-Bootstrap steps are executed sequentially.
-
-Use the following naming format:
-
-```text
-01-<step>.md
-02-<step>.md
-03-<step>.md
-...
-```
-
----
-
-## Examples
-
-```text
-01-spec.md
-02-architecture.md
-03-backlog.md
-04-execution.md
-05-ai-environment.md
-06-final-validation.md
-```
-
----
-
-## Identifier Naming (Canonical)
-
-All identifiers are zero-padded to 3 digits and use kebab-case for the human-readable suffix.
-
-| Entity | Identifier | Folder / File |
-|--------|-----------|---------------|
-| Epic | `EPIC-001` | `execution/active/EPIC-001-<short-name>/` |
-| Task | `TASK-001` | `execution/active/EPIC-001-<name>/tasks/TASK-001-<short-name>.md` |
+| Entity | Identifier | Canonical location |
+| --- | --- | --- |
+| Epic | `EPIC-001` | `execution/<state>/EPIC-001-<short-name>/` |
+| Task | `TASK-001` | `execution/<state>/EPIC-001-<short-name>/tasks/TASK-001-<short-name>.md` |
+| Bug | `BUG-001` | `BACKLOG.md` |
 | Decision | `ADR-001` | `decisions/ADR-001-<short-name>.md` |
 
-Rules:
+`<short-name>` is stable, lowercase kebab-case, and one to four words. An Epic folder name must match its Epic name in `BACKLOG.md`; each Task belongs to exactly one Epic.
 
-- `<short-name>` is lowercase kebab-case, 1–4 words, stable over the artifact's lifetime.
-- The Epic folder name MUST exactly match the Epic name in BACKLOG.md.
-- A Task file belongs to exactly one Epic folder.
-- Never reuse an identifier once retired.
-
----
-
-## Directory Layout (Canonical)
+## Canonical project paths
 
 ```text
 project/
-├── README.md
-├── CLAUDE.md
-├── SPEC.md
-├── ARCHITECTURE.md
-├── BACKLOG.md
-├── DECISIONS.md            # ADR index (navigation)
-├── decisions/              # individual ADR records
-│   └── ADR-001-<name>.md
-├── execution/
-│   ├── active/
-│   │   └── EPIC-001-<name>/
-│   │       ├── plan.md
-│   │       └── tasks/
-│   │           └── TASK-001-<name>.md
-│   └── completed/
-├── docs/                   # created during bootstrap (may start empty)
-└── references/             # created during bootstrap (may start empty)
+|- README.md
+|- AGENTS.md
+|- CLAUDE.md
+|- SPEC.md
+|- ARCHITECTURE.md
+|- BACKLOG.md
+|- DECISIONS.md
+|- decisions/
+|- execution/{active,paused,completed}/
+|- .ai/{project.yaml,framework.lock,custom/}
+|- .codex/
+|- .claude/
+`- .agents/
 ```
 
----
+`execution/active`, `execution/paused`, and `execution/completed` are structural representations of Epic status. The orchestrator updates `BACKLOG.md` and moves the matching Epic directory together; a mismatch is an invalid state.
 
-# Status Vocabularies
+## Ownership and generated files
 
-Controlled vocabularies are mandatory. Free-text statuses break determinism.
+Ownership is defined by `.ai/framework/manifest.yaml`.
 
-## Epic Status (BACKLOG.md)
+- Framework-owned: bootstrap control documents, `CONVENTIONS.md`, `.ai/templates/`, and `.ai/framework/`.
+- Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical documents, decisions, execution state, and project-specific hooks or MCP.
+- Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, and `.agents/`. Unlisted entries remain project-owned.
 
-- `Planned` — not started
-- `Active` — currently being executed
-- `Completed` — done and archived to `execution/completed/`
-- `Blocked` — cannot proceed (reason required)
-- `Cancelled` — abandoned
+Generated Forge adapter entries are derived files, not project-owned files. Do not edit them manually; put project-specific router additions in `.ai/custom/`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
 
-Invariant: **exactly one** Epic is `Active` (or none, before execution starts).
+Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not introduce additional lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
 
----
+## Language rules
 
-## Task Status (TASK-NNN.md)
+Framework control text, technical identifiers, statuses, paths, and commands are English. Canonical project documents (`README`, `SPEC`, `ARCHITECTURE`, `BACKLOG`, `DECISIONS`, ADRs, plans, and Tasks) use the user communication language recorded in `.ai/project.yaml`.
 
-- `TODO` — not started
-- `IN PROGRESS` — currently being worked on
-- `DONE` — complete, acceptance criteria met
-- `BLOCKED` — cannot proceed (reason required)
-- `CANCELLED` — abandoned
+## One source of truth
 
-Invariant: **at most one** Task is `IN PROGRESS` per active Epic.
+Each kind of information has one canonical owner:
 
-This is the determinism mechanism for "current task": the active task is the single `IN PROGRESS` task inside the single `Active` Epic. If none is `IN PROGRESS`, the next task is the first `TODO` task in plan.md order.
+- Product behavior: `SPEC.md`; architecture: `ARCHITECTURE.md`.
+- Epic priority, readiness, and lifecycle status, plus bug lifecycle state: `BACKLOG.md`; Epic strategy, Task order, Epic fuzzing summary, and Epic user-validation summary: its `plan.md`.
+- Task scope, acceptance criteria, lifecycle state, and implementation/review/testing/user-validation summaries: the Task file.
+- Architectural decision content: its ADR; ADR navigation: `DECISIONS.md`.
+- File history: Git.
 
----
-
-## Decision Status (ADR-NNN.md)
-
-- `Proposed` — drafted, not yet ratified
-- `Accepted` — ratified and in force
-- `Superseded` — replaced by a later ADR (link required)
-- `Deprecated` — no longer relevant
-- `Rejected` — considered and discarded (kept for the record)
-
----
-
-# Decision Records Model
-
-Architectural and significant technical decisions are captured as **ADR (Architecture Decision Records)**.
-
-The model mirrors the BACKLOG / execution split:
-
-- `DECISIONS.md` — lightweight **index** (navigation only). Lists every ADR: ID, title, status, file link. Contains no decision content.
-- `decisions/` — one **atomic record per file**: `decisions/ADR-NNN-<short-name>.md`.
-
-Each ADR is single-responsibility and independently readable (Minimal Context Principle): an AI agent reads only the relevant record, not the whole log.
-
-`DECISIONS.md` + `decisions/` are initialized during Step 02 (System Design), where the first architectural decisions are made, and grow during runtime as new significant decisions occur.
-
----
-
-# Templates
-
-Every artifact has a canonical fill-in template under `.ai/templates/`.
-
-During bootstrap, copy the relevant template to its target location and fill the placeholders. This is the primary mechanism for reproducible (deterministic) output: the agent fills a defined form rather than inventing structure each run.
-
-See `.ai/templates/README.md` for the full mapping.
-
----
-
-# Standard Step Structure
-
-Every bootstrap step MUST follow this structure:
-
----
-
-## 1. Goal
-
-Define:
-
-- purpose of the step
-- expected outcome
-- scope boundaries
-
----
-
-## 2. Inputs
-
-List required artifacts before execution.
-
-Examples:
-
-- SPEC.md
-- ARCHITECTURE.md
-- BACKLOG.md
-
-If none:
-
-```text
-None
-```
-
----
-
-## 3. Actions
-
-Define step-by-step instructions for the AI agent.
-
-Rules:
-
-- must be ordered
-- must be explicit
-- must avoid ambiguity
-- must be deterministic
-
----
-
-## 4. Restrictions
-
-Define what MUST NOT be done during the step.
-
-Common restrictions:
-
-- do not implement features
-- do not modify production code
-- do not skip steps
-- do not invent requirements
-- do not proceed automatically
-
----
-
-## 5. Definition of Done
-
-Define objective completion criteria.
-
-Must be:
-
-- verifiable
-- non-ambiguous
-- based on outputs, not intent
-
----
-
-## 6. Outputs
-
-List all files created or modified.
-
-Must clearly separate:
-
-- created files
-- updated files
-
-Examples:
-
-- SPEC.md
-- ARCHITECTURE.md
-- BACKLOG.md
-- execution/
-- CLAUDE.md
-
----
-
-## 7. Next Step
-
-Specify the next bootstrap step.
-
-Rule:
-
-> Bootstrap never proceeds automatically.
-
-User must explicitly confirm continuation.
-
----
-
-# Documentation Style Rules
-
-All generated documentation MUST be:
-
-- concise
-- structured
-- AI-readable
-- deterministic
-- unambiguous
-
----
-
-## Preferred Formatting
-
-Use:
-
-- headings
-- bullet points
-- tables (when useful)
-- short paragraphs
-
-Avoid:
-
-- long narrative explanations
-- ambiguous phrasing
-- duplicated information
-
----
-
-# Question Policy
-
-If required information is missing:
-
-- ask the user
-- do NOT assume
-- do NOT fabricate
-- do NOT infer silently
-
-Bootstrap is a controlled process, not a guessing system.
-
----
-
-# Existing Repository Handling
-
-When bootstrap is applied to an existing project:
-
-- analyze existing code first
-- preserve valid documentation
-- extend rather than overwrite
-- explicitly report inconsistencies
-- align structure gradually
-
----
-
-# New Repository Handling
-
-When bootstrap is applied to a new project:
-
-- generate all required artifacts
-- initialize full structure
-- ensure consistency across all documents
-- prepare system for execution phase
-
----
-
-# Consistency Rules
-
-All artifacts must remain consistent:
-
-- SPEC ↔ ARCHITECTURE
-- BACKLOG ↔ execution
-- execution ↔ plan.md ↔ TASK.md
-- DECISIONS.md ↔ decisions/ (index ↔ records)
-- CLAUDE.md ↔ navigation system
-- Epic folder name ↔ Epic name in BACKLOG.md
-- Epic Status ↔ Task Status (one Active Epic ↔ at most one IN PROGRESS task)
-
-If inconsistencies appear:
-
-- report them immediately
-- do not silently ignore them
-
----
-
-# Output Quality Requirements
-
-Every generated artifact MUST:
-
-- be syntactically valid Markdown
-- be internally consistent
-- avoid duplication of information
-- follow framework structure
-- be optimized for AI reasoning
-
----
-
-# Completion Protocol
-
-After each bootstrap step:
-
-1. Summarize completed actions
-2. List created/modified files
-3. Report inconsistencies or open questions
-4. Suggest next step
-5. Wait for user confirmation
-
----
-
-# Critical Principle
-
-> Bootstrap is a deterministic system, not a creative process.
-
-The goal is not to “design freely”, but to produce a reproducible engineering environment for AI agents.
-
----
+Do not create separate progress, report, checkpoint, user-validation, security, research, or fuzzing Markdown files. Keep document approval status separate from lifecycle status. If source documents disagree, report the inconsistency instead of silently reconciling it.
