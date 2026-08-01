@@ -211,16 +211,7 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 
 Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет parity и обновляет `.ai/framework.lock`.
 
-## 15. Миграция
-
-1. Скопируйте новую `.ai/` поверх старой.
-2. Попросите агента запустить `forge-migrate-framework`.
-3. Проверьте migration diff, obsolete files, adapter collisions и canonical schema changes.
-4. Подтвердите точный scope.
-
-Skill создаёт временный backup, обновляет framework-owned files и оба adapters, запускает conformance check и обновляет lock только после успеха. При ошибке восстанавливается backup. Canonical documents требуют отдельного diff и подтверждения.
-
-## 16. Git policy
+## 15. Git policy
 
 `.ai/project.yaml` поддерживает:
 
@@ -229,7 +220,7 @@ Skill создаёт временный backup, обновляет framework-own
 
 В commit нельзя включать посторонние пользовательские изменения.
 
-## 17. Проверка фреймворка
+## 16. Проверка фреймворка
 
 `forge-check-framework` выполняет read-only проверку:
 

@@ -24,7 +24,7 @@ AI Development Forge — репозиторный фреймворк совме�
 - восстановление работы без зависимости от истории сессии;
 - обязательную пользовательскую приёмку каждой TASK и каждого Epic;
 - одновременную генерацию нативных адаптеров Codex и Claude;
-- безопасную установку и миграцию без обязательного CLI-инструмента.
+- безопасную установку без обязательного CLI-инструмента.
 
 ## 2. Основные принципы
 
@@ -237,7 +237,7 @@ ARCHITECTURE описывает утверждённую целевую архи
 - trust boundaries;
 - security, reliability и observability;
 - testing strategy;
-- migration и compatibility;
+- data evolution и compatibility;
 - risks и known limitations;
 - ссылки на ADR.
 
@@ -418,7 +418,6 @@ forge-resume-development
 forge-run-task
 forge-complete-task
 forge-complete-epic
-forge-migrate-framework
 forge-security-audit
 forge-check-framework
 forge-sync-adapters
@@ -689,50 +688,9 @@ auto_commit_after_acceptance
 3. явного Task Acceptance;
 4. перевода TASK в `DONE`.
 
-## 27. Миграция
+## 27. Final validation invariants
 
-### 27.1 Ownership
-
-Framework-owned:
-
-- bootstrap documents;
-- CONVENTIONS;
-- templates;
-- neutral definitions в `.ai/framework/`.
-
-Project-owned:
-
-- `.ai/project.yaml`;
-- `.ai/framework.lock`;
-- `.ai/custom/`;
-- canonical documents;
-- decisions;
-- execution;
-- project-specific hooks и MCP.
-
-### 27.2 Процесс
-
-Пользователь копирует новую `.ai/` поверх существующей и просит агента показать план миграции.
-
-`forge-migrate-framework`:
-
-1. сравнивает release manifest с `framework.lock`;
-2. проверяет ручные изменения generated adapters;
-3. находит obsolete framework-owned files;
-4. показывает migration diff;
-5. ждёт подтверждение;
-6. создаёт временный backup затрагиваемых файлов;
-7. обновляет framework-owned files и оба adapters;
-8. отдельно показывает необходимые canonical schema changes;
-9. проверяет structure и invariants;
-10. обновляет lock только после успеха;
-11. восстанавливает backup при ошибке.
-
-Канонические документы не изменяются миграцией без отдельного diff и подтверждения.
-
-## 28. Final validation invariants
-
-Bootstrap, adapter sync, resume и migration проверяют:
+Bootstrap, adapter sync и resume проверяют:
 
 - отсутствие template placeholders в approved documents;
 - существование обязательных canonical files;
@@ -751,7 +709,7 @@ Bootstrap, adapter sync, resume и migration проверяют:
 - возможность восстановить текущий gate без session history;
 - отсутствие production-code changes во время bootstrap.
 
-## 29. Не входит в первую версию
+## 28. Не входит в первую версию
 
 - Framework CLI и команды `forge` как executable.
 - Self-bootstrap framework repository: в нём не создаются project canonical documents, execution workspace или generated root adapters.
@@ -763,7 +721,7 @@ Bootstrap, adapter sync, resume и migration проверяют:
 - Отдельные report/state/progress Markdown-файлы.
 - Скрытые network или security scans.
 
-## 30. Критерии готовности реализации дизайна
+## 29. Критерии готовности реализации дизайна
 
 Дизайн считается реализованным, когда:
 
@@ -776,4 +734,3 @@ Bootstrap, adapter sync, resume и migration проверяют:
 7. TASK хранит все task-level summaries без report-файлов.
 8. Epic проходит mandatory fuzzing и отдельный Epic Acceptance.
 9. Resume восстанавливает процесс только из repository state.
-10. Migration сохраняет project-owned files и требует preview/confirmation.

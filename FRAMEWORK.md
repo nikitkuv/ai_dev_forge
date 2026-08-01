@@ -69,7 +69,7 @@ project/
 
 Ownership разделён на три категории:
 
-- framework-owned release files обновляются миграцией;
+- framework-owned release files поставляются текущей версией Forge;
 - project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical и execution-файлы сохраняются;
 - generated adapters пересоздаются после collision preview.
 
@@ -77,7 +77,7 @@ Ownership разделён на три категории:
 
 `SPEC.md` описывает утверждённое target behavior через наблюдаемые `FR-*`, измеримые `NFR-*` и инварианты `BR-*`.
 
-`ARCHITECTURE.md` связывает requirement drivers с компонентами, dependency rules, data ownership, interfaces, trust boundaries, runtime, reliability, observability, testing и migration.
+`ARCHITECTURE.md` связывает requirement drivers с компонентами, dependency rules, data ownership, interfaces, trust boundaries, runtime, reliability, observability, testing и эволюцией данных.
 
 `BACKLOG.md` содержит только:
 
@@ -156,7 +156,7 @@ Framework control layer написан на английском. Канонич
 - Epic preparation и durable resume;
 - Task execution/completion и Epic completion;
 - security audit;
-- framework migration/check;
+- framework conformance check;
 - adapter synchronization.
 
 Codex вызывает skill как `$forge-...`, Claude Code — как `/forge-...`. Mandatory lifecycle использует явный skill routing, а не только implicit matching.
@@ -229,22 +229,9 @@ Severity описывает последствия, а priority задаётся
 
 Расширение scope требует отдельного точного разрешения. Принятые findings превращаются в существующую TASK, Bug или Epic; отдельный security report не создаётся.
 
-## Синхронизация и миграция
+## Синхронизация адаптеров
 
 Adapter sync пересоздаёт обе платформы как одну операцию, проверяет parity и обновляет lock только после успеха.
-
-Migration:
-
-1. сравнивает новый manifest с lock;
-2. обнаруживает obsolete files и ручные adapter edits;
-3. показывает migration diff;
-4. ждёт подтверждение;
-5. создаёт временный backup;
-6. обновляет только approved scope;
-7. валидирует оба adapters и canonical invariants;
-8. обновляет lock при успехе или восстанавливает backup при ошибке.
-
-Канонические документы не меняются миграцией без отдельного diff и подтверждения.
 
 ## Внешние интеграции
 

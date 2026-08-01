@@ -96,3 +96,18 @@ test("conformance allows project-owned adapter extensions", () => {
   assert.doesNotMatch(combined, /seven `\.codex/);
   assert.doesNotMatch(combined, /fourteen `\.agents/);
 });
+
+test("general docs do not duplicate framework migration guidance", () => {
+  for (const path of [
+    "README.md",
+    "RUNBOOK.md",
+    "FRAMEWORK.md",
+    "FRAMEWORK_DESIGN.md",
+  ]) {
+    const text = read(path);
+    assert.doesNotMatch(text, /forge-migrate-framework/i, path);
+    assert.doesNotMatch(text, /framework migration/i, path);
+    assert.doesNotMatch(text, /## 15\. Миграция/i, path);
+    assert.doesNotMatch(text, /## Синхронизация и миграция/i, path);
+  }
+});
