@@ -23,7 +23,7 @@ Follow all six numbered workflows:
 2. Use `.ai/02-system-design.md` to compare current and target architecture, approve significant ADRs, and create `ARCHITECTURE.md` plus generated `DECISIONS.md`.
 3. Use `.ai/03-release-planning.md` to present discovered feature, defect, debt, and risk candidates; add only user-approved items to `BACKLOG.md`.
 4. Use `.ai/04-prepare-workspace.md` only when the user selects a `READY`, unblocked Epic and authorizes Epic Start.
-5. Use `.ai/05-create-platform-adapters.md` to resolve model mappings and generate both Codex and Claude adapters.
+5. Use `.ai/05-create-platform-adapters.md` to confirm default or overridden model mappings and generate both Codex and Claude adapters.
 6. Use `.ai/06-final-validation.md` to validate the adopted repository without changing product code.
 
 Require explicit user approval at every numbered step and every document, ADR, Replan, Epic Start, and collision gate. Never advance automatically.

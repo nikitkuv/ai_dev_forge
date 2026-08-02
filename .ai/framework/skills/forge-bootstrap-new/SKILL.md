@@ -11,7 +11,7 @@ description: Initialize AI Development Forge in a new product repository from a 
 2. Confirm this is a consumer product repository. If it is the AI Development Forge source repository itself, stop; never self-bootstrap the framework repository.
 3. Inspect existing root files without overwriting unrelated user work.
 4. Record the user's communication language as the documentation language. Keep framework control text, IDs, statuses, paths, and commands in English.
-5. Prepare `.ai/project.yaml` with both Codex and Claude enabled, concrete model mappings to be resolved before adapter generation, and the selected Git policy.
+5. Prepare `.ai/project.yaml` with both Codex and Claude enabled, the bundled model defaults or explicit user-approved overrides, and the selected Git policy.
 
 ## Run the gated bootstrap
 
@@ -21,7 +21,7 @@ Follow the numbered workflows in order:
 2. `.ai/02-system-design.md` — interview for architecture, present alternatives, create proposed ADRs, and generate the decision index.
 3. `.ai/03-release-planning.md` — create the Epic Roadmap and Defect Queue without Tasks or active work.
 4. `.ai/04-prepare-workspace.md` — prepare one `READY` Epic only when the user wants to begin execution.
-5. `.ai/05-create-platform-adapters.md` — resolve model mappings and generate both native platform adapters.
+5. `.ai/05-create-platform-adapters.md` — confirm default or overridden model mappings and generate both native platform adapters.
 6. `.ai/06-final-validation.md` — validate structure, lifecycle, references, adapter parity, and ownership.
 
 Require explicit user approval at every document, ADR, Epic Start, and other gate defined by the numbered workflow. Do not automatically continue from one numbered step to the next.

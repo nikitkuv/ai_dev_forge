@@ -59,14 +59,14 @@ If no Epic was activated, report that bootstrap is planning-ready but paused bef
 
 ## Validate Both Platform Adapters
 
-- Root `AGENTS.md` and `CLAUDE.md` both exist, act only as lifecycle routers, and are each no more than 150 lines.
+- Root `AGENTS.md` and `CLAUDE.md` both exist, are byte-identical lifecycle routers, and are each no more than 150 lines.
 - Codex contains every manifest-declared agent under `.codex/agents/` and every manifest-declared skill under `.agents/skills/`.
 - Claude contains every manifest-declared agent under `.claude/agents/` and every manifest-declared skill under `.claude/skills/`.
 - Additional project-owned agents and skills are allowed, excluded from Forge parity counts, and unchanged.
 - Unlisted platform configuration, settings, commands, and hooks are preserved and remain outside Forge ownership.
-- All rendered agents contain concrete tier mappings; Codex also contains reasoning effort.
+- All rendered agents contain concrete tier mappings and effort.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
-- No unresolved renderer placeholder remains; structured shared and platform overlays appear only in their intended routers.
+- No unresolved renderer placeholder remains; the shared project overlay appears identically in both routers.
 - Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
 - The framework generated no hooks, MCP configuration, or CLI dependency. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 

@@ -7,8 +7,8 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 
 ## Build the render input
 
-1. Read `.ai/project.yaml`, the manifest, neutral agents, portable skills, renderer templates, structured `.ai/custom/` overlays, existing local adapters, and lock hashes.
-2. Require both platforms and resolve every configured model tier. Never invent or silently change a model or reasoning effort.
+1. Read `.ai/project.yaml`, the manifest, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes.
+2. Require both platforms and resolve every configured model tier from the bundled defaults or explicit project overrides. Never invent or silently change a model or effort.
 3. Derive managed membership only from the manifest `subagents` and `skills` IDs plus root `AGENTS.md` and `CLAUDE.md`.
 4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, and adjacent platform files as project-owned content.
 5. Detect manual edits and same-ID collisions in managed entries.
@@ -17,13 +17,13 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 
 Show the complete regeneration diff before replacing a manually changed root router or managed entry. Request explicit confirmation for each same-ID collision.
 
-Preserve project router content only through:
+Preserve project router content only through the shared overlay:
 
 ```text
 .ai/custom/router-shared.md
-.ai/custom/codex-router.md
-.ai/custom/claude-router.md
 ```
+
+If `.ai/custom/codex-router.md` or `.ai/custom/claude-router.md` exists, stop and require explicit migration/reconciliation into the shared overlay before rendering. Never ignore or silently delete a legacy project-owned overlay; platform-specific root router content is incompatible with the identical-router invariant.
 
 Preserve every unlisted adapter entry in place. Do not modify canonical product or execution documents.
 
@@ -31,7 +31,7 @@ Preserve every unlisted adapter entry in place. Do not modify canonical product 
 
 Stage one synchronized candidate containing:
 
-- root `AGENTS.md` and `CLAUDE.md` from current templates plus structured overlays;
+- byte-identical root `AGENTS.md` and `CLAUDE.md` from the identical templates plus the shared overlay;
 - manifest-declared Codex agents under `.codex/agents/`;
 - manifest-declared Codex skills under `.agents/skills/`;
 - manifest-declared Claude agents under `.claude/agents/`;
@@ -42,9 +42,9 @@ Install no global agent or skill. Generate no hook, MCP configuration, platform 
 
 ## Validate and finalize
 
-1. verify both routers have no unresolved placeholder and remain within the configured line limit;
+1. verify both routers are byte-identical, have no unresolved placeholder, and remain within the configured line limit;
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
-3. verify managed IDs, tiers, permissions, descriptions, instructions, models, reasoning effort, and skill bodies have cross-platform parity;
+3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity;
 4. verify additional project-owned agents and skills and all unlisted platform files are unchanged;
 5. run the read-only framework conformance check.
 

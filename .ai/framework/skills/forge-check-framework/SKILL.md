@@ -18,8 +18,8 @@ Do not repair files during this check.
 - Verify both platform adapters were generated from the same source hashes and project configuration.
 - Verify every manifest-declared agent and skill exists on both platforms with matching IDs, tiers, role boundaries, and concrete model mappings.
 - Permit additional project-owned agents and skills; verify they and other unlisted platform files are excluded from Forge ownership and remain unchanged.
-- Verify structured router overlays render into their intended routers without copying legacy framework instructions.
-- Verify root `AGENTS.md` and `CLAUDE.md` are each no more than 150 lines.
+- Verify the shared router overlay renders identically without copying legacy framework instructions.
+- Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
 - Verify the framework did not create default hooks, MCP configuration, or CLI dependencies.
 
 ## Validate canonical and lifecycle state
@@ -32,6 +32,7 @@ Do not repair files during this check.
 - Check plan Task order matches existing TASK files without storing Task status.
 - Check SPEC and ARCHITECTURE contain target state, not execution tracking.
 - Check review/testing fingerprints match current implementation and fuzzing evidence is current after code changes.
+- Check no Task commit predates explicit Task Acceptance and transition to `DONE`.
 - Check the current gate can be reconstructed without session history.
 
 ## Report

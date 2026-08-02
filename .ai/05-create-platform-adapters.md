@@ -16,7 +16,7 @@ Read:
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex and Claude adapter templates under `.ai/templates/adapters/`;
-- `.ai/custom/router-shared.md`, `.ai/custom/codex-router.md`, and `.ai/custom/claude-router.md` when present;
+- `.ai/custom/router-shared.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
 
 Stop if source counts, IDs, or framework versions disagree.
@@ -31,23 +31,23 @@ Require:
 - `documentation_language` to match the user's communication language;
 - `framework_language: en`;
 - an explicit Git policy;
-- concrete model mappings for every tier.
+- resolved model mappings for every tier, using the bundled defaults unless the project explicitly overrides them.
 
 Model mappings must provide:
 
 ```yaml
 models:
   codex:
-    strong: {model: "<model-or-alias>", reasoning_effort: "<effort>"}
-    balanced: {model: "<model-or-alias>", reasoning_effort: "<effort>"}
-    fast: {model: "<model-or-alias>", reasoning_effort: "<effort>"}
+    strong: {model: gpt-5.6-sol, reasoning_effort: high}
+    balanced: {model: gpt-5.6-terra, reasoning_effort: medium}
+    fast: {model: gpt-5.6-luna, reasoning_effort: medium}
   claude:
-    strong: {model: "<model-or-alias>"}
-    balanced: {model: "<model-or-alias>"}
-    fast: {model: "<model-or-alias>"}
+    strong: {model: opus, effort: high}
+    balanced: {model: sonnet, effort: high}
+    fast: {model: haiku, effort: high}
 ```
 
-Accept provider aliases or full model IDs. Never invent a model, leave a mapping unresolved, or silently upgrade or downgrade a tier. Warn if the main orchestrator session is not suitable for tier `strong`, but do not change that session.
+These are framework defaults, not unresolved placeholders. Accept provider aliases or full model IDs as explicit project overrides. Never invent an override, leave a mapping unresolved, or silently upgrade or downgrade a tier. Warn if the main orchestrator session is not suitable for tier `strong`, but do not change that session.
 
 ## Detect Collisions
 
@@ -79,7 +79,7 @@ AGENTS.md
 .agents/skills/<fourteen-skill-ids>/SKILL.md
 ```
 
-Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus shared and Codex-specific overlays. Do not copy legacy framework sections into an overlay.
+Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus the shared overlay. Do not copy legacy framework sections into the overlay.
 
 For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 
@@ -106,12 +106,12 @@ CLAUDE.md
 .claude/skills/<fourteen-skill-ids>/SKILL.md
 ```
 
-Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus shared and Claude-specific overlays. Do not copy legacy framework sections into an overlay.
+Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus the same shared overlay. Do not copy legacy framework sections into the overlay.
 
 For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
 - native YAML frontmatter;
-- its `id`, English description, concrete Claude model, and allowed tools;
+- its `id`, English description, concrete Claude model and effort, and allowed tools;
 - the same English role contract used by the Codex adapter.
 
 Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
@@ -120,13 +120,13 @@ Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
 Verify the staged outputs:
 
-- both root routers contain no unresolved placeholder and are no more than 150 lines;
+- both root routers are byte-identical, contain no unresolved placeholder, and are no more than 150 lines;
 - each platform contains every agent and skill ID declared by the manifest;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
-- every rendered agent contains its concrete model and Codex agents contain reasoning effort;
+- every rendered agent contains its concrete model and effort;
 - generated files contain English control text;
-- shared and platform-specific `.ai/custom/` overlays appear only in their intended routers;
+- `.ai/custom/router-shared.md` appears identically in both routers;
 - `.codex/config.toml`, Claude settings, commands, hooks, and all other unlisted platform files are unchanged;
 - no hook or MCP file was generated.
 

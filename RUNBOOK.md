@@ -206,19 +206,19 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 
 - neutral agents или skills;
 - model mappings;
-- `.ai/custom/`;
+- `.ai/custom/router-shared.md`;
 - framework release.
 
-Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет parity и обновляет `.ai/framework.lock`.
+Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет byte-identical root routers, parity остальных adapters и обновляет `.ai/framework.lock`.
 
 ## 15. Git policy
 
 `.ai/project.yaml` поддерживает:
 
-- `manual` — оркестратор предлагает commit, но ждёт явного разрешения;
+- `manual` — после Task Acceptance и перехода TASK в `DONE` оркестратор предлагает commit, но ждёт отдельного явного разрешения;
 - `auto_commit_after_acceptance` — commit разрешён только после clean review, testing, Task Acceptance и перехода TASK в `DONE`.
 
-В commit нельзя включать посторонние пользовательские изменения.
+До явного Task Acceptance commit запрещён. Commit не заменяет acceptance. В commit нельзя включать посторонние пользовательские изменения.
 
 ## 16. Проверка фреймворка
 
