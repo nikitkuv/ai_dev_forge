@@ -62,6 +62,7 @@ If no Epic was activated, report that bootstrap is planning-ready but paused bef
 - Root `AGENTS.md` and `CLAUDE.md` both exist, are byte-identical lifecycle routers, and are each no more than 150 lines.
 - Codex contains every manifest-declared agent under `.codex/agents/` and every manifest-declared skill under `.agents/skills/`.
 - Claude contains every manifest-declared agent under `.claude/agents/` and every manifest-declared skill under `.claude/skills/`.
+- Every Forge-managed `.claude/agents/*.md` is UTF-8 without BOM and begins at byte zero with `---`, so Claude Code can parse its YAML frontmatter.
 - Additional project-owned agents and skills are allowed, excluded from Forge parity counts, and unchanged.
 - Unlisted platform configuration, settings, commands, and hooks are preserved and remain outside Forge ownership.
 - All rendered agents contain concrete tier mappings and effort.
