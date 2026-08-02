@@ -49,17 +49,15 @@ Report a canonical schema difference as a compatibility finding. Do not edit, re
 
 Treat `AGENTS.md` and `CLAUDE.md` as mixed-ownership files.
 
-Preserve project title, overview, project map, confirmed commands, domain constraints, protected directories, and platform-specific guidance. Do not preserve legacy Forge lifecycle rules, routing, agent lists, skill lists, or generic process instructions.
+Preserve project title, overview, project map, confirmed commands, domain constraints, protected directories, and applicable platform guidance. Check preserved statements against canonical state, especially `BACKLOG.md`, and report contradictions without modifying canonical files. Do not preserve legacy Forge lifecycle rules, routing, agent lists, skill lists, or generic process instructions.
 
-Preview extracted project content before storing it as:
+Merge preserved project content from both routers and from any legacy `.ai/custom/router-shared.md`, `.ai/custom/codex-router.md`, or `.ai/custom/claude-router.md`, then preview it before storing it as:
 
 ```text
 .ai/custom/router-shared.md
-.ai/custom/codex-router.md
-.ai/custom/claude-router.md
 ```
 
-Render the final routers from the staged templates plus these overlays and show their complete diff before replacement.
+If old routers or overlays contain conflicting project rules, stop for an explicit reconciliation decision. Back up legacy platform-specific overlays and remove them only as part of the exact approved migration scope after their preserved content is present in the shared overlay. Render the final routers from the staged byte-identical templates plus the shared overlay, verify that the outputs are byte-identical, and show their complete diff before replacement.
 
 ## Local Adapter Update
 
@@ -80,7 +78,7 @@ Show one complete migration preview containing:
 
 - old and new framework versions and the rollback source;
 - every framework replacement and obsolete recognized Forge path;
-- extracted router overlays and final router diffs;
+- extracted shared router overlay and byte-identical final router diffs;
 - adapter additions, replacements, preserved files, and collisions;
 - protected-path hashes and canonical schema findings;
 - `.ai/project.yaml` values that must be confirmed when absent;
@@ -96,11 +94,10 @@ After approval:
 2. build staged candidate outputs without changing active targets;
 3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` and `.ai/custom/` project state;
 4. replace recognized Forge adapter IDs while preserving unlisted files;
-5. replace the active bundle and both routers as one logical operation;
+5. replace the active bundle and both byte-identical routers as one logical operation;
 6. run `forge-check-framework` against the candidate result;
 7. re-hash protected paths and fail on any difference;
 8. create or update `.ai/framework.lock` only after every validation passes;
 9. remove `.ai-next/` only after success and keep the backup until the user acknowledges the result.
 
 On any failure, perform rollback: restore the old `.ai/`, routers, adapters, and lock; verify protected hashes again; report the failed stage. Create no migration report Markdown file and require no framework CLI.
-

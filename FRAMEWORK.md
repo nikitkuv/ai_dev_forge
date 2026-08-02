@@ -115,13 +115,15 @@ Framework control layer написан на английском. Канонич
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Оба root router ограничены 150 строками. `.ai/project.yaml` сопоставляет tiers с конкретными моделями:
+Оба root router имеют byte-identical содержимое и ограничены 150 строками. `.ai/project.yaml` сопоставляет tiers с конкретными моделями и effort. Framework defaults:
 
-- `strong`;
-- `balanced`;
-- `fast`.
+| Tier | Codex | Claude Code |
+| --- | --- | --- |
+| `strong` | `gpt-5.6-sol`, `high` | `opus`, `high` |
+| `balanced` | `gpt-5.6-terra`, `medium` | `sonnet`, `high` |
+| `fast` | `gpt-5.6-luna`, `medium` | `haiku`, `high` |
 
-Для Codex отдельно задаётся reasoning effort. Aliases и полные model IDs поддерживаются; скрытая замена tier запрещена.
+Проект может явно переопределить defaults. Aliases и полные model IDs поддерживаются; скрытая замена tier запрещена.
 
 `.ai/framework.lock` хранит версии и hashes neutral sources и generated outputs, чтобы обнаруживать drift и ручные изменения.
 
@@ -185,7 +187,7 @@ TODO
 5. пользователь тестирует вручную;
 6. отдельный Task Acceptance переводит TASK в `DONE`.
 
-Любое изменение кода инвалидирует прежние review и test fingerprints. Task Acceptance не запускает следующую TASK без отдельного разрешения.
+Любое изменение кода инвалидирует прежние review и test fingerprints. Commit этой TASK запрещён до явного Task Acceptance и перехода в `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit. Task Acceptance не запускает следующую TASK без отдельного разрешения.
 
 ## Epic lifecycle и fuzzing
 

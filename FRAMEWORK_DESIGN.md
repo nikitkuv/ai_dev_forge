@@ -362,9 +362,9 @@ AGENTS.md                     CLAUDE.md
 .agents/skills/*/SKILL.md     .claude/skills/*/SKILL.md
 ```
 
-`AGENTS.md` и `CLAUDE.md` являются короткими lifecycle routers и не превышают 150 строк каждый.
+`AGENTS.md` и `CLAUDE.md` являются byte-identical короткими lifecycle routers и не превышают 150 строк каждый.
 
-Нейтральные определения находятся в `.ai/framework/`. Сгенерированные platform files вручную не редактируются. Project-specific additions находятся в `.ai/custom/`.
+Нейтральные определения находятся в `.ai/framework/`. Сгенерированные platform files вручную не редактируются. Project-specific router additions находятся только в `.ai/custom/router-shared.md` и одинаково попадают в оба router.
 
 Framework не создаёт hooks и MCP. Проект добавляет их отдельно при необходимости.
 
@@ -376,12 +376,20 @@ Framework не создаёт hooks и MCP. Проект добавляет их
 - `balanced`;
 - `fast`.
 
-`.ai/project.yaml` сопоставляет tier с concrete model и, где поддерживается, reasoning effort отдельно для Codex и Claude.
+`.ai/project.yaml` сопоставляет tier с concrete model и effort. Framework задаёт defaults:
+
+| Tier | Codex | Claude Code |
+| --- | --- | --- |
+| `strong` | `gpt-5.6-sol`, effort `high` | `opus`, effort `high` |
+| `balanced` | `gpt-5.6-terra`, effort `medium` | `sonnet`, effort `high` |
+| `fast` | `gpt-5.6-luna`, effort `medium` | `haiku`, effort `high` |
+
+Проект может явно переопределить любой default в `.ai/project.yaml`.
 
 Adapter-generation workflow записывает concrete model:
 
 - в `model` и `model_reasoning_effort` Codex TOML agent;
-- в `model` Claude agent frontmatter.
+- в `model` и `effort` Claude agent frontmatter.
 
 Поддерживаются provider aliases и полные model IDs. Изменение mapping выполняется в одном месте и синхронизируется во все соответствующие agents.
 
@@ -679,7 +687,9 @@ auto_commit_after_acceptance
 
 По умолчанию используется `manual`.
 
-В manual mode orchestrator после принятия TASK предлагает изменённые файлы и commit message, но не выполняет commit.
+Commit TASK является отдельным gate после явного Task Acceptance и перехода TASK в `DONE`; до подтверждения пользователя commit запрещён.
+
+В manual mode orchestrator после принятия TASK предлагает изменённые файлы и commit message, но не выполняет commit без отдельного разрешения пользователя.
 
 В automatic mode commit допустим только после:
 
@@ -687,6 +697,8 @@ auto_commit_after_acceptance
 2. полного testing;
 3. явного Task Acceptance;
 4. перевода TASK в `DONE`.
+
+Task commit никогда не является доказательством или заменой Task Acceptance и не может предшествовать ему.
 
 ## 27. Final validation invariants
 

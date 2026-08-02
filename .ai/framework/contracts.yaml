@@ -46,6 +46,11 @@ gates:
   task_acceptance:
     transition: "AWAITING USER ACCEPTANCE -> DONE"
     requires: [explicit_user_acceptance]
+  task_commit:
+    allowed_after: task_acceptance
+    requires: [task_status_DONE, explicit_user_acceptance, current_review_and_testing_evidence, scoped_changes_only]
+    manual_policy_additionally_requires: [separate_explicit_user_commit_authorization]
+    forbidden_before: task_acceptance
   next_task_start:
     requires: [separate_explicit_user_authorization]
     note: Task acceptance and permission to start the next task are separate gates; one message may authorize both only when it explicitly states both decisions.
@@ -101,4 +106,5 @@ invariants:
   - no_more_than_one_active_epic
   - no_more_than_one_code_writing_task_in_progress
   - code_changes_invalidate_prior_review_and_test_results
+  - task_commit_never_precedes_explicit_user_acceptance
   - next_epic_never_starts_automatically

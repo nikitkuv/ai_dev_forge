@@ -17,8 +17,8 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 
 ## Classify routers and adapters
 
-1. Split `AGENTS.md` and `CLAUDE.md` into project-owned context and legacy Forge instructions.
-2. Propose shared, Codex-only, and Claude-only project overlays under `.ai/custom/`.
+1. Split `AGENTS.md` and `CLAUDE.md` into project-owned context and legacy Forge instructions. Include any existing shared, Codex-only, and Claude-only custom router overlays as migration inputs. Check project-owned statements against canonical state, especially `BACKLOG.md`, and report contradictions without changing canonical files.
+2. Merge the preserved project-owned context from both routers and all legacy overlays into one `.ai/custom/router-shared.md`. If any inputs disagree, show the conflict and require an explicit user decision; do not silently prefer either platform. Back up legacy platform-specific overlays and remove them only within the approved migration scope after their preserved content is present in the shared overlay.
 3. Derive the new managed adapter membership from the staged manifest IDs.
 4. Recognize legacy Forge agents and skills from the old bundle, old hashes when present, known IDs, and content comparison.
 5. Preserve unlisted agents, skills, platform configuration, settings, commands, hooks, and unknown files.
@@ -26,7 +26,7 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 
 ## Preview and authorize
 
-Show one complete diff containing framework replacements, recognized obsolete Forge paths, overlay extraction, final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, model/configuration decisions, and rollback source.
+Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, default or overridden model/configuration decisions, and rollback source.
 
 Report canonical schema differences only as compatibility findings outside migration scope. Request explicit approval for the exact framework, router, and managed-adapter changes. Approval does not authorize canonical edits, product changes, commits, or pushes.
 
@@ -35,8 +35,8 @@ Report canonical schema differences only as compatibility findings outside migra
 After approval:
 
 1. back up active `.ai/`, root routers, every affected adapter entry, and the old lock;
-2. build a candidate `.ai/` from the staged release plus approved project configuration and structured overlays;
-3. render both root routers from current templates and overlays;
+2. build a candidate `.ai/` from the staged release plus approved project configuration and the shared overlay;
+3. render byte-identical root `AGENTS.md` and `CLAUDE.md` from the current identical templates and shared overlay;
 4. invoke `forge-sync-adapters` to replace recognized Forge IDs and install the manifest-declared local set while preserving unlisted files;
 5. replace the active bundle and staged outputs as one logical operation;
 6. run `forge-check-framework` and compare all protected-path hashes;

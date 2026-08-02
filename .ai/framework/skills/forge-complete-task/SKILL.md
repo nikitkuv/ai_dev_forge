@@ -29,7 +29,9 @@ After explicit acceptance:
 
 Read `git.policy` from `.ai/project.yaml`.
 
-- `manual`: show the exact scoped files and proposed commit message, then wait for explicit commit authorization.
+The commit gate follows Task Acceptance; it never precedes or constitutes user acceptance. Do not commit the TASK while it is awaiting acceptance.
+
+- `manual`: after explicit Task Acceptance and transition to `DONE`, show the exact scoped files and proposed commit message, then wait for separate explicit commit authorization.
 - `auto_commit_after_acceptance`: commit only the accepted TASK's scoped changes after clean review, full testing or an accepted exception, explicit Task Acceptance, and transition to `DONE`.
 
 Never include unrelated user changes in the commit.

@@ -90,12 +90,14 @@ Sparse checkout загружает рабочую копию только пап
 Read .ai-next/MIGRATE.md and migrate the framework from .ai/ to .ai-next/.
 The legacy project may not have .ai/framework.lock.
 Do not modify canonical documents, decisions/, execution/, project code, or tests.
-Preserve project-specific content in AGENTS.md and CLAUDE.md.
+Preserve project-specific content from AGENTS.md and CLAUDE.md in one shared overlay.
+Reconcile it with canonical state from BACKLOG.md and report contradictions without editing BACKLOG.md.
+Render final AGENTS.md and CLAUDE.md with byte-identical content.
 Replace legacy Forge agents and skills with the bundled local versions.
 Show the complete migration diff before writing.
 Communicate with me in Russian.
 ```
 
-Сначала агент работает read-only и показывает полный diff: замену `.ai/`, merge routers, удаляемые старые Forge adapters, устанавливаемые локальные adapters, collisions и rollback source. Ничего не подтверждайте, пока в списке изменений присутствует canonical или product path.
+Сначала агент работает read-only и показывает полный diff: замену `.ai/`, объединение проектного содержимого routers и legacy platform-specific overlays в shared overlay, два идентичных итоговых router-файла, удаляемые старые Forge adapters, устанавливаемые локальные adapters, collisions и rollback source. Legacy `.ai/custom/codex-router.md` и `.ai/custom/claude-router.md` удаляются только после backup и явного подтверждения их merge. Противоречия с `BACKLOG.md` агент сообщает, но сам `BACKLOG.md` не изменяет. Ничего не подтверждайте, пока в списке изменений присутствует canonical или product path.
 
 После подтверждения агент создаёт backup, применяет staged-кандидаты, проверяет защищённые пути и только затем создаёт `.ai/framework.lock`. При ошибке он восстанавливает старую `.ai/` и адаптеры. После успеха `.ai-next/` удаляется.

@@ -78,9 +78,11 @@ Communicate with me in Russian.
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Нейтральные определения находятся в `.ai/framework/`. Конкретные модели для tiers `strong`, `balanced` и `fast` задаются один раз в `.ai/project.yaml`; генератор записывает их в нативные agent-файлы обеих платформ.
+Нейтральные определения находятся в `.ai/framework/`. `AGENTS.md` и `CLAUDE.md` генерируются с byte-identical содержимым. Проектные дополнения к ним хранятся только в `.ai/custom/router-shared.md`.
 
-Сгенерированные adapters вручную не редактируются. Проектные дополнения хранятся в `.ai/custom/` и применяются через синхронизацию.
+Framework defaults для субагентов: Codex `strong = gpt-5.6-sol/high`, `balanced = gpt-5.6-terra/medium`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/high`, `balanced = sonnet/high`, `fast = haiku/high`. Проект может явно переопределить их в `.ai/project.yaml`; генератор записывает resolved mapping в нативные agent-файлы обеих платформ.
+
+Сгенерированные adapters вручную не редактируются и применяются через синхронизацию.
 
 ## Внешняя инфраструктура
 
