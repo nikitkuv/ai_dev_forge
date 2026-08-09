@@ -7,7 +7,7 @@ description: Classify and record a reported defect in an initialized Forge proje
 
 ## Establish the affected state
 
-1. Read the reported behavior, relevant requirements, active Epic and TASK files, user-validation history, accepted code history, and Git state.
+1. Read the reported behavior, relevant requirements, affected planned workspaces, active Epic and TASK files, user-validation history, accepted code history, and Git state.
 2. Clarify reproduction conditions, expected behavior, actual behavior, impact, affected versions or environments, and available evidence.
 3. Reproduce the problem consistently when local evidence permits. Capture exact commands, inputs, outputs, error messages, and environmental differences; if it is not reproducible, state the evidence gap instead of guessing.
 4. Inspect relevant recent changes, data flow, component boundaries, dependencies, and similar working behavior. Trace the first point where observed behavior diverges from expected behavior.
@@ -25,7 +25,7 @@ Investigation before scheduling is read-only with respect to production code and
 - Record the feedback in that TASK's User Validation and Iteration History.
 - Return the TASK to `IN PROGRESS` through the orchestrator.
 - Invalidate prior review and testing evidence after code changes.
-- Repeat implementation, review, full testing, and user acceptance.
+- Repeat implementation, structured review, selected Task testing, and user acceptance. Full regression remains the Epic Validation gate.
 
 ### Defect in previously accepted code
 
@@ -41,6 +41,7 @@ Severity describes consequences; priority belongs to the user.
 Present the available paths:
 
 - add a repair TASK to the active Epic through the Replan gate;
+- add a repair TASK to an existing compatible planned workspace through the Replan gate without activating it;
 - create a separate `PLANNED/OUTLINE` Bugfix Epic;
 - leave the Bug `OPEN`;
 - reject, deduplicate, or mark it `WONT_FIX` after the user's decision.

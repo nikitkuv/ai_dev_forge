@@ -199,7 +199,9 @@ BACKLOG.md
 
 ### Шаг 5. Prepare Workspace → Epic plan и TASK-файлы
 
-Оркестратор выбирает только `PLANNED + READY + unblocked` Epic. Допустим, это `EPIC-001`.
+Оркестратор выбирает `PLANNED + READY` Epic со стабильными requirements, boundaries и declarations зависимостей. Unsatisfied dependencies, blockers или другой active Epic не мешают планированию, но позже блокируют Epic Start. Допустим, выбран `EPIC-001`.
+
+Он вызывает strong read-only `epic-planner`, передаёт approved canonical documents, repository/CI evidence, quality configuration, contracts и templates, затем независимо проверяет предложение. Planner не пишет plan/TASK-файлы и не утверждает их.
 
 > **Оркестратор:** Для `EPIC-001` предлагаю три TASK:
 >
@@ -207,32 +209,31 @@ BACKLOG.md
 > - `TASK-002` — реализовать SQLite repository;
 > - `TASK-003` — реализовать создание и список задач через application/UI boundary.
 >
-> Показываю полный plan, acceptance criteria, зависимости и required tests. Утверждаете определения plan и TASK?
+> Показываю полный plan, requirement coverage, quality profiles, Epic Verification Plan, acceptance criteria, зависимости, affected surfaces, risk flags, review focus и selected Task checks. Утверждаете определения plan и TASK?
 
 > **Пользователь:** Для TASK-002 добавь проверку миграции пустой базы. Остальное принимаю.
 
 **Внутреннее действие**
 
 - Оркестратор обновляет proposed plan и TASK-002.
-- До approval файлы остаются draft или ещё не создаются в active workspace.
-- После approval определения получают approved metadata.
+- До approval файлы остаются draft или ещё не создаются в execution workspace.
+- После Plan Approval approved plan и все `TODO` TASK-файлы атомарно создаются в `execution/planned/EPIC-001-core/`; `BACKLOG.md` сохраняет `EPIC-001` в `PLANNED`.
 
-> **Оркестратор:** Определения обновлены и утверждены. Отдельный gate: активировать `EPIC-001` сейчас?
+> **Оркестратор:** Определения обновлены и сохранены в planned queue. Отдельный gate: активировать `EPIC-001` сейчас?
 
-> **Пользователь:** Да, запускай EPIC-001.
+> **Пользователь:** Нет, оставь его спланированным в очереди.
 
 **Внутреннее действие**
 
-1. Срабатывает отдельный Epic Start gate.
-2. `BACKLOG.md`: `EPIC-001` переходит `PLANNED → ACTIVE`.
-3. Создаётся `execution/active/EPIC-001-core/plan.md`.
-4. Создаются три TASK-файла с `definition_status: approved` и `status: TODO`.
-5. Ни одна TASK не переходит в `IN PROGRESS`.
+1. Epic Start не срабатывает; `EPIC-001` остаётся `PLANNED + READY`.
+2. Approved workspace остаётся в `execution/planned/`.
+3. Все три TASK имеют `definition_status: approved` и `status: TODO`.
+4. Ни одна TASK не переходит в `IN PROGRESS`.
 
 **Состояние после шага**
 
 ```text
-execution/active/EPIC-001-core/
+execution/planned/EPIC-001-core/
 ├── plan.md
 └── tasks/
     ├── TASK-001-domain-model.md    status: TODO
@@ -240,7 +241,7 @@ execution/active/EPIC-001-core/
     └── TASK-003-create-and-list.md
 ```
 
-Epic Start не является Task Start.
+Позже Epic Start повторно проверит dependencies, `Blocked by` и отсутствие другого active-work Epic, затем атомарно переместит каталог `execution/planned/ → execution/active/` вместе с переходом Backlog `PLANNED → ACTIVE`. Epic Start не является Task Start.
 
 ### Шаг 6. Создание Codex и Claude Code adapters
 
@@ -290,17 +291,17 @@ Generated adapters вручную не редактируются. Проект�
 - ownership и обязательные root-файлы;
 - frontmatter и approval metadata;
 - ссылки между requirements, architecture, ADR, Epic, plan и TASK;
-- совпадение `BACKLOG.md` с `execution/active/`;
+- согласованность `BACKLOG.md` с ordered `execution/planned/` queue и `execution/active/`;
 - отсутствие циклов TASK dependencies;
 - parity двух adapters;
 - отсутствие hooks, MCP, CLI dependency и report Markdown;
 - восстановление текущего gate без истории чата.
 
-> **Оркестратор:** Final Validation пройдена. Активен `EPIC-001`, все три TASK имеют status `TODO`. Первый допустимый gate — Task Start для `TASK-001`. Подтверждаете результат Step 06 и завершение bootstrap?
+> **Оркестратор:** Final Validation пройдена. `EPIC-001` находится в planned queue, все три TASK имеют status `TODO`, активного Epic нет. Следующий допустимый gate — Epic Start для `EPIC-001`. Подтверждаете результат Step 06 и завершение bootstrap?
 
 > **Пользователь:** Да, Final Validation принимаю. Bootstrap можно завершить.
 
-> **Оркестратор:** Bootstrap завершён. Отдельный следующий gate — Task Start для `TASK-001`. Запустить TASK-001?
+> **Оркестратор:** Bootstrap завершён. Отдельный следующий gate — Epic Start для `EPIC-001`; только после него можно запрашивать Task Start для `TASK-001`. Активировать EPIC-001?
 
 На этом bootstrap заканчивается. Сам вопрос о запуске TASK не означает её запуск.
 

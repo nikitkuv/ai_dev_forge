@@ -1,6 +1,6 @@
-# AI Development Forge v3 — Architecture
+# AI Development Forge v4 — Architecture
 
-Этот документ описывает реализованную архитектуру фреймворка. Обоснование решений и полный набор согласованных правил находятся в [FRAMEWORK_DESIGN.md](FRAMEWORK_DESIGN.md).
+Этот документ описывает реализованную архитектуру фреймворка и её обязательные lifecycle-контракты.
 
 ## Назначение
 
@@ -29,6 +29,9 @@ project/
 │   ├── active/EPIC-NNN-<name>/
 │   │   ├── plan.md
 │   │   └── tasks/TASK-NNN-<name>.md
+│   ├── planned/EPIC-NNN-<name>/
+│   │   ├── plan.md
+│   │   └── tasks/TASK-NNN-<name>.md
 │   ├── paused/
 │   └── completed/
 ├── .ai/
@@ -49,7 +52,7 @@ project/
 | Epic, приоритет, readiness, status и дефекты | `BACKLOG.md` |
 | Содержание одного архитектурного решения | соответствующий ADR |
 | Навигация по решениям | генерируемый `DECISIONS.md` |
-| Стратегия Epic, порядок TASK, Epic fuzzing и validation | `plan.md` |
+| Стратегия Epic, порядок TASK, verification plan, Epic Validation, fuzzing и user validation | `plan.md` |
 | TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
 | История файлов | Git |
 
@@ -63,7 +66,7 @@ project/
 - `CONVENTIONS.md`;
 - `framework/manifest.yaml` с release, ownership, agent и skill IDs;
 - `framework/contracts.yaml` с lifecycle, transitions, gates и fuzzing outcomes;
-- семь нейтральных agent definitions;
+- девять нейтральных agent definitions;
 - четырнадцать portable skills;
 - canonical и adapter templates.
 
@@ -88,7 +91,9 @@ Ownership разделён на три категории:
 
 ADR является авторитетным решением. `DECISIONS.md` генерируется из ADR frontmatter и служит только индексом.
 
-`plan.md` не хранит TASK status. TASK-файл хранит единственный lifecycle status, revision/fingerprint evidence и компактные summaries.
+`plan.md` не хранит TASK status. TASK-файл хранит единственный lifecycle status, revision/fingerprint evidence и компактные summaries. Approved detailed plans для ещё не активированных Epic находятся в `execution/planned/`; все их TASK остаются `TODO`.
+
+Несколько `execution/planned/EPIC-*` могут существовать одновременно. Они не создают новый Epic status: Backlog сохраняет `PLANNED + READY`, а приоритет и порядок определяются только строками Backlog. Plan Approval пишет planned workspace. Epic Start отдельно требует satisfied dependencies, пустой `Blocked by`, отсутствие другого active-work Epic и атомарно выполняет move `planned → active` вместе с `PLANNED → ACTIVE`.
 
 ## Идентификаторы и язык
 
@@ -141,9 +146,11 @@ Framework control layer написан на английском. Канонич
 | --- | --- | --- |
 | `context-collector` | fast | локальное canonical/execution/Git/code evidence |
 | `documentation-researcher` | fast | официальная внешняя документация |
+| `epic-planner` | strong | read-only Epic decomposition, risks, review focus и verification planning |
 | `implementer` | balanced | одна TASK, production-код и тесты |
 | `reviewer` | strong | независимый read-only review |
-| `tester` | fast | targeted, affected, full tests и configured checks |
+| `tester` | fast | selected focused, affected и scoped Task checks |
+| `epic-validator` | balanced | полный regression, project-wide checks, critical paths и quality profiles |
 | `fuzzer` | balanced | воспроизводимый Epic fuzzing без исправлений |
 | `security-auditor` | strong | явный on-demand local security audit |
 
@@ -182,31 +189,52 @@ TODO
 
 1. отдельный Task Start;
 2. implementer пишет код и необходимые тесты;
-3. strong reviewer проверяет только назначенную TASK;
-4. tester запускает targeted, affected и полный suite, затем lint/typecheck/build;
+3. strong reviewer получает обязательный Review Packet и по ordered protocol проверяет acceptance traceability, diff/context, adversarial cases, архитектуру, контракты, данные, безопасность и тесты;
+4. tester запускает focused, selected affected и scoped quality checks; полный project suite и unscoped global checks остаются Epic gate;
 5. пользователь тестирует вручную;
 6. отдельный Task Acceptance переводит TASK в `DONE`.
 
 Любое изменение кода инвалидирует прежние review и test fingerprints. Commit этой TASK запрещён до явного Task Acceptance и перехода в `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit. Task Acceptance не запускает следующую TASK без отдельного разрешения.
 
-## Epic lifecycle и fuzzing
+## Epic lifecycle, validation и fuzzing
 
 ```text
-PLANNED → ACTIVE → FUZZING → AWAITING EPIC ACCEPTANCE → COMPLETED
+PLANNED → ACTIVE → VALIDATING → FUZZING → AWAITING EPIC ACCEPTANCE → COMPLETED
 ```
 
 Также поддерживаются `PAUSED` и `CANCELLED`.
 
-После принятия последней TASK автоматически запускается read-only fuzzer:
+После принятия последней TASK отдельный `epic-validator` на точном aggregate fingerprint запускает полный project suite, project-wide lint/typecheck/build, integration/E2E, requirement coverage и применимые quality-profile gates. Только `PASSED` или `PASSED WITH ACCEPTED EXCEPTIONS` после явного принятия риска переводит Epic в `FUZZING`.
+
+Затем автоматически запускается read-only fuzzer:
 
 - `PASSED`;
 - `NOT APPLICABLE` с rationale и alternative risk coverage;
 - `HARNESS REQUIRED`;
 - `FINDINGS`.
 
-Harness или remediation создаются как новые TASK через Replan и собственный Task Start. После изменений повторяются review, полный testing и fuzzing.
+Harness или remediation создаются как новые TASK через Replan и собственный Task Start. После изменений повторяются structured review, selected Task testing, полный Epic Validation и fuzzing.
 
 Только отдельный Epic Acceptance завершает Epic и перемещает его каталог в `execution/completed/`. Следующий Epic автоматически не активируется.
+
+## Quality gates и project profiles
+
+Universal Task baseline требует approved definition и boundaries, objectively verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected affected/scoped checks, current structured review, reproducible manual verification и explicit Task Acceptance.
+
+Universal Epic baseline требует `DONE` для всех planned TASK, requirement-to-evidence coverage, полный project suite, project-wide lint/typecheck/build, cross-component и critical-path validation, applicable profile gates, current documentation/operational evidence, допустимый fuzzing outcome, отсутствие непринятых blocking risks и explicit Epic Acceptance.
+
+Профили компонуются; backend + frontend образуют full-stack coverage:
+
+| Profile | Дополнительные gates |
+| --- | --- |
+| `backend` | API/schema contracts, authorization, persistence/migration, idempotency, concurrency, failure handling |
+| `frontend` | component behavior, critical E2E, accessibility, responsive states, browser compatibility, production build |
+| `ml` | data quality, leakage prevention, reproducibility, baseline comparison, metric uncertainty, artifact lineage, training-serving parity |
+| `data_pipeline` | schema evolution, idempotency, backfill, data quality, lineage, partial-failure recovery |
+| `infrastructure` | validate/plan/dry-run, least privilege, rollback, drift, secret handling, deployment smoke |
+| `library_cli` | public API compatibility, packaging, supported runtimes, install/upgrade, CLI exit and stream contracts |
+
+Конкретные команды берутся только из подтверждённого repository/build/CI evidence, сохраняются в `.ai/project.yaml` и утверждённом Epic Verification Plan. Пустая конфигурация требует явного `not applicable` или blocker; агент не придумывает замену.
 
 ## Defect Queue
 

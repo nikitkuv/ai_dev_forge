@@ -23,7 +23,7 @@ The user controls `P0`–`P3` priority and row order within each priority. The a
 | EPIC-001 | <Name — observable outcome> | <FR-/NFR-/BR-IDs or `TBD` while OUTLINE> | P0 | READY | — | PLANNED | — |
 | EPIC-002 | <Name — observable outcome> | TBD | P1 | OUTLINE | EPIC-001 | PLANNED | EPIC-001 |
 
-Readiness and lifecycle values are defined only in `.ai/framework/contracts.yaml`. An `OUTLINE` or dependency-blocked Epic cannot become `ACTIVE`. At most one Epic may be `ACTIVE`.
+Readiness and lifecycle values are defined only in `.ai/framework/contracts.yaml`. An `OUTLINE` Epic cannot receive an approved detailed workspace. A `PLANNED + READY` Epic may have one approved workspace under `execution/planned/` even while its declared dependencies or blockers prevent activation. At most one Epic may occupy the nonterminal active-work states `ACTIVE`, `VALIDATING`, `FUZZING`, or `AWAITING EPIC ACCEPTANCE`.
 
 ## Defect Queue
 

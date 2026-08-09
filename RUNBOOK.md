@@ -1,4 +1,4 @@
-# AI Development Forge v3 — Runbook
+# AI Development Forge v4 — Runbook
 
 Этот runbook описывает повседневные действия. Детальные алгоритмы находятся в skills; основной агент должен явно выбрать нужный skill и сохранить результат в canonical файлах.
 
@@ -22,7 +22,7 @@ Create both Codex and Claude Code adapters.
 Communicate with me in Russian and start the product interview.
 ```
 
-3. Утверждайте отдельно SPEC, архитектуру/ADR, Backlog, Epic plan, Epic Start, adapters и final validation.
+3. Утверждайте отдельно SPEC, архитектуру/ADR, Backlog, Epic plan, optional Epic Start, adapters и final validation.
 4. После bootstrap первая TASK остаётся `TODO`.
 
 Skill: `forge-bootstrap-new`.
@@ -52,10 +52,12 @@ Read the project router, recover development state from canonical files and Git,
 
 Skill `forge-resume-development` определяет:
 
+- ordered `execution/planned/` queue и Epic Start eligibility;
 - active/paused Epic;
 - TASK statuses и blockers;
 - текущий gate;
 - актуальность implementation/review/test/fuzz fingerprints;
+- актуальность Epic Validation fingerprint и выбранных quality profiles;
 - незавершённый Git diff.
 
 История сессии необязательна. Если результат агента не сохранён в TASK или plan, соответствующий этап выполняется повторно.
@@ -109,18 +111,21 @@ Skill `forge-reprioritize-backlog` строит dependency graph и сравни
 
 ## 7. Подготовка Epic
 
-Skill `forge-prepare-epic` требует:
+Skill `forge-prepare-epic` для Plan Approval требует:
 
 - status `PLANNED`;
 - readiness `READY`;
-- удовлетворённые dependencies;
-- отсутствие blockers и другого active Epic.
+- approved requirements и boundaries;
+- явно объявленные dependencies и blockers;
+- отсутствие другого workspace для того же Epic.
 
-Оркестратор показывает plan и все TASK definitions. После отдельного утверждения plan и Epic Start создаются `execution/active/...`, approved plan и TASK-файлы со status `TODO`.
+Unsatisfied dependencies, blockers или другой active Epic не мешают подготовить очередь, но блокируют Epic Start. Оркестратор вызывает strong read-only `epic-planner`, независимо проверяет его предложение и показывает plan и все TASK definitions. После Plan Approval создаётся `execution/planned/EPIC-*` с approved plan и `TODO` TASK-файлами; Backlog status остаётся `PLANNED`.
+
+Несколько planned workspaces могут сосуществовать, но их порядок определяется только Backlog. Отдельный Epic Start повторно проверяет dependencies, `Blocked by` и отсутствие другого active-work Epic, затем атомарно перемещает один каталог `execution/planned/ → execution/active/` и меняет status `PLANNED → ACTIVE`. Первая TASK всё равно требует отдельного Task Start.
 
 ## 8. Запуск и выполнение TASK
 
-Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria и required tests.
+Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan и review focus.
 
 Skill `forge-run-task` запускает цикл:
 
@@ -132,14 +137,13 @@ Task Start
 → AWAITING USER ACCEPTANCE
 ```
 
-Implementer пишет production-код и тесты. Reviewer не исправляет код и возвращает findings оркестратору. Tester не пишет тесты и запускает:
+Implementer пишет production-код и focused tests. Reviewer не исправляет код, получает обязательный Review Packet, независимо трассирует acceptance criteria и выполняет ordered adversarial review protocol. Tester не пишет тесты и запускает:
 
 1. новые/изменённые тесты;
-2. affected-component tests;
-3. полный test suite;
-4. configured lint, typecheck и build.
+2. выбранные affected-component tests;
+3. scoped lint, typecheck, build и применимые profile-specific checks.
 
-После любого исправления review и testing выполняются заново. Исключение для полного suite возможно только при объективной невозможности запуска и явном принятии риска пользователем.
+Полный project test suite и unscoped project-wide checks не являются Task gate и по умолчанию запрещены implementer, reviewer и tester. Ранний полный прогон допустим только по явному запросу пользователя и не заменяет Epic Validation. После любого исправления structured review и selected testing выполняются заново.
 
 ## 9. Ручная проверка и Task Acceptance
 
@@ -166,9 +170,18 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 
 Опечатки и исправления ссылок Replan не требуют. Новая или изменённая TASK всё равно требует собственного Task Start.
 
-## 11. Завершение Epic и fuzzing
+## 11. Завершение Epic, validation и fuzzing
 
-После принятия последней TASK skill `forge-complete-epic` переводит Epic в `FUZZING` и автоматически вызывает read-only fuzzer для существующих harnesses.
+После принятия последней TASK skill `forge-complete-epic` переводит Epic в `VALIDATING` и автоматически вызывает `epic-validator` для exact aggregate fingerprint. Он запускает полный regression suite, project-wide lint/typecheck/build, integration/E2E, critical paths и применимые quality-profile gates.
+
+Результаты Epic Validation:
+
+- `PASSED` → `FUZZING`;
+- `PASSED WITH ACCEPTED EXCEPTIONS` → `FUZZING` только после явного принятия точных рисков пользователем;
+- `FAILED` → `ACTIVE`, Replan и remediation TASK;
+- `BLOCKED` → `ACTIVE` и явное решение по отсутствующей capability или environment.
+
+После passing Epic Validation автоматически вызывается read-only fuzzer для существующих harnesses.
 
 Результаты:
 
@@ -177,9 +190,9 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 - `HARNESS REQUIRED` → Replan и отдельная harness TASK;
 - `FINDINGS` → Replan и remediation TASK.
 
-После любых изменений повторяются review, полный testing и fuzzing.
+После любых изменений повторяются structured review, selected Task testing, полный Epic Validation и fuzzing.
 
-Пользователь отдельно выполняет Epic validation и даёт Epic Acceptance. Только затем Epic становится `COMPLETED` и перемещается в `execution/completed/`. Следующий Epic не запускается автоматически.
+Пользователь отдельно выполняет Epic-level manual validation и даёт Epic Acceptance. Только затем Epic становится `COMPLETED` и перемещается в `execution/completed/`. Следующий queued Epic из `execution/planned/` показывается в Backlog order, но не запускается автоматически.
 
 ## 12. Pause и resume
 

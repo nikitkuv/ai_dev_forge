@@ -48,7 +48,7 @@ Never rewrite an accepted decision to change its meaning. A later change require
 
 1. Create or update `ARCHITECTURE.md` from its template with `document_status: draft`.
 2. Link requirement drivers and relevant ADRs instead of duplicating their content.
-3. Check component boundaries, dependency direction, data ownership, interfaces, trust boundaries, runtime, reliability, observability, testing, migration, compatibility, and known risks.
+3. Check component boundaries, dependency direction, data ownership, interfaces, trust boundaries, runtime, reliability, observability, testing, migration, compatibility, and known risks. Identify applicable quality profiles and critical paths without inventing repository commands or decomposing work into Tasks.
 4. Present the target design, alternatives, unresolved risks, and current-to-target differences.
 5. Request explicit user approval of the architecture.
 6. Only after approval, set `document_status: approved` and `approved_at`.

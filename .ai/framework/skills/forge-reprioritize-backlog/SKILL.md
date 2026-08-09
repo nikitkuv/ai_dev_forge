@@ -7,10 +7,10 @@ description: Reprioritize the Epic Roadmap or Defect Queue while preserving user
 
 ## Build the evidence
 
-1. Read `BACKLOG.md`, relevant requirements, architecture, ADRs, active or paused Epic state, and known external dependencies.
+1. Read `BACKLOG.md`, relevant requirements, architecture, ADRs, every planned workspace, active or paused Epic state, and known external dependencies.
 2. Ask the `context-collector` for a read-only dependency graph when repository evidence is needed.
 3. Capture the user's requested priority and ordering changes without applying them.
-4. Distinguish Epic dependencies from `Blocked by`, defect severity from user-defined priority, and active execution from planned order.
+4. Distinguish Epic dependencies from `Blocked by`, defect severity from user-defined priority, active execution from the planned queue, and Backlog order from filesystem creation order.
 
 ## Analyze conflicts
 

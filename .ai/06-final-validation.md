@@ -24,8 +24,8 @@ If an earlier step is incomplete, return to that step and its approval gate.
 - SPEC owns target product behavior and contains no architecture, Tasks, or implementation status.
 - ARCHITECTURE owns target architecture and contains no task-level execution steps.
 - BACKLOG owns Epic priority/readiness/status and defect state, with no Task list or execution summaries.
-- Each plan owns Epic strategy and Task order but no Task lifecycle state.
-- Each TASK owns its lifecycle and compact implementation, review, testing, and user-validation evidence.
+- Each plan owns Epic strategy, Task order, requirement coverage, selected quality profiles, Epic Verification Plan, Epic Validation evidence, fuzzing and user validation, but no Task lifecycle state.
+- Each TASK owns its lifecycle, affected surface, risk flags, review focus, selected Verification Plan, and compact implementation, structured-review, testing, and user-validation evidence.
 - No separate framework-generated progress, checkpoint, review, testing, fuzzing, security, recovery, or validation Markdown report exists.
 
 ## Validate IDs, References, and Decisions
@@ -40,14 +40,18 @@ If an earlier step is incomplete, return to that step and its approval gate.
 
 - Every enum and transition matches `.ai/framework/contracts.yaml`.
 - Blocking is stored in `Blocked by` or `blocked_by`, never as a lifecycle status.
-- At most one Epic is `ACTIVE` and at most one code-writing TASK is `IN PROGRESS`.
-- Backlog Epic status matches its directory under `execution/active`, `execution/paused`, or `execution/completed`.
+- At most one nonterminal active-work Epic is `ACTIVE`, `VALIDATING`, `FUZZING`, or `AWAITING EPIC ACCEPTANCE`, and at most one code-writing TASK is `IN PROGRESS`.
+- Every `execution/planned/` workspace maps to one `PLANNED + READY` Backlog Epic, approved plan, approved `TODO` TASK definitions, unique IDs, and no duplicate execution directory.
+- Multiple planned workspaces are allowed and ordered only by Backlog priority and row order.
+- Non-planned Backlog Epic status matches its directory under `execution/active`, `execution/paused`, or `execution/completed`.
 - The active plan's ordered Task list exactly matches its TASK files and dependencies contain no cycle.
-- Review and testing revision/fingerprint evidence matches current implementation; code changes invalidate older evidence.
-- Fuzzing evidence is absent before required, or current for the accepted Epic revision.
+- Review Packet, structured review, and selected Task-testing revision/fingerprint evidence matches current implementation; code changes invalidate older evidence.
+- Task evidence contains no mandatory full project suite or unscoped project-wide check unless an explicit early-run request is recorded.
+- Epic Validation evidence is absent before `VALIDATING`, or current for the exact aggregate fingerprint and contains the full suite, project-wide checks, critical paths, requirement coverage, and applicable quality profiles.
+- Fuzzing evidence is absent before passing Epic Validation, or current for the same validated Epic fingerprint.
 - Task Acceptance, next Task Start, Epic Start, Replan, ADR Approval, and Epic Acceptance remain separate explicit gates.
 
-If no Epic was activated, report that bootstrap is planning-ready but paused before Epic Start. Do not claim development readiness.
+If no Epic was activated, report all approved planned workspaces in Backlog order, their Epic Start eligibility or blockers, and that no Task may start before one planned workspace passes Epic Start. Do not claim active development.
 
 ## Validate Ownership State
 
@@ -66,9 +70,11 @@ If no Epic was activated, report that bootstrap is planning-ready but paused bef
 - Additional project-owned agents and skills are allowed, excluded from Forge parity counts, and unchanged.
 - Unlisted platform configuration, settings, commands, and hooks are preserved and remain outside Forge ownership.
 - All rendered agents contain concrete tier mappings and effort.
+- The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite and fuzzer requires current Epic Validation evidence.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
 - No unresolved renderer placeholder remains; the shared project overlay appears identically in both routers.
 - Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
+- Both routers contain byte-identical Common Engineering Prohibitions without missing or weakened entries.
 - The framework generated no hooks, MCP configuration, or CLI dependency. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 
 ## Simulate Recovery
@@ -79,10 +85,12 @@ Ignore conversation history and reconstruct:
 2. target behavior from `SPEC.md`;
 3. target architecture and decisions from `ARCHITECTURE.md` and ADRs;
 4. priority, readiness, Epic state, and defects from `BACKLOG.md`;
-5. active or paused Epic strategy and Task order from `plan.md`;
-6. current TASK and pending gate from TASK statuses and Workflow State;
-7. unfinished changes from Git status and diff;
-8. adapter provenance from `.ai/framework.lock`.
+5. the ordered queued Epic set from `execution/planned/` reconciled with Backlog priority, readiness, dependencies and blockers;
+6. active or paused Epic strategy and Task order from `plan.md`;
+7. current TASK and pending gate from TASK statuses and Workflow State;
+8. current Review Packet, selected Task checks, Epic Verification Plan, quality profiles, Epic Validation and fuzzing evidence;
+9. unfinished changes from Git status and diff;
+10. adapter provenance from `.ai/framework.lock`.
 
 The same repository state must yield the same current gate. Missing persisted agent evidence means that stage must be rerun.
 

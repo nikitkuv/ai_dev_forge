@@ -19,6 +19,8 @@
 
 `AGENTS.md` и `CLAUDE.md` получают новые framework-инструкции, сохраняя описание, карту и правила проекта. Старые Forge agents и skills заменяются новыми локальными версиями; посторонние пользовательские файлы сохраняются.
 
+При переходе на v4 добавляются `epic-planner`, `epic-validator`, lifecycle state `VALIDATING`, selective Task testing, обязательный Review Packet, quality profiles и полный Epic Validation перед fuzzing. Миграция фреймворка не переписывает существующие plan/TASK-файлы автоматически.
+
 ## Перед началом
 
 Запускайте команды из корня мигрируемого проекта. Убедитесь, что старая `.ai/` существует, сохраните текущее состояние в Git или сделайте резервную копию. Если `.ai-next/` уже существует, не перезаписывайте её: удалите или переименуйте только после проверки её происхождения.
@@ -99,5 +101,7 @@ Communicate with me in Russian.
 ```
 
 Сначала агент работает read-only и показывает полный diff: замену `.ai/`, объединение проектного содержимого routers и legacy platform-specific overlays в shared overlay, два идентичных итоговых router-файла, удаляемые старые Forge adapters, устанавливаемые локальные adapters, collisions и rollback source. Legacy `.ai/custom/codex-router.md` и `.ai/custom/claude-router.md` удаляются только после backup и явного подтверждения их merge. Противоречия с `BACKLOG.md` агент сообщает, но сам `BACKLOG.md` не изменяет. Ничего не подтверждайте, пока в списке изменений присутствует canonical или product path.
+
+Для проекта со старым planned/active/paused Epic агент отдельно покажет compatibility findings: отсутствующие quality profiles, Verification Plans, Review Packets, planned-workspace mapping и Epic Validation evidence. Миграция не создаёт `execution/planned/` из строк Backlog и не перемещает execution-каталоги автоматически. После миграции findings исправляются через `forge-resume-development` и требуемые user gates. Старый Epic в `FUZZING` или `AWAITING EPIC ACCEPTANCE` нельзя завершить, пока полный Epic Validation не пройдёт на текущем aggregate fingerprint.
 
 После подтверждения агент создаёт backup, применяет staged-кандидаты, проверяет защищённые пути и только затем создаёт `.ai/framework.lock`. При ошибке он восстанавливает старую `.ai/` и адаптеры. После успеха `.ai-next/` удаляется.

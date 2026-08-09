@@ -7,7 +7,7 @@ description: Add a new feature, product change, or retained future idea to an in
 
 ## Classify the request
 
-1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, active Epic plan, current TASK, and Git state.
+1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, all affected planned workspaces, the active Epic plan, current TASK, and Git state.
 2. Clarify the desired observable outcome, users, scope, exclusions, acceptance direction, constraints, urgency, and dependencies.
 3. Separate confirmed user intent, repository evidence, assumptions, and unresolved decisions. Do not turn an inference into target behavior.
 4. If a material product or design choice remains, present two or three viable approaches with trade-offs and a recommendation. Keep the discussion proportional to the decision; do not create a parallel design artifact.
@@ -35,7 +35,7 @@ Every retained future idea is an Epic; do not create a separate idea list.
 4. Regenerate `DECISIONS.md` from ADR frontmatter when ADRs change.
 5. Change Epic readiness from `OUTLINE` to `READY` only after requirements, scope boundaries, acceptance direction, and dependencies are approved.
 
-If the user expands the active Epic, show the plan and TASK diff and use the Replan gate before changing scope, order, or composition. New TASK files remain `TODO` until their own Task Start gates.
+If the approved product or architecture change affects an existing planned or active workspace, show each affected plan and TASK diff and use the Replan gate before changing scope, order, or composition. Planned workspaces remain under `execution/planned/`; new TASK files remain `TODO` until their Epic passes Epic Start and each Task passes its own Task Start gate.
 
 ## Recheck priority and dependencies
 

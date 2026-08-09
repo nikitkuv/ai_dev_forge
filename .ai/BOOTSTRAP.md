@@ -53,7 +53,7 @@ Run these files in order and read each one in full before acting:
 1. [Product Discovery](01-product-discovery.md) — create approved target `SPEC.md`.
 2. [System Design](02-system-design.md) — create approved `ARCHITECTURE.md`, ADRs, and generated `DECISIONS.md`.
 3. [Release Planning](03-release-planning.md) — create approved Epic Roadmap and Defect Queue in `BACKLOG.md`.
-4. [Prepare Workspace](04-prepare-workspace.md) — approve one Epic plan and TASK definitions, then use the Epic Start gate.
+4. [Prepare Workspace](04-prepare-workspace.md) — use the strong read-only Epic planner, approve one queued workspace under `execution/planned/`, and optionally use the separate Epic Start gate to move it to active state.
 5. [Create Platform Adapters](05-create-platform-adapters.md) — write project configuration and generate both native adapter sets.
 6. [Final Validation](06-final-validation.md) — verify canonical state, lifecycle, ownership, adapters, and recovery.
 
@@ -79,4 +79,4 @@ Do not:
 
 ## Completion
 
-Bootstrap is complete only when Step 06 passes. If an Epic was activated, every initial TASK must still be `TODO`; end by asking for a separate Task Start authorization.
+Bootstrap is complete only when Step 06 passes. Approved queued Epics remain `PLANNED` under `execution/planned/`. If an Epic was activated, every initial TASK must still be `TODO`; end by asking for a separate Task Start authorization.

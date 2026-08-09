@@ -3,13 +3,16 @@ schema_version: 1
 enums:
   epic_readiness: [OUTLINE, READY]
   epic_status:
-    [PLANNED, ACTIVE, FUZZING, "AWAITING EPIC ACCEPTANCE", COMPLETED, PAUSED, CANCELLED]
+    [PLANNED, ACTIVE, VALIDATING, FUZZING, "AWAITING EPIC ACCEPTANCE", COMPLETED, PAUSED, CANCELLED]
   task_status:
     [TODO, "IN PROGRESS", "IN REVIEW", "IN TESTING", "AWAITING USER ACCEPTANCE", DONE, PAUSED, CANCELLED]
   bug_status: [OPEN, SCHEDULED, RESOLVED, REJECTED, DUPLICATE, WONT_FIX]
   adr_status: [PROPOSED, ACCEPTED, REJECTED, SUPERSEDED, DEPRECATED]
   model_tiers: [strong, balanced, fast]
   fuzzing_outcomes: [PASSED, "HARNESS REQUIRED", FINDINGS, "NOT APPLICABLE"]
+  epic_validation_outcomes: [PASSED, "PASSED WITH ACCEPTED EXCEPTIONS", FAILED, BLOCKED]
+  task_risk_levels: [low, standard, high]
+  quality_profiles: [backend, frontend, ml, data_pipeline, infrastructure, library_cli]
 
 # Stable machine-friendly spellings for status values that contain spaces.
 machine_tokens:
@@ -21,10 +24,11 @@ transitions:
     OUTLINE: [READY]
   epic_status:
     PLANNED: [ACTIVE, PAUSED, CANCELLED]
-    ACTIVE: [FUZZING, PAUSED, CANCELLED]
+    ACTIVE: [VALIDATING, PAUSED, CANCELLED]
+    VALIDATING: [FUZZING, ACTIVE, PAUSED, CANCELLED]
     FUZZING: ["AWAITING EPIC ACCEPTANCE", ACTIVE, PAUSED, CANCELLED]
     "AWAITING EPIC ACCEPTANCE": [COMPLETED, ACTIVE, PAUSED, CANCELLED]
-    PAUSED: [PLANNED, ACTIVE, FUZZING, "AWAITING EPIC ACCEPTANCE", CANCELLED]
+    PAUSED: [PLANNED, ACTIVE, VALIDATING, FUZZING, "AWAITING EPIC ACCEPTANCE", CANCELLED]
   task_status:
     TODO: ["IN PROGRESS", PAUSED, CANCELLED]
     "IN PROGRESS": ["IN REVIEW", PAUSED, CANCELLED]
@@ -54,9 +58,20 @@ gates:
   next_task_start:
     requires: [separate_explicit_user_authorization]
     note: Task acceptance and permission to start the next task are separate gates; one message may authorize both only when it explicitly states both decisions.
+  epic_plan_approval:
+    effect: "write approved plan and TASK definitions under execution/planned without changing Epic lifecycle status"
+    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, explicit_user_approval]
+    permits: [declared_unsatisfied_dependencies, declared_blockers, another_active_work_epic]
   epic_start:
     transition: "PLANNED -> ACTIVE"
-    requires: [readiness_READY, approved_plan, dependencies_satisfied, no_unresolved_blockers, explicit_user_authorization]
+    requires: [readiness_READY, approved_planned_workspace, dependencies_satisfied, no_unresolved_blockers, no_other_nonterminal_active_work_epic, explicit_user_authorization]
+    atomic_effects: [move_execution_planned_to_active, update_backlog_status]
+  epic_validation:
+    transition: "ACTIVE -> VALIDATING"
+    requires: [all_planned_tasks_DONE, current_task_evidence, approved_epic_verification_plan]
+  epic_fuzzing:
+    transition: "VALIDATING -> FUZZING"
+    requires: [current_epic_validation_evidence, epic_validation_acceptance_satisfied]
   epic_acceptance:
     transition: "AWAITING EPIC ACCEPTANCE -> COMPLETED"
     requires: [fuzzing_acceptance_satisfied, explicit_user_acceptance]
@@ -64,12 +79,13 @@ gates:
     required_for: [task_scope_change, task_order_change, task_composition_change]
     requires: [reason, plan_diff, explicit_user_confirmation]
     not_required_for: [typo_correction, link_correction]
+    applies_to_workspaces: [planned, active, paused]
   adr_approval:
     transition: "PROPOSED -> ACCEPTED"
     requires: [explicit_user_approval]
 
 fuzzing:
-  mandatory_after: last_task_acceptance
+  mandatory_after: epic_validation_acceptance_satisfied
   acceptance_gate:
     id: fuzzing_acceptance_satisfied
     satisfied_by:
@@ -89,7 +105,8 @@ fuzzing:
         - replan_gate
         - separate_task_start_gate
         - full_task_lifecycle
-        - "ACTIVE -> FUZZING"
+        - repeated_epic_validation
+        - "VALIDATING -> FUZZING"
         - repeated_epic_fuzzing
     FINDINGS:
       transition: "FUZZING -> ACTIVE"
@@ -98,13 +115,80 @@ fuzzing:
         - replan_gate
         - separate_task_start_gate
         - full_task_lifecycle
-        - "ACTIVE -> FUZZING"
+        - repeated_epic_validation
+        - "VALIDATING -> FUZZING"
         - repeated_epic_fuzzing
+
+quality_gates:
+  task:
+    requires:
+      - approved_definition_with_objective_acceptance_and_boundaries
+      - affected_surface_and_risk_flags
+      - focused_behavior_evidence
+      - selected_affected_checks
+      - current_structured_review
+      - current_task_test_evidence
+      - reproducible_manual_verification
+      - explicit_task_acceptance
+    full_project_suite: deferred_to_epic_validation
+    early_full_project_suite_requires: explicit_user_request
+    global_unscoped_checks: deferred_to_epic_validation
+    check_removal_requires: explicit_rationale_and_orchestrator_disposition
+  epic:
+    requires:
+      - all_planned_tasks_DONE
+      - requirement_to_task_evidence_coverage
+      - full_project_test_suite
+      - project_wide_lint_typecheck_and_build
+      - cross_component_and_critical_path_validation
+      - applicable_quality_profile_gates
+      - current_fuzzing_outcome
+      - current_documentation_and_operational_evidence
+      - no_unaccepted_blocking_risk
+      - explicit_epic_acceptance
+  profiles:
+    backend: [api_and_schema_contracts, authorization, persistence_and_migration, idempotency, concurrency, failure_handling]
+    frontend: [component_behavior, critical_e2e, accessibility, responsive_states, browser_compatibility, production_build]
+    ml: [data_quality, leakage_prevention, reproducibility, baseline_comparison, metric_uncertainty, artifact_lineage, training_serving_parity]
+    data_pipeline: [schema_evolution, idempotency, backfill, data_quality, lineage, partial_failure_recovery]
+    infrastructure: [validate_plan_or_dry_run, least_privilege, rollback, drift, secret_handling, deployment_smoke]
+    library_cli: [public_api_compatibility, packaging, supported_runtimes, install_upgrade, cli_exit_and_stream_contracts]
+
+epic_validation:
+  mandatory_after: last_task_acceptance
+  runs_on: exact_aggregate_revision_or_tree_fingerprint
+  acceptance_gate:
+    id: epic_validation_acceptance_satisfied
+    satisfied_by:
+      - outcome: PASSED
+      - outcome: "PASSED WITH ACCEPTED EXCEPTIONS"
+        requires: [explicit_user_exception_acceptance, recorded_risk]
+  outcomes:
+    PASSED:
+      transition: "VALIDATING -> FUZZING"
+    "PASSED WITH ACCEPTED EXCEPTIONS":
+      transition: "VALIDATING -> FUZZING"
+      requires: [explicit_user_exception_acceptance, recorded_risk]
+    FAILED:
+      transition: "VALIDATING -> ACTIVE"
+      requires: [reproducible_evidence, replan_gate]
+    BLOCKED:
+      transition: "VALIDATING -> ACTIVE"
+      requires: [exact_blocker, risk_statement, replan_or_user_direction]
 
 invariants:
   - blocked_by_is_metadata_not_a_lifecycle_status
-  - no_more_than_one_active_epic
+  - no_more_than_one_nonterminal_active_work_epic
+  - multiple_execution_planned_workspaces_are_allowed
+  - execution_planned_requires_epic_status_PLANNED_and_readiness_READY
+  - execution_planned_requires_approved_plan_and_TASK_definitions
+  - one_epic_has_at_most_one_execution_workspace
+  - epic_start_atomically_moves_planned_workspace_to_active_and_updates_backlog
   - no_more_than_one_code_writing_task_in_progress
-  - code_changes_invalidate_prior_review_and_test_results
+  - code_changes_invalidate_prior_review_test_epic_validation_and_fuzzing_results
+  - full_project_suite_is_an_epic_validation_gate_not_a_task_gate
+  - task_check_selection_is_justified_by_changed_and_affected_surfaces
+  - task_tester_never_silently_expands_to_the_full_project_suite
+  - epic_validation_precedes_epic_fuzzing
   - task_commit_never_precedes_explicit_user_acceptance
   - next_epic_never_starts_automatically

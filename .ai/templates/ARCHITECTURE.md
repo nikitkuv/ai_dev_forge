@@ -93,10 +93,12 @@ It may define technical boundaries and decisions, but it must not contain task-l
 
 ## Testing Strategy
 
+- **Quality profiles:** <Applicable backend, frontend, ml, data_pipeline, infrastructure, or library_cli profiles and why.>
 - **Unit and component:** <Boundaries and important invariants.>
 - **Integration and contract:** <Interfaces, data stores, and external systems.>
 - **End-to-end:** <Critical user journeys.>
 - **Non-functional:** <Performance, reliability, security, fuzzing, or other required validation.>
+- **Verification lifecycle:** <What can be checked selectively per Task and what must be validated project-wide at Epic Validation.>
 
 ## Migration and Compatibility
 

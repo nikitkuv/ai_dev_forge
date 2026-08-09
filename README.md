@@ -1,4 +1,4 @@
-# AI Development Forge v3
+# AI Development Forge v4
 
 AI Development Forge — documentation-first фреймворк для совместной разработки с кодовыми агентами, прежде всего Codex CLI и Claude Code CLI.
 
@@ -17,7 +17,7 @@ ARCHITECTURE.md
 BACKLOG.md
 DECISIONS.md
 decisions/ADR-NNN-<name>.md
-execution/{active,paused,completed}/
+execution/{planned,active,paused,completed}/
 .ai/
 .codex/agents/
 .agents/skills/
@@ -64,7 +64,7 @@ Communicate with me in Russian.
 1. Product Discovery → утверждённый `SPEC.md`.
 2. System Design → `ARCHITECTURE.md`, ADR и генерируемый `DECISIONS.md`.
 3. Release Planning → `BACKLOG.md` с Epic Roadmap и Defect Queue.
-4. Prepare Workspace → утверждённый Epic plan и TASK-файлы, затем отдельный Epic Start.
+4. Prepare Workspace → strong `epic-planner`, approved queued workspace under `execution/planned/`, затем optional отдельный Epic Start с атомарным move в `execution/active/`.
 5. Create Platform Adapters → оба native adapter-набора и `.ai/framework.lock`.
 6. Final Validation → проверка структуры, lifecycle, ownership, parity и восстановления без истории сессии.
 
@@ -84,6 +84,14 @@ Framework defaults для субагентов: Codex `strong = gpt-5.6-sol/high
 
 Сгенерированные adapters вручную не редактируются и применяются через синхронизацию.
 
+## Проверка качества
+
+Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks. Strong reviewer получает обязательный Review Packet, независимо трассирует каждый acceptance criterion и проверяет diff, соседний код, adversarial cases, архитектуру, контракты, данные, безопасность и качество тестов. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
+
+После принятия последней TASK Epic переходит в `VALIDATING`. Отдельный `epic-validator` запускает полный regression suite, глобальные quality checks, critical-path validation и применимые gates выбранных project profiles. Только текущий passing Epic Validation fingerprint допускается к fuzzing и последующему Epic Acceptance.
+
+Можно заранее подготовить несколько `PLANNED + READY` Epic. Каждый approved plan и его `TODO` TASK definitions хранятся в собственном `execution/planned/EPIC-*`; порядок очереди остаётся только в `BACKLOG.md`. Plan Approval не активирует Epic, а Epic Start отдельно проверяет dependencies/blockers и перемещает один eligible workspace в `execution/active/`.
+
 ## Внешняя инфраструктура
 
 - Hooks не создаются автоматически.
@@ -96,7 +104,6 @@ Feature discovery, root-cause investigation, test-driven implementation и evide
 
 - [Архитектура фреймворка](FRAMEWORK.md)
 - [Операционные сценарии](RUNBOOK.md)
-- [Подробные пошаговые сценарии и диалоги](FRAMEWORK_WORKFLOWS.md)
-- [Утверждённый подробный дизайн](FRAMEWORK_DESIGN.md)
+- [Миграция между версиями](MIGRATION.md)
 
 Для продолжения разработки попросите основного агента прочитать соответствующий root router и восстановить состояние из `BACKLOG.md`, execution-файлов и Git.

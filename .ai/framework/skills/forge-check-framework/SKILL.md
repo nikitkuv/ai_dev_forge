@@ -27,14 +27,20 @@ Do not repair files during this check.
 
 - Check required frontmatter, approved-document placeholders, global unique IDs, max-plus-one allocation, links, and ADR index parity.
 - Check all enum values and transitions against `.ai/framework/contracts.yaml`.
-- Check at most one `ACTIVE` Epic and one code-writing TASK in progress.
-- Check Backlog Epic state matches `execution/active`, `paused`, or `completed`.
+- Check at most one nonterminal active-work Epic across `ACTIVE`, `VALIDATING`, `FUZZING`, and `AWAITING EPIC ACCEPTANCE`, and one code-writing TASK in progress.
+- Check each `execution/planned/` directory maps to exactly one `PLANNED + READY` Backlog Epic with an approved plan and approved `TODO` TASK definitions.
+- Allow multiple planned workspaces, verify their priority comes only from Backlog order, and reject duplicate workspaces for one Epic.
+- Check non-planned Backlog Epic state matches `execution/active`, `paused`, or `completed` and no Epic exists in more than one execution directory.
 - Check Task state exists only in its TASK file and Epic priority/readiness/status only in `BACKLOG.md`.
 - Check plan Task order matches existing TASK files without storing Task status.
 - Check SPEC and ARCHITECTURE contain target state, not execution tracking.
-- Check review/testing fingerprints match current implementation and fuzzing evidence is current after code changes.
+- Check Review Packet, structured review, and selected Task-testing fingerprints match current implementation.
+- Check Task verification does not require a full project suite or unscoped global command without an explicit early-run request.
+- Check the approved Epic Verification Plan, selected quality profiles, full-suite/project-wide Epic Validation evidence, and aggregate fingerprint are current before fuzzing.
+- Check code changes invalidate affected Task evidence plus aggregate Epic Validation and fuzzing evidence.
 - Check no Task commit predates explicit Task Acceptance and transition to `DONE`.
 - Check the current gate can be reconstructed without session history.
+- Check Epic Start always consumes one approved planned workspace through an atomic planned-to-active move plus Backlog transition.
 
 ## Report
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document is the human-readable companion to the machine-readable framework contracts. `.ai/framework/contracts.yaml` is the single source of truth for lifecycle enums, transitions, gates, fuzzing outcomes, and invariants. Do not duplicate or locally redefine lifecycle status lists.
+This document is the human-readable companion to the machine-readable framework contracts. `.ai/framework/contracts.yaml` is the single source of truth for lifecycle enums, transitions, gates, Task/Epic quality policy, quality profiles, Epic Validation and fuzzing outcomes, and invariants. Do not duplicate or locally redefine lifecycle status lists.
 
 ## Naming and global identifiers
 
@@ -29,14 +29,16 @@ project/
 |- BACKLOG.md
 |- DECISIONS.md
 |- decisions/
-|- execution/{active,paused,completed}/
+|- execution/{planned,active,paused,completed}/
 |- .ai/{project.yaml,framework.lock,custom/}
 |- .codex/
 |- .claude/
 `- .agents/
 ```
 
-`execution/active`, `execution/paused`, and `execution/completed` are structural representations of Epic status. The orchestrator updates `BACKLOG.md` and moves the matching Epic directory together; a mismatch is an invalid state.
+`execution/planned/EPIC-*` stores approved detailed plans and `TODO` TASK definitions for `PLANNED + READY` Epics that have not passed Epic Start. Multiple planned workspaces may coexist; their directory order has no priority meaning because Backlog row order remains authoritative.
+
+`execution/active`, `execution/paused`, and `execution/completed` are structural representations of non-planned Epic status. Epic Start atomically moves one approved directory from `execution/planned/` to `execution/active/` and changes only that Backlog Epic from `PLANNED` to `ACTIVE`. The same Epic may exist in at most one execution state directory; a mismatch is invalid.
 
 ## Ownership and generated files
 
@@ -59,9 +61,11 @@ Framework control text, technical identifiers, statuses, paths, and commands are
 Each kind of information has one canonical owner:
 
 - Product behavior: `SPEC.md`; architecture: `ARCHITECTURE.md`.
-- Epic priority, readiness, and lifecycle status, plus bug lifecycle state: `BACKLOG.md`; Epic strategy, Task order, Epic fuzzing summary, and Epic user-validation summary: its `plan.md`.
-- Task scope, acceptance criteria, lifecycle state, and implementation/review/testing/user-validation summaries: the Task file.
+- Epic priority, readiness, and lifecycle status, plus bug lifecycle state: `BACKLOG.md`; Epic strategy, Task order, requirement coverage, quality profiles, Epic Verification Plan, Epic Validation, fuzzing, and Epic user-validation summaries: its `plan.md`.
+- Task scope, acceptance criteria, affected surface, risk flags, review focus, Verification Plan, lifecycle state, and implementation/structured-review/testing/user-validation summaries: the Task file.
 - Architectural decision content: its ADR; ADR navigation: `DECISIONS.md`.
 - File history: Git.
 
 Do not create separate progress, report, checkpoint, user-validation, security, research, or fuzzing Markdown files. Keep document approval status separate from lifecycle status. If source documents disagree, report the inconsistency instead of silently reconciling it.
+
+Generated root `AGENTS.md` and `CLAUDE.md` contain byte-identical Common Engineering Prohibitions. Project overlays may add stricter rules but may not remove or weaken those framework prohibitions.
