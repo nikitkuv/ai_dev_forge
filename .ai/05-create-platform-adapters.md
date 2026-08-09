@@ -113,6 +113,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 - native YAML frontmatter;
 - its `id`, English description, concrete Claude model and effort, and allowed tools;
 - the same English role contract used by the Codex adapter.
+- Write every `.claude/agents/*.md` file as UTF-8 **without BOM**. Byte zero must be the first `-` of the opening `---` frontmatter delimiter; never prepend `EF BB BF`.
 
 Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
@@ -125,6 +126,7 @@ Verify the staged outputs:
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
 - every rendered agent contains its concrete model and effort;
+- every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 - generated files contain English control text;
 - `.ai/custom/router-shared.md` appears identically in both routers;
 - `.codex/config.toml`, Claude settings, commands, hooks, and all other unlisted platform files are unchanged;

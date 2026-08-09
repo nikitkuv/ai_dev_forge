@@ -38,6 +38,8 @@ Stage one synchronized candidate containing:
 - manifest-declared Claude skills under `.claude/skills/`;
 - all preserved unlisted project-owned entries.
 
+Write each generated `.claude/agents/*.md` file as UTF-8 without BOM. Its first bytes must be the opening YAML frontmatter delimiter `---`; do not emit the UTF-8 BOM byte sequence `EF BB BF`, because Claude Code then fails to recognize the frontmatter and does not register the subagent.
+
 Install no global agent or skill. Generate no hook, MCP configuration, platform settings, commands, or framework CLI dependency.
 
 ## Validate and finalize
@@ -46,6 +48,7 @@ Install no global agent or skill. Generate no hook, MCP configuration, platform 
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
 3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity;
 4. verify additional project-owned agents and skills and all unlisted platform files are unchanged;
-5. run the read-only framework conformance check.
+5. verify every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
+6. run the read-only framework conformance check.
 
 If either platform fails, replace neither. Back up every affected managed path before replacement and restore both adapter sets on failure. Update managed source/output hashes and preserved-path ownership in `.ai/framework.lock` only after success. Create no sync report file.
