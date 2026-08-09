@@ -48,7 +48,6 @@ Treat all paths outside the approved framework and adapter allowlist as read-onl
 - `DECISIONS.md`;
 - `decisions/`;
 - `execution/`;
-- project documents such as `WORKFLOW.md`;
 - project source code, tests, data, and unrelated configuration.
 
 Report a canonical schema difference as a compatibility finding. Do not edit, rename, reformat, or migrate canonical content in this workflow.
