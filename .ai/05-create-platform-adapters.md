@@ -11,7 +11,7 @@ This step generates derived platform files. It does not change canonical product
 Read:
 
 - `.ai/framework/manifest.yaml` and `.ai/framework/contracts.yaml`;
-- seven `.ai/framework/agents/*.yaml` definitions;
+- nine `.ai/framework/agents/*.yaml` definitions;
 - fourteen `.ai/framework/skills/*/SKILL.md` sources;
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
@@ -32,6 +32,7 @@ Require:
 - `framework_language: en`;
 - an explicit Git policy;
 - resolved model mappings for every tier, using the bundled defaults unless the project explicitly overrides them.
+- quality profiles approved in the Epic plan and reusable Task/Epic command catalogs derived only from confirmed repository, build-system, and CI evidence. Keep an unresolved list empty and report the blocker; never invent a command.
 
 Model mappings must provide:
 
@@ -71,15 +72,19 @@ Generate:
 AGENTS.md
 .codex/agents/context-collector.toml
 .codex/agents/documentation-researcher.toml
+.codex/agents/epic-planner.toml
 .codex/agents/implementer.toml
 .codex/agents/reviewer.toml
 .codex/agents/tester.toml
+.codex/agents/epic-validator.toml
 .codex/agents/fuzzer.toml
 .codex/agents/security-auditor.toml
 .agents/skills/<fourteen-skill-ids>/SKILL.md
 ```
 
 Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus the shared overlay. Do not copy legacy framework sections into the overlay.
+
+The rendered router must include the byte-identical Common Engineering Prohibitions section from the neutral root-router templates.
 
 For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 
@@ -98,9 +103,11 @@ Generate:
 CLAUDE.md
 .claude/agents/context-collector.md
 .claude/agents/documentation-researcher.md
+.claude/agents/epic-planner.md
 .claude/agents/implementer.md
 .claude/agents/reviewer.md
 .claude/agents/tester.md
+.claude/agents/epic-validator.md
 .claude/agents/fuzzer.md
 .claude/agents/security-auditor.md
 .claude/skills/<fourteen-skill-ids>/SKILL.md
@@ -122,6 +129,7 @@ Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 Verify the staged outputs:
 
 - both root routers are byte-identical, contain no unresolved placeholder, and are no more than 150 lines;
+- both root routers contain the same Common Engineering Prohibitions without project-specific weakening;
 - each platform contains every agent and skill ID declared by the manifest;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;

@@ -169,16 +169,17 @@ taskflow/
 
 Инициализация существующего проекта не обязана сразу активировать Epic.
 
-> **Оркестратор:** Backlog готов. Можно закончить bootstrap в planning-ready состоянии либо подготовить и активировать migration Epic. Что выбираете?
+> **Оркестратор:** Backlog готов. Можно закончить bootstrap без detailed workspace, подготовить migration Epic в planned queue либо отдельно подготовить и активировать его. Что выбираете?
 
-> **Пользователь:** Подготовь migration Epic, но TASK пока не запускай.
+> **Пользователь:** Подготовь migration Epic в очереди, но пока не активируй его и не запускай TASK.
 
 Далее происходят те же отдельные gates:
 
-1. approval Epic plan и всех TASK definitions;
-2. отдельный Epic Start;
-3. все TASK создаются как `TODO`;
-4. Task Start не подразумевается.
+1. strong read-only `epic-planner` формирует проверяемое предложение с requirement coverage, quality profiles, risk map и Epic/Task verification;
+2. orchestrator независимо проверяет proposal, затем запрашивает Plan Approval для Epic plan и всех TASK definitions;
+3. Plan Approval создаёт `execution/planned/EPIC-*`, оставляет Backlog status `PLANNED`, а все TASK создаёт как `TODO`;
+4. отдельный Epic Start остаётся pending и позже переместит approved workspace в `execution/active/` только после повторной проверки eligibility;
+5. Task Start не подразумевается ни Plan Approval, ни Epic Start.
 
 ### Шаг 7. Adapter collisions в существующем проекте
 
@@ -234,4 +235,3 @@ Existing TaskFlow adopted
 ```
 
 ---
-

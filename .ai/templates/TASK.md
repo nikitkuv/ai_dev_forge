@@ -8,6 +8,8 @@ blocked_by: []
 created_at: "<YYYY-MM-DD>"
 definition_approved_at:
 started_at:
+risk_level: standard
+risk_flags: []
 ---
 
 # TASK-NNN — <Task Title>
@@ -32,17 +34,33 @@ started_at:
 
 - <File, component, compatibility, security, operational, or process constraint.>
 
+## Affected Surface and Risk
+
+- **Affected components:** <Components, packages, services, screens, pipelines, models, or infrastructure units.>
+- **Affected contracts:** <APIs, schemas, events, storage formats, public interfaces, training/serving contracts, or —.>
+- **Risk level:** <low/standard/high with rationale.>
+- **Risk flags:** <Public contract, authorization, persistence, migration, concurrency, shared core, dependency/build, frontend critical path, data/ML, operations, or —.>
+- **Failure impact:** <User, data, compatibility, security, availability, cost, or model-quality impact.>
+
 ## Acceptance Criteria
 
 - [ ] <Observable, objectively verifiable condition.>
 
-## Required Tests
+## Verification Plan
 
 - **Approach:** <TDD by default for bug fixes and meaningful business logic, or a recorded reason why it is not applicable.>
-- **Task-specific tests:** <Tests that prove this Task.>
-- **Affected-component tests:** <Related suites.>
-- **Full-suite command:** <Project-wide test command.>
-- **Additional checks:** <Lint, typecheck, build, security, performance, or other configured checks.>
+- **Focused behavior tests:** <Tests that directly prove the acceptance criteria and important failure paths.>
+- **Affected-component tests:** <Selected related suites and why they cover the affected surface.>
+- **Scoped quality checks:** <Scoped lint, typecheck, build, contract, security, performance, accessibility, ML, data, or infrastructure checks.>
+- **Selection rationale:** <Map changed and affected surfaces to the selected commands.>
+- **Epic-only checks:** <Full project suite and unscoped project-wide checks deferred to Epic Validation.>
+- **Execution constraints:** <Required services, fixtures, datasets, environments, budgets, or objective limitations.>
+
+Removing or weakening an approved check requires an explicit rationale and orchestrator disposition. Expanding implementation beyond the affected surface requires scope correction or Replan, not a silent fallback to the full project suite.
+
+## Review Focus
+
+- <Acceptance invariant, boundary, failure mode, compatibility concern, or risk that the independent reviewer must challenge.>
 
 ## Manual Verification
 
@@ -60,12 +78,18 @@ started_at:
 
 Lifecycle values and transitions are defined only in `.ai/framework/contracts.yaml`. `status` in frontmatter is the sole lifecycle status for this Task.
 
-Set `status` to `IN REVIEW` only after implementation evidence is current, to `IN TESTING` only after review approval, and to `AWAITING USER ACCEPTANCE` only after required testing passes. Code changes return the Task to `IN PROGRESS` and invalidate older review and testing evidence.
+Set `status` to `IN REVIEW` only after implementation evidence and the Review Packet are current, to `IN TESTING` only after a protocol-complete `CLEAN` review, and to `AWAITING USER ACCEPTANCE` only after selected Task testing passes. Code changes return the Task to `IN PROGRESS` and invalidate older review and testing evidence.
 
 ```yaml
 current_gate: task_start
 implementation_revision: 0
 current_fingerprint:
+review_packet:
+  base_fingerprint:
+  implementation_revision:
+  implementation_fingerprint:
+  diff_fingerprint:
+  changed_paths: []
 review:
   revision:
   fingerprint:
@@ -82,11 +106,16 @@ Use a reproducible Git commit, tree, or scoped diff hash as the fingerprint. Rev
 
 ## Implementation Summary
 
+- **Base revision:** <Base commit, tree, or reproducible fingerprint>
 - **Revision:** <implementation revision>
 - **Fingerprint:** <Git commit, tree, or scoped diff hash>
 - **Files changed:** <Compact list>
+- **Affected-surface or risk changes:** <None, or correction to the approved plan>
 - **Behavior delivered:** <Compact summary>
 - **Tests added or changed:** <Compact summary>
+- **RED/GREEN evidence:** <Commands and expected RED/GREEN results, or allowed not-applicable rationale>
+- **Selected checks:** <Focused, affected, and scoped command/result summary>
+- **Early full-suite authorization:** <Explicit user request and result, or —>
 - **Known limitations:** <None or compact list>
 
 Do not paste full agent responses or long tool logs.
@@ -95,8 +124,12 @@ Do not paste full agent responses or long tool logs.
 
 - **Revision reviewed:** <revision>
 - **Fingerprint reviewed:** <fingerprint>
-- **Outcome:** <pending/approved/changes requested>
+- **Outcome:** <pending/CLEAN/FINDINGS/BLOCKED>
 - **Reviewed at:** <YYYY-MM-DD or pending>
+- **Packet integrity:** <pass/fail and compact mismatch summary>
+- **Acceptance traceability:** <Criterion-to-implementation/test evidence summary>
+- **Protocol coverage:** <Scope/context, adversarial, architecture, contracts/data/security, test quality, verification-selection result>
+- **Focused diagnostics:** <Commands and results, or —>
 - **Findings:** <None or compact actionable summary>
 
 ## Test Summary
@@ -106,6 +139,8 @@ Do not paste full agent responses or long tool logs.
 - **Outcome:** <pending/passed/failed/exception accepted>
 - **Tested at:** <YYYY-MM-DD or pending>
 - **Commands and results:** <Compact command/result list>
+- **Selection rationale:** <Why the selected checks cover the actual affected surface>
+- **Skipped or not-applicable checks:** <Rationale and risk, or —>
 - **Accepted exception:** <User decision and risk, or —>
 
 ## User Validation

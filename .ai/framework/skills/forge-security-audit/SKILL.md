@@ -26,7 +26,7 @@ Network access, scanner installation, external targets, production access, crede
    - use the current unaccepted TASK when the issue was introduced there;
    - add a confirmed issue in accepted code to the Backlog Defect Queue;
    - create a `PLANNED/OUTLINE` security Epic for broader work;
-   - use Replan for approved changes to an active Epic.
+- use Replan for approved changes to a planned or active Epic.
 
 Do not create a security report Markdown file. Do not edit code, create Bugs, Epics, or TASK files, change priority, or start remediation without the applicable user approval and lifecycle gate.
 

@@ -28,6 +28,14 @@ Before writing:
 5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
 6. hash every protected project path before proposing changes.
 
+For upgrades to v4 or later, also inspect:
+
+- whether `.ai/project.yaml` has approved `quality.profiles`, Task-scoped command catalogs, Epic-wide commands, and selection rules;
+- whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, and appropriate evidence;
+- whether any existing `execution/planned/` directory maps to exactly one `PLANNED + READY` Backlog Epic and contains only approved `TODO` definitions;
+- whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans, Review Packets, and structured review evidence;
+- whether an Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` has a current passing Epic Validation result on the same aggregate fingerprint.
+
 A legacy project may be without `.ai/framework.lock`. In that case use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence. Do not infer permission to delete an ambiguous file.
 
 ## Protected Project State
@@ -44,6 +52,10 @@ Treat all paths outside the approved framework and adapter allowlist as read-onl
 - project source code, tests, data, and unrelated configuration.
 
 Report a canonical schema difference as a compatibility finding. Do not edit, rename, reformat, or migrate canonical content in this workflow.
+
+A pre-v4 planned, active, or paused plan is not silently upgraded or moved. After the framework migration, use `forge-resume-development` and present the exact plan/TASK compatibility diff. Changes to approved Task scope, order, or composition still require Replan; adding or correcting in-scope verification evidence requires an explicit rationale and may not remove or weaken an approved check. A pre-v4 Epic in `FUZZING` or `AWAITING EPIC ACCEPTANCE` cannot continue to Epic Acceptance until current Epic Validation passes under the new contract.
+
+Migration never infers that a `PLANNED` Backlog Epic already has approved Task definitions. It does not create `execution/planned/` from Backlog rows or move active/paused/completed workspaces. Future Plan Approval creates the new planned workspace; an existing project-owned planned directory is preserved and validated as a compatibility finding.
 
 ## Root Router Merge
 
@@ -82,6 +94,7 @@ Show one complete migration preview containing:
 - adapter additions, replacements, preserved files, and collisions;
 - protected-path hashes and canonical schema findings;
 - `.ai/project.yaml` values that must be confirmed when absent;
+- v4 quality-profile, verification-plan, Review-Packet, `VALIDATING`, and Epic Validation compatibility findings;
 - exact paths that will be backed up.
 
 Request explicit approval for this exact scope. Approval of migration never authorizes canonical edits, product changes, commits, or pushes.
@@ -92,7 +105,7 @@ After approval:
 
 1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, and existing lock;
 2. build staged candidate outputs without changing active targets;
-3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` and `.ai/custom/` project state;
+3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` and `.ai/custom/` project state; add missing quality configuration only from explicit user decisions and confirmed repository or CI evidence;
 4. replace recognized Forge adapter IDs while preserving unlisted files;
 5. replace the active bundle and both byte-identical routers as one logical operation;
 6. run `forge-check-framework` against the candidate result;

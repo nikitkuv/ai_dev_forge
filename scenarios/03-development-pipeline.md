@@ -25,10 +25,10 @@ TASK-003 — TODO
 
 Context collector сообщает:
 
-- active/paused Epic;
+- ordered planned queue с Epic Start eligibility, затем active/paused Epic;
 - TASK statuses и blockers;
 - текущий gate;
-- implementation/review/test/fuzz fingerprints;
+- implementation/review/selected-test/Epic-Validation/fuzz fingerprints;
 - незакоммиченные изменения;
 - следующий допустимый переход.
 
@@ -50,8 +50,8 @@ Context collector сообщает:
 - goal;
 - scope и out of scope;
 - acceptance criteria;
-- constraints;
-- required tests;
+- constraints, affected surface и risk flags;
+- Verification Plan и review focus;
 - manual verification.
 
 > **Пользователь:** Да, запускай TASK-002.
@@ -74,6 +74,7 @@ Implementer читает:
 - связанные `FR-*`, `NFR-*`, `BR-*`;
 - архитектуру и ADR;
 - релевантный код и тесты;
+- affected surface, risk flags, review focus и selected checks;
 - repository instructions.
 
 Implementer:
@@ -113,8 +114,8 @@ Fingerprint candidate: конкретный воспроизводимый Git t
 Reviewer:
 
 - работает read-only;
-- проверяет только TASK-002 и заявленный fingerprint;
-- сверяет code, tests, architecture, ADR и acceptance criteria;
+- получает exact Review Packet с base/head fingerprints, changed paths, scoped diff, acceptance criteria, affected surfaces, risks, implementation и test evidence;
+- независимо трассирует каждый acceptance criterion, читает изменённые файлы с callers/callees и проверяет adversarial cases, architecture, contracts, data, security и test quality;
 - не исправляет код;
 - возвращает findings только оркестратору.
 
@@ -144,15 +145,12 @@ implementer fixes
 Tester не пишет тесты и не исправляет код. Он запускает по порядку:
 
 1. новые и изменённые TASK tests;
-2. affected-component tests;
-3. полный project test suite;
-4. configured lint;
-5. configured typecheck;
-6. configured build.
+2. выбранные affected-component tests;
+3. scoped lint, typecheck, build и применимые profile-specific checks.
 
 #### Ветка A: тесты упали
 
-> **Оркестратор:** Полный suite обнаружил regression в import старого JSON. TASK возвращается в `IN PROGRESS`. Результаты testing и review инвалидированы. Finding передан implementer.
+> **Оркестратор:** Выбранные repository-component checks обнаружили regression в import старого JSON. TASK возвращается в `IN PROGRESS`. Результаты testing и review инвалидированы. Finding передан implementer.
 
 После исправления обязательны:
 
@@ -161,8 +159,7 @@ new implementation revision
 → повторный strong review
 → targeted tests
 → affected tests
-→ full suite
-→ configured checks
+→ scoped configured checks
 ```
 
 Tester не передаёт ошибку implementer напрямую: всем циклом управляет оркестратор.
@@ -175,7 +172,7 @@ Tester не передаёт ошибку implementer напрямую: всем
 IN TESTING → AWAITING USER ACCEPTANCE
 ```
 
-Если полный suite объективно невозможно запустить, оркестратор объясняет точную причину и риск. Исключение допустимо только после явного принятия риска пользователем.
+Полный project test suite и unscoped global checks не запускаются в обычном TASK pipeline. Они остаются обязательными в Epic Validation. Ранний полный прогон требует явного запроса пользователя и не заменяет этот gate.
 
 ### Шаг 6. Ручная проверка пользователя
 
@@ -262,17 +259,20 @@ Commit требует отдельного разрешения при manual po
 
 Сообщение «принимаю TASK-002» не запускает TASK-003. Одно пользовательское сообщение может принять предыдущую и запустить следующую TASK только если явно содержит оба решения.
 
-### Шаг 10. Завершение последней TASK и Epic fuzzing
+### Шаг 10. Завершение последней TASK, Epic Validation и fuzzing
 
 После принятия последней TASK оркестратор автоматически выбирает `forge-complete-epic`.
 
 **Внутреннее действие**
 
 1. Проверяет, что все TASK `DONE` и evidence актуален.
-2. Переводит Epic `ACTIVE → FUZZING`.
-3. Автоматически вызывает read-only `fuzzer` с tier `balanced` для существующих harnesses.
-4. Записывает Fuzzing Summary в `plan.md`.
-5. Не создаёт `fuzzing-report.md`.
+2. Устанавливает exact aggregate fingerprint и переводит Epic `ACTIVE → VALIDATING`.
+3. Автоматически вызывает `epic-validator` с tier `balanced` для full suite, project-wide checks, critical paths и выбранных quality profiles.
+4. Записывает Epic Validation Summary в `plan.md`.
+5. Только после passing outcome переводит Epic `VALIDATING → FUZZING` и вызывает read-only `fuzzer`.
+6. Записывает Fuzzing Summary в `plan.md` и не создаёт отдельных validation/fuzzing report-файлов.
+
+Epic Validation outcomes: `PASSED`, `PASSED WITH ACCEPTED EXCEPTIONS`, `FAILED` и `BLOCKED`. Failures или blockers возвращают Epic в `ACTIVE`; remediation требует Replan и нового TASK lifecycle. Любое implementation change требует повторной Epic Validation перед fuzzing.
 
 Возможны четыре outcome.
 
@@ -299,6 +299,7 @@ FUZZING → ACTIVE
 → Replan approval
 → отдельный Task Start
 → полный TASK lifecycle
+→ повторная Epic Validation
 → повторный FUZZING
 ```
 
@@ -312,18 +313,19 @@ FUZZING → ACTIVE
 → Replan remediation TASK
 → Task Start
 → implementer/reviewer/tester/user acceptance
+→ повторная Epic Validation
 → повторный FUZZING
 ```
 
 ### Шаг 11. Epic Acceptance
 
-После допустимого fuzzing outcome пользователь проводит Epic-level validation.
+После допустимого fuzzing outcome пользователь проводит Epic-level manual validation.
 
-> **Оркестратор:** Все TASK приняты, full testing актуален, fuzzing outcome — `PASSED`. Epic acceptance criteria выполнены. Проверьте сквозной сценарий создания, сохранения и завершения задачи. После проверки явно подтвердите Epic Acceptance.
+> **Оркестратор:** Все TASK приняты, Epic Validation прошла на текущем fingerprint, selected quality-profile gates выполнены, fuzzing outcome — `PASSED`. Epic acceptance criteria выполнены. Проверьте сквозной сценарий создания, сохранения и завершения задачи. После проверки явно подтвердите Epic Acceptance.
 
 #### Пользователь нашёл проблему
 
-Epic возвращается в `ACTIVE`. Оркестратор предлагает Replan diff и новую TASK. После её полного lifecycle fuzzing повторяется.
+Epic возвращается в `ACTIVE`. Оркестратор предлагает Replan diff и новую TASK. После её полного lifecycle Epic Validation и fuzzing повторяются.
 
 #### Пользователь принимает Epic
 
@@ -342,7 +344,7 @@ execution/active/EPIC-001-core/
 
 4. Следующий Epic не активируется автоматически.
 
-> **Оркестратор:** EPIC-001 завершён. Следующий planned candidate — EPIC-002. Подготовить его plan или пока остановиться?
+> **Оркестратор:** EPIC-001 завершён. Следующий queued planned workspace по Backlog order — EPIC-002; он eligible для Epic Start. Активировать его или пока остановиться?
 
 ---
 
@@ -430,7 +432,7 @@ IN REVIEW
   ├── findings ───────────────► IN PROGRESS
   ▼ clean
 IN TESTING
-  │ tester: targeted + affected + full suite + configured checks
+  │ tester: focused + selected affected + scoped checks
   ├── failure ────────────────► IN PROGRESS → review again
   ▼ pass
 AWAITING USER ACCEPTANCE
@@ -446,10 +448,12 @@ AWAITING USER ACCEPTANCE
 | Основной оркестратор | strong | основная сессия | делегирует production-код implementer | да |
 | `context-collector` | fast | bootstrap existing, resume | нет | нет |
 | `documentation-researcher` | fast | когда нужна официальная внешняя документация | нет | нет |
+| `epic-planner` | strong | при подготовке Epic | нет | нет |
 | `implementer` | balanced | после отдельного Task Start | да, только TASK scope | нет |
 | `reviewer` | strong | после implementation revision | нет | нет |
 | `tester` | fast | после clean review | нет | нет |
-| `fuzzer` | balanced | после принятия последней TASK Epic | нет | нет |
+| `epic-validator` | balanced | после `DONE` всех planned TASK | нет | нет |
+| `fuzzer` | balanced | после passing Epic Validation | нет | нет |
 | `security-auditor` | strong | только явный запрос пользователя | нет | нет |
 
 Субагенты не вызывают друг друга. Все результаты возвращаются оркестратору.
@@ -464,6 +468,7 @@ AWAITING USER ACCEPTANCE
 | Принято архитектурное решение | соответствующий ADR; `DECISIONS.md` регенерируется |
 | Изменились Epic strategy или TASK order | `plan.md` через Replan |
 | Изменились TASK scope, status или evidence | соответствующий TASK-файл |
+| Получен Epic Validation outcome | `plan.md` |
 | Получен Epic fuzzing outcome | `plan.md` |
 | Получен Task manual feedback | тот же TASK-файл |
 | Получен Epic-level feedback | `plan.md`; remediation через новую TASK |
@@ -475,12 +480,12 @@ AWAITING USER ACCEPTANCE
 | --- | --- | --- |
 | SPEC Approval | утвердить target behavior | проектировать или писать код |
 | ADR Approval | принять одно архитектурное решение | автоматически утвердить весь ARCHITECTURE |
-| Plan Approval | утвердить стратегию и TASK definitions | активировать Epic |
-| Epic Start | сделать один Epic `ACTIVE` | запустить первую TASK |
+| Plan Approval | создать или обновить approved `execution/planned/` workspace | активировать Epic |
+| Epic Start | атомарно переместить один eligible workspace `planned → active` и сделать Epic `ACTIVE` | запустить первую TASK |
 | Task Start | запустить одну конкретную TASK | расширить её scope |
 | Replan | изменить approved plan/TASK composition | автоматически запустить новую TASK |
 | Task Acceptance | перевести одну TASK в `DONE` | запустить следующую TASK |
-| Epic Acceptance | завершить Epic после fuzzing | активировать следующий Epic |
+| Epic Acceptance | завершить Epic после Epic Validation и fuzzing | активировать следующий Epic |
 | Commit authorization при `manual` | создать показанный commit | включить unrelated изменения |
 
 ## Как восстановить процесс без истории чата
@@ -495,7 +500,7 @@ AWAITING USER ACCEPTANCE
 6. active или paused Epic `plan.md`;
 7. все TASK-файлы этого Epic;
 8. Git status и diff;
-9. hashes/revision/fingerprint evidence.
+9. hashes/revision/fingerprint, Review Packet, Epic Validation и fuzzing evidence.
 
 Если результат субагента существовал только в старом чате и не был записан в TASK или plan, соответствующий этап считается недоказанным и выполняется снова.
 
@@ -506,10 +511,10 @@ AWAITING USER ACCEPTANCE
 - Пользователь владеет priority и окончательными решениями.
 - Epic Start, Task Start, Task Acceptance и Epic Acceptance — разные gates.
 - Implementer пишет production-код и тесты; tester тесты не пишет.
-- Любая правка кода требует нового review и нового полного testing.
+- Любая Task-правка кода требует нового structured review и selected Task testing; aggregate changes также инвалидируют Epic Validation и fuzzing.
 - Проблема в непринятой TASK остаётся в этой TASK.
 - Проблема в принятом коде получает `BUG-*` только после подтверждения.
-- После последней TASK автоматически запускается read-only Epic fuzzing.
+- После последней TASK автоматически запускается полный Epic Validation; read-only fuzzing начинается только после passing outcome.
 - Security audit запускается только вручную.
 - История чата полезна, но не является источником истины.
 - Следующая TASK и следующий Epic никогда не стартуют автоматически.
@@ -519,5 +524,3 @@ AWAITING USER ACCEPTANCE
 - [README](README.md) — установка и quick start;
 - [FRAMEWORK](FRAMEWORK.md) — архитектура и контракты;
 - [RUNBOOK](RUNBOOK.md) — краткие операционные действия;
-- [FRAMEWORK_DESIGN](FRAMEWORK_DESIGN.md) — обоснование согласованных решений.
-

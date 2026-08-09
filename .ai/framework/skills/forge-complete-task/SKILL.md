@@ -9,11 +9,11 @@ description: Record explicit user acceptance for a verified Forge TASK, close an
 
 1. Require lifecycle `status: AWAITING USER ACCEPTANCE`.
 2. Confirm the implementation revision and fingerprint match current clean review and testing evidence.
-3. Confirm the recorded test evidence contains exact commands and current results for TASK-specific, affected, full-suite, and configured quality checks, or an explicitly accepted exception with its risk.
-4. Confirm required manual verification was presented and any full-suite exception was explicitly accepted with its risk.
+3. Confirm the recorded test evidence contains exact commands, selection rationale, and current results for focused, affected-component, and scoped quality checks, or an explicitly accepted Task-level exception with its risk.
+4. Confirm Review Packet integrity, acceptance traceability and protocol coverage are current, and required manual verification was presented.
 5. Ask for explicit Task Acceptance. Verification evidence proves eligibility for acceptance; it never constitutes acceptance. Do not infer acceptance from passing checks or positive feedback that does not clearly accept the TASK.
 
-If the user requests changes, record the feedback, return the TASK to `IN PROGRESS`, and use the full implementation-review-testing loop again.
+If the user requests changes, record the feedback, return the TASK to `IN PROGRESS`, and repeat the entire structured implementation-review-selected-testing loop.
 
 ## Record completion
 
@@ -32,7 +32,7 @@ Read `git.policy` from `.ai/project.yaml`.
 The commit gate follows Task Acceptance; it never precedes or constitutes user acceptance. Do not commit the TASK while it is awaiting acceptance.
 
 - `manual`: after explicit Task Acceptance and transition to `DONE`, show the exact scoped files and proposed commit message, then wait for separate explicit commit authorization.
-- `auto_commit_after_acceptance`: commit only the accepted TASK's scoped changes after clean review, full testing or an accepted exception, explicit Task Acceptance, and transition to `DONE`.
+- `auto_commit_after_acceptance`: commit only the accepted TASK's scoped changes after clean structured review, selected Task testing or an accepted exception, explicit Task Acceptance, and transition to `DONE`.
 
 Never include unrelated user changes in the commit.
 
@@ -40,4 +40,4 @@ Never include unrelated user changes in the commit.
 
 Task Acceptance and permission to start the next TASK are separate decisions. Do not start, delegate, or transition the next TASK unless the user explicitly authorizes its Task Start gate, even when the same message accepted the previous TASK.
 
-If accepted work was the final TASK in the Epic, hand control to `forge-complete-epic` for automatic read-only fuzzing. Otherwise report the next eligible TASK and ask whether the user wants to start it.
+If accepted work was the final TASK in the Epic, hand control to `forge-complete-epic` for automatic Epic Validation followed by read-only fuzzing. Otherwise report the next eligible TASK and ask whether the user wants to start it.

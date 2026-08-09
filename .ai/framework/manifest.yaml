@@ -1,6 +1,6 @@
 framework:
   name: ai-dev-forge
-  version: 3.0.0
+  version: 4.0.0
   schema_version: 1
 
 adapters: [codex, claude]
@@ -60,7 +60,7 @@ skills:
   - forge-check-framework
   - forge-sync-adapters
 
-subagents: [context-collector, documentation-researcher, implementer, reviewer, tester, fuzzer, security-auditor]
+subagents: [context-collector, documentation-researcher, epic-planner, implementer, reviewer, tester, epic-validator, fuzzer, security-auditor]
 
 optional_capabilities:
   hooks: false

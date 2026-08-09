@@ -12,6 +12,7 @@ description: Use when a consumer repository already contains an older AI Develop
 3. Support a legacy installation without `.ai/framework.lock`. Use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence.
 4. Hash canonical, execution, product, and unrelated project paths before any write.
 5. Identify a recoverable rollback source. Stop if the old bundle and affected adapters cannot be restored.
+6. For a pre-v4 project, inspect every planned/active/paused workspace, quality configuration, Epic Verification Plans, Task affected/risk/verification fields, Review Packets, and Epic Validation fingerprints. Treat missing fields, an invalid `execution/planned/` mapping, and any Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` without current validation as compatibility findings.
 
 Never modify canonical documents, canonical schema, ADRs, execution state, project code, tests, data, or unrelated configuration during this workflow.
 
@@ -28,7 +29,7 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 
 Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, default or overridden model/configuration decisions, and rollback source.
 
-Report canonical schema differences only as compatibility findings outside migration scope. Request explicit approval for the exact framework, router, and managed-adapter changes. Approval does not authorize canonical edits, product changes, commits, or pushes.
+Report canonical schema differences only as compatibility findings outside migration scope. Do not infer approved planning from a `PLANNED` Backlog row, create `execution/planned/`, or move any existing execution workspace during migration. A pre-v4 planned, active, or paused plan requires a later explicit compatibility diff through `forge-resume-development`; an Epic may not continue through fuzzing or Epic Acceptance without current v4 Epic Validation evidence. Request explicit approval for the exact framework, router, managed-adapter, and project quality-configuration changes. Approval does not authorize canonical or execution edits, product changes, commits, or pushes.
 
 ## Apply with backup
 

@@ -8,7 +8,7 @@ description: Execute one approved Forge TASK through implementation, independent
 ## Start the TASK
 
 1. Require `definition_status: approved`, lifecycle `status: TODO`, satisfied dependencies, no unresolved blocker, and no other code-writing TASK in progress.
-2. Show the TASK goal, scope, acceptance criteria, tests, and constraints.
+2. Show the TASK goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus, and constraints.
 3. Obtain explicit Task Start authorization.
 4. Let only the orchestrator transition the TASK to `IN PROGRESS`, record the gate, and establish the next implementation revision.
 
@@ -19,26 +19,36 @@ description: Execute one approved Forge TASK through implementation, independent
    - identify the smallest observable behavior required by an acceptance criterion;
    - add or adjust one focused test and run it to confirm an expected failure caused by the missing behavior, not by a test error;
    - implement the smallest in-scope production change that makes the focused test pass;
-   - rerun the focused and affected tests;
+   - rerun the focused tests and selected affected checks;
    - refactor only while tests remain green, then repeat for the next behavior.
 3. Documentation-only changes, generated artifacts, and simple configuration may record a concise TDD-not-applicable rationale instead. Exploration code is not completion evidence until the final implementation satisfies this contract.
-4. Record a compact Implementation Summary, including RED/GREEN evidence or the not-applicable rationale, incremented revision, and reproducible fingerprint in the TASK.
-5. Transition to `IN REVIEW` and invoke the strong read-only `reviewer` for the exact revision and fingerprint.
-6. If review finds anything actionable:
+4. Run applicable scoped quality checks. Do not require the full project suite or unscoped project-wide checks; those belong to Epic Validation. An early full run requires the user's explicit request.
+5. If the actual changed or affected surface exceeds the approved Verification Plan, correct the implementation scope or update the in-scope verification selection with an explicit rationale. Removing or weakening an approved check requires orchestrator disposition; changed Task scope still requires Replan.
+6. Record a compact Implementation Summary, including base revision, affected-surface or risk changes, RED/GREEN evidence or the not-applicable rationale, selected command evidence, incremented revision, and reproducible fingerprint in the TASK.
+7. Build a Review Packet containing:
+   - TASK and Epic-plan paths;
+   - base and implementation fingerprints and implementation revision;
+   - changed paths and reproducible scoped diff;
+   - acceptance criteria, affected components and contracts, risk level and flags, and review focus;
+   - implementation summary, tests added or changed, RED/GREEN evidence, selected checks, and known limitations.
+8. Transition to `IN REVIEW` and invoke the strong read-only `reviewer` with the exact Review Packet.
+9. If review finds anything actionable:
    - let the orchestrator return the TASK to `IN PROGRESS`;
    - route findings to `implementer`;
    - invalidate prior review and testing evidence;
    - record the new revision/fingerprint after fixes;
    - repeat independent review.
-7. After a clean review, transition to `IN TESTING` and invoke `tester`.
-8. Require tests added or changed by the TASK, affected-component tests, the full test suite, and configured lint, typecheck, and build checks.
-9. If testing fails or coverage is missing, route evidence through the orchestrator to `implementer`, then repeat review and all required testing after any code change.
+10. After a clean, protocol-complete review, transition to `IN TESTING` and invoke `tester` for the exact reviewed revision, fingerprint, changed surface, Verification Plan, and review evidence.
+11. Require tests added or changed by the TASK, selected affected-component tests, and configured scoped quality checks. Do not require the full project suite or unscoped project-wide checks.
+12. If testing fails, coverage or selection is missing, or the plan is stale, route evidence through the orchestrator to `implementer`, then repeat structured review and selected testing after any code change.
 
 The tester never writes tests or fixes code. The reviewer and tester report only to the orchestrator. Agents never invoke one another.
 
-## Handle execution limits
+## Handle execution limits and full-suite requests
 
-Require the full test suite for every TASK. If local execution is objectively impossible, explain the exact missing capability and risk, then obtain explicit user acceptance of the exception. Do not silently skip or weaken checks.
+The full project suite is not a Task gate. It runs during Epic Validation after all planned Tasks are DONE. If the user explicitly requests an early full run, record the authorization, exact command and result; that result is supplementary and does not replace the later fingerprint-bound Epic Validation.
+
+If a required selected Task check is objectively impossible, explain the exact missing capability and risk, then obtain explicit user acceptance of the Task-level exception. Do not silently skip, substitute, remove, or weaken checks.
 
 ## Hand off to the user
 
@@ -46,7 +56,7 @@ After current review and testing evidence passes:
 
 1. confirm the tested revision and fingerprint exactly match the clean reviewed revision; stale or mismatched evidence must be invalidated and rerun;
 2. transition the TASK to `AWAITING USER ACCEPTANCE`;
-3. record compact review and test summaries in the TASK, including exact commands, exit results, skipped checks, and accepted execution exceptions;
+3. record compact review and test summaries in the TASK, including Review Packet integrity, acceptance traceability, protocol coverage, exact selected commands, exit results, skipped checks, selection rationale, and accepted execution exceptions;
 4. report the delivered behavior, verification evidence, limitations, and manual steps;
 5. wait without timeout for user validation.
 

@@ -18,21 +18,38 @@ For ongoing work, recover state from canonical files and Git, not session histor
 2. `ARCHITECTURE.md` — target architecture.
 3. `BACKLOG.md` — Epic priority/readiness/status and defects.
 4. `DECISIONS.md` plus ADR files — decision navigation and authoritative decisions.
-5. Active or paused Epic `plan.md` — strategy, Task order, Epic fuzzing and validation.
-6. TASK files — the only Task lifecycle state and Task evidence.
-7. Git status and diff — unfinished file changes.
+5. Every queued `execution/planned/` Epic — approved strategy and `TODO` Task definitions pending Epic Start, ordered only by Backlog.
+6. Active or paused Epic `plan.md` — strategy, Task order, quality profiles, Epic Validation, fuzzing, and user validation.
+7. TASK files — the only Task lifecycle state and Task evidence.
+8. Git status and diff — unfinished file changes.
 
 Report contradictions instead of silently reconciling them.
 
 ## Lifecycle and Git Gates
 
 - Require explicit user approval for SPEC, ARCHITECTURE, BACKLOG, plan definitions, ADR acceptance, Epic Start, Replan, Task Start, Task Acceptance, and Epic Acceptance.
+- Plan Approval creates or updates only an approved `execution/planned/` workspace and leaves the Epic `PLANNED`; Epic Start separately moves one eligible planned workspace to `execution/active/` and changes its Backlog status atomically.
 - Task Acceptance never starts the next Task unless the user explicitly authorizes both decisions.
 - Never commit a Task before explicit Task Acceptance. A Task commit is allowed only after the user confirms acceptance and the Task transitions to `DONE`.
 - Under `manual` Git policy, show the exact scoped files and proposed message after Task Acceptance, then wait for separate explicit commit authorization.
 - Under `auto_commit_after_acceptance`, the accepted Task may be committed after Task Acceptance without a second commit prompt.
 - Never include unrelated user changes in a Task commit. Do not activate the next Epic automatically.
 - Lifecycle enums, transitions, and commit prerequisites come only from `.ai/framework/contracts.yaml`.
+
+## Common Engineering Prohibitions
+
+- Do not silently expand approved scope, invent requirements, or make an unresolved architectural or product decision.
+- Do not mix unrelated refactoring, dependency upgrades, formatting churn, or user changes into assigned work or its evidence.
+- Do not delete, disable, skip, quarantine, weaken, or rewrite tests merely to obtain a passing result. Do not use rerun-until-green as evidence for a flaky check.
+- Do not update snapshots, golden files, fixtures, baselines, generated artifacts, or ML expectations without verifying and explaining the intended behavior change.
+- Do not claim `passed`, `clean`, `compatible`, `secure`, or complete without current reproducible evidence tied to the exact revision or fingerprint.
+- Do not hide failures, ignore non-zero exits or material warnings, swallow errors, or introduce unbounded retries, waits, resource use, or training runs.
+- Do not expose secrets, credentials, tokens, private keys, production data, or unnecessary personal data in code, prompts, logs, fixtures, artifacts, or documentation.
+- Do not perform destructive data or schema changes without an approved migration, compatibility, backup, and rollback strategy appropriate to the risk.
+- Do not break a public API, schema, event, storage format, CLI contract, model interface, or supported runtime without approved versioning and migration handling.
+- Do not access production, external systems, or the network, or perform destructive operations, unless the user explicitly authorizes the exact scope.
+- For ML and data work, do not leak validation or test data into training, cherry-pick metrics, or leave datasets, features, seeds, environments, and model artifacts unversioned when they affect reproducibility.
+- Do not edit generated Forge adapters directly; change neutral sources or the shared overlay and synchronize them.
 
 ## Skills
 
@@ -59,13 +76,15 @@ Project configuration may explicitly override these defaults in `.ai/project.yam
 
 - `context-collector` — fast local state and code context.
 - `documentation-researcher` — fast authoritative external research.
+- `epic-planner` — strong read-only Epic decomposition, risk analysis, and verification planning.
 - `implementer` — balanced code and test implementation for one authorized TASK.
 - `reviewer` — strong independent read-only review.
-- `tester` — fast targeted, affected, full-suite, lint, typecheck, and build execution.
-- `fuzzer` — balanced read-only Epic fuzzing after the final Task is accepted.
+- `tester` — fast selected Task and affected verification without the full project suite.
+- `epic-validator` — balanced full regression, project-wide checks, critical paths, and quality-profile validation.
+- `fuzzer` — balanced read-only Epic fuzzing after current Epic Validation passes.
 - `security-auditor` — strong on-demand local read-only security analysis.
 
-Reviewer, tester, fuzzer, and security auditor return results to the orchestrator. The orchestrator routes corrections and records compact summaries in the existing TASK or plan; no separate report Markdown files are created.
+Epic planner, reviewer, tester, Epic validator, fuzzer, and security auditor return results to the orchestrator. The orchestrator routes corrections and records compact summaries in the existing TASK or plan; no separate report Markdown files are created.
 
 Run no more than one code-writing Task at a time. Independent read-only research may run in parallel.
 

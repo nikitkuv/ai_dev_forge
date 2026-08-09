@@ -1,7 +1,7 @@
 schema_version: 1
 framework:
   name: ai-dev-forge
-  version: 3.0.0
+  version: 4.0.0
 
 platforms:
   codex:
@@ -24,3 +24,24 @@ framework_language: en
 
 git:
   policy: manual
+
+# Populate only from confirmed repository, build-system, and CI evidence.
+# An empty profile or command list must be resolved in the approved Epic plan as
+# not applicable or as an explicit blocker; it is not permission to invent,
+# silently skip, or substitute a command.
+quality:
+  profiles: []
+  task:
+    focused_test_commands: []
+    affected_test_commands: []
+    scoped_lint_commands: []
+    scoped_typecheck_commands: []
+    scoped_build_commands: []
+  epic:
+    full_test_suite_commands: []
+    project_lint_commands: []
+    project_typecheck_commands: []
+    project_build_commands: []
+    integration_commands: []
+    e2e_commands: []
+  selection_rules: []

@@ -20,11 +20,11 @@ Follow the numbered workflows in order:
 1. `.ai/01-product-discovery.md` — start from the supplied description or conduct an iterative interview; create a draft target-state `SPEC.md`.
 2. `.ai/02-system-design.md` — interview for architecture, present alternatives, create proposed ADRs, and generate the decision index.
 3. `.ai/03-release-planning.md` — create the Epic Roadmap and Defect Queue without Tasks or active work.
-4. `.ai/04-prepare-workspace.md` — prepare one `READY` Epic only when the user wants to begin execution.
+4. `.ai/04-prepare-workspace.md` — prepare one `PLANNED + READY` Epic as an approved queued workspace; activate it only through the separate optional Epic Start gate.
 5. `.ai/05-create-platform-adapters.md` — confirm default or overridden model mappings and generate both native platform adapters.
 6. `.ai/06-final-validation.md` — validate structure, lifecycle, references, adapter parity, and ownership.
 
-Require explicit user approval at every document, ADR, Epic Start, and other gate defined by the numbered workflow. Do not automatically continue from one numbered step to the next.
+Require explicit user approval at every document, ADR, Plan Approval, Epic Start, and other gate defined by the numbered workflow. Do not automatically continue from one numbered step to the next.
 
 ## Preserve framework rules
 
