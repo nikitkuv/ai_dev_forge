@@ -31,7 +31,7 @@ description: Execute one approved Forge TASK through implementation, independent
    - changed paths and reproducible scoped diff;
    - acceptance criteria, affected components and contracts, risk level and flags, and review focus;
    - implementation summary, tests added or changed, RED/GREEN evidence, selected checks, and known limitations.
-8. Transition to `IN REVIEW` and invoke the strong read-only `reviewer` with the exact Review Packet.
+8. Transition to `IN REVIEW`. On Codex, invoke the strong read-only `reviewer` with the exact Review Packet. On Claude Code, read the complete neutral `.ai/framework/agents/reviewer.yaml` contract, build a prompt containing that contract and the exact Review Packet, and run `.claude/forge/codex-role-runner.mjs --preflight`. If preflight is available, write the prompt to a secure temporary file and invoke the runner with `--role reviewer --prompt-file <path>`; always remove the temporary file. If preflight is unavailable, invoke the generated native Claude `reviewer` with the identical Review Packet and report the fallback reason. Once a Codex task starts, a non-zero exit, timeout, malformed output, or model/effort mismatch blocks review and never falls back.
 9. If review finds anything actionable:
    - let the orchestrator return the TASK to `IN PROGRESS`;
    - route findings to `implementer`;

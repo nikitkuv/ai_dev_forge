@@ -21,9 +21,10 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 1. Split `AGENTS.md` and `CLAUDE.md` into project-owned context and legacy Forge instructions. Include any existing shared, Codex-only, and Claude-only custom router overlays as migration inputs. Check project-owned statements against canonical state, especially `BACKLOG.md`, and report contradictions without changing canonical files.
 2. Merge the preserved project-owned context from both routers and all legacy overlays into one `.ai/custom/router-shared.md`. If any inputs disagree, show the conflict and require an explicit user decision; do not silently prefer either platform. Back up legacy platform-specific overlays and remove them only within the approved migration scope after their preserved content is present in the shared overlay.
 3. Derive the new managed adapter membership from the staged manifest IDs.
-4. Recognize legacy Forge agents and skills from the old bundle, old hashes when present, known IDs, and content comparison.
-5. Preserve unlisted agents, skills, platform configuration, settings, commands, hooks, and unknown files.
-6. Treat an ambiguous obsolete path or same-ID custom entry as a collision; do not delete it by inference.
+4. Preserve native Claude `epic-planner` and `reviewer` agents while adding the staged optional Codex launcher and route metadata. Do not install the plugin or authenticate Codex during migration; unavailable preflight remains a valid native fallback.
+5. Recognize legacy Forge agents and skills from the old bundle, old hashes when present, known IDs, and content comparison.
+6. Preserve unlisted agents, skills, platform configuration, settings, commands, hooks, and unknown files.
+7. Treat an ambiguous obsolete path or same-ID custom entry as a collision; do not delete it by inference.
 
 ## Preview and authorize
 

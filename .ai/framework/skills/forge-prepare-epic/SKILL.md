@@ -17,7 +17,7 @@ description: Prepare one PLANNED and READY Epic as an approved queued workspace 
 
 Follow `.ai/04-prepare-workspace.md`:
 
-1. invoke the strong read-only `epic-planner` with canonical, repository, CI, quality-configuration, contract, convention, and template evidence;
+1. On Codex, invoke the strong read-only `epic-planner` with canonical, repository, CI, quality-configuration, contract, convention, and template evidence. On Claude Code, read the complete neutral `.ai/framework/agents/epic-planner.yaml` contract, build the identical assignment, and run `.claude/forge/codex-role-runner.mjs --preflight`. If preflight is available, write the contract and assignment to a secure temporary prompt file and invoke the runner with `--role epic-planner --prompt-file <path>`; always remove that temporary file. If preflight is unavailable, invoke the generated native Claude `epic-planner` with the identical assignment and report the fallback reason. Once a Codex task starts, a non-zero exit or malformed result blocks planning and never falls back;
 2. require a proposal containing the Epic strategy, requirement coverage, selected quality profiles, risks, ordered Task graph, Task definitions, Task verification selections, review focus, and Epic Verification Plan;
 3. independently verify the proposal; never treat agent output as approval or canonical truth;
 4. allocate project-global TASK IDs without restarting per Epic or reusing retired IDs;

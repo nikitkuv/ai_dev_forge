@@ -79,7 +79,10 @@ Install no global agent or skill. Manage only IDs declared by the staged manifes
 .agents/skills/
 .claude/agents/
 .claude/skills/
+.claude/forge/codex-role-runner.mjs
 ```
+
+Keep all nine generated Claude agents. Copy the managed launcher and preferred-route metadata, but do not install `codex-plugin-cc` 1.0.6+ or run Codex authentication during migration. The launcher is optional: unavailable preflight selects the existing native Claude `epic-planner` or `reviewer`; a Codex task that has already started and fails remains blocked. Roll back by removing the managed launcher and preferred-route metadata through adapter sync; retain the native agents.
 
 Remove or replace recognized legacy Forge entries, install the complete staged Forge set, and preserve unlisted project-owned entries. Preserve `.codex/config.toml`, Claude settings, commands, hooks, and other adjacent platform configuration. Stop on a same-ID collision until the user chooses the exact replacement.
 

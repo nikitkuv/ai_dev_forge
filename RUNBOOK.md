@@ -1,4 +1,10 @@
-# AI Development Forge v4 — Runbook
+# AI Development Forge v4.1 — Runbook
+
+## Codex route для Claude Code
+
+На подготовке Epic и независимом review Claude Code выполняет preflight `codex-plugin-cc`. Доступный runtime получает полный нейтральный контракт роли и тот же Epic assignment или Review Packet, запускается fresh/read-only с `gpt-5.6-sol/high`. Недоступный плагин, Node.js, Codex CLI или login означает fallback на одноимённый Claude subagent с теми же входными данными; начатый Codex run при ошибке блокирует этап.
+
+Поддерживается `codex-plugin-cc` версии `1.0.6` и новее. Установка плагина, запуск `/codex:setup` и авторизация — ручные и необязательные действия.
 
 Этот runbook описывает повседневные действия. Детальные алгоритмы находятся в skills; основной агент должен явно выбрать нужный skill и сохранить результат в canonical файлах.
 

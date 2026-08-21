@@ -1,5 +1,11 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.1
+
+v4.1 добавляет необязательный preferred route для Claude Code: `epic-planner` и `reviewer` могут выполняться через установленный `openai/codex-plugin-cc` с `gpt-5.6-sol/high`. Миграция сохраняет оба native Claude agent-файла как fallback, не устанавливает плагин и не выполняет login автоматически. После adapter sync проверьте `/codex:setup`; при недоступности runtime workflow продолжит работу через текущих Claude subagents.
+
+Минимальная проверенная версия плагина — `1.0.6`. Для отката удалите managed launcher и preferred-route metadata при следующем adapter sync; native Claude agents остаются рабочими без плагина.
+
 Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `decisions/`, `execution/`, код и тесты проекта не изменяются.
 
 ## Что получится
