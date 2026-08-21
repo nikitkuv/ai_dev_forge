@@ -1,6 +1,6 @@
 framework:
   name: ai-dev-forge
-  version: 4.0.0
+  version: 4.1.0
   schema_version: 1
 
 adapters: [codex, claude]
@@ -61,6 +61,26 @@ skills:
   - forge-sync-adapters
 
 subagents: [context-collector, documentation-researcher, epic-planner, implementer, reviewer, tester, epic-validator, fuzzer, security-auditor]
+
+claude_codex_preferred_routes:
+  epic-planner:
+    provider: codex-plugin-cc
+    plugin_id: codex@openai-codex
+    minimum_plugin_version: 1.0.6
+    model: gpt-5.6-sol
+    reasoning_effort: high
+    mode: read_only
+    fresh: true
+    fallback_agent: epic-planner
+  reviewer:
+    provider: codex-plugin-cc
+    plugin_id: codex@openai-codex
+    minimum_plugin_version: 1.0.6
+    model: gpt-5.6-sol
+    reasoning_effort: high
+    mode: read_only
+    fresh: true
+    fallback_agent: reviewer
 
 optional_capabilities:
   hooks: false

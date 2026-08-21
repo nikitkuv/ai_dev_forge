@@ -16,6 +16,7 @@ Read:
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex and Claude adapter templates under `.ai/templates/adapters/`;
+- the Claude Codex-role launcher template `.ai/templates/adapters/claude/codex-role-runner.mjs`;
 - `.ai/custom/router-shared.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
 
@@ -110,6 +111,7 @@ CLAUDE.md
 .claude/agents/epic-validator.md
 .claude/agents/fuzzer.md
 .claude/agents/security-auditor.md
+.claude/forge/codex-role-runner.mjs
 .claude/skills/<fourteen-skill-ids>/SKILL.md
 ```
 
@@ -124,6 +126,8 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
 Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
+Copy the Claude launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the nine generated Claude agents, including `epic-planner` and `reviewer`: they are the fallback path when the optional Codex plugin is unavailable. Do not preflight, install, authenticate, or otherwise require the plugin while generating adapters.
+
 ## Validate Before Replacement
 
 Verify the staged outputs:
@@ -131,6 +135,7 @@ Verify the staged outputs:
 - both root routers are byte-identical, contain no unresolved placeholder, and are no more than 150 lines;
 - both root routers contain the same Common Engineering Prohibitions without project-specific weakening;
 - each platform contains every agent and skill ID declared by the manifest;
+- the generated Claude launcher and the two `claude_codex_preferred_routes` exist, pin `gpt-5.6-sol` with `high` reasoning, use fresh read-only task invocation, and point to the matching native Claude fallback agent IDs;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
 - every rendered agent contains its concrete model and effort;

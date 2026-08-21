@@ -1,5 +1,7 @@
 ## Сценарий 1. Инициализация нового проекта с нуля
 
+> В Claude Code `epic-planner` и `reviewer` предпочитают `codex-plugin-cc` с `gpt-5.6-sol/high`; отсутствие runtime сохраняет штатный Claude-subagent fallback.
+
 ### Исходное состояние
 
 В репозитории может не быть ничего, кроме `.git/`, краткого product brief или нескольких исходных заметок. В нём ещё нет canonical документов и platform adapters.

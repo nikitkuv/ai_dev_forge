@@ -9,7 +9,7 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 
 1. Read `.ai/project.yaml`, the manifest, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes.
 2. Require both platforms and resolve every configured model tier from the bundled defaults or explicit project overrides. Never invent or silently change a model or effort.
-3. Derive managed membership only from the manifest `subagents` and `skills` IDs plus root `AGENTS.md` and `CLAUDE.md`.
+3. Derive managed membership from the manifest `subagents`, `skills`, `claude_codex_preferred_routes`, root `AGENTS.md`, and `CLAUDE.md`. The two preferred routes supplement rather than replace the native Claude `epic-planner` and `reviewer` agents.
 4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, and adjacent platform files as project-owned content.
 5. Detect manual edits and same-ID collisions in managed entries.
 
@@ -36,6 +36,7 @@ Stage one synchronized candidate containing:
 - manifest-declared Codex skills under `.agents/skills/`;
 - manifest-declared Claude agents under `.claude/agents/`;
 - manifest-declared Claude skills under `.claude/skills/`;
+- `.claude/forge/codex-role-runner.mjs` copied verbatim from the Claude adapter template;
 - all preserved unlisted project-owned entries.
 
 Write each generated `.claude/agents/*.md` file as UTF-8 without BOM. Its first bytes must be the opening YAML frontmatter delimiter `---`; do not emit the UTF-8 BOM byte sequence `EF BB BF`, because Claude Code then fails to recognize the frontmatter and does not register the subagent.
@@ -46,7 +47,7 @@ Install no global agent or skill. Generate no hook, MCP configuration, platform 
 
 1. verify both routers are byte-identical, have no unresolved placeholder, and remain within the configured line limit;
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
-3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity;
+3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify each preferred Claude Codex route reuses its neutral role contract, pins `gpt-5.6-sol/high`, uses a fresh read-only task, and names the matching native fallback ID;
 4. verify additional project-owned agents and skills and all unlisted platform files are unchanged;
 5. verify every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 6. run the read-only framework conformance check.

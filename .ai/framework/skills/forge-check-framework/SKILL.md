@@ -17,11 +17,12 @@ Do not repair files during this check.
 - Detect obsolete framework-owned paths, unexpected overwrites, generated adapter edits, and ownership collisions.
 - Verify both platform adapters were generated from the same source hashes and project configuration.
 - Verify every manifest-declared agent and skill exists on both platforms with matching IDs, tiers, role boundaries, and concrete model mappings.
+- Verify the managed Claude launcher and every `claude_codex_preferred_routes` entry: it must reuse the matching neutral role contract, pin `gpt-5.6-sol/high`, request a fresh read-only task, and name an existing native Claude fallback agent.
 - Verify every Forge-managed `.claude/agents/*.md` file is UTF-8 without BOM and starts at byte zero with the `---` YAML frontmatter delimiter.
 - Permit additional project-owned agents and skills; verify they and other unlisted platform files are excluded from Forge ownership and remain unchanged.
 - Verify the shared router overlay renders identically without copying legacy framework instructions.
 - Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
-- Verify the framework did not create default hooks, MCP configuration, or CLI dependencies.
+- Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies; plugin absence must leave the generated native Claude fallback path valid.
 
 ## Validate canonical and lifecycle state
 

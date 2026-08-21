@@ -33,7 +33,7 @@ An `OUTLINE` Epic or an Epic with unresolved requirements or boundaries cannot r
 
 ## Prepare the Proposed Plan
 
-Invoke the strong read-only `epic-planner` with the approved canonical documents, selected Epic, relevant repository and CI evidence, project quality configuration, framework contracts, conventions, and templates. The agent returns a proposal only; it does not write files, approve definitions, activate the Epic, or contact the user.
+Invoke the strong read-only `epic-planner` with the approved canonical documents, selected Epic, relevant repository and CI evidence, project quality configuration, framework contracts, conventions, and templates. In Claude Code, first run the managed Codex-route preflight: an available `codex-plugin-cc` delegates the complete neutral contract and identical evidence to fresh read-only `gpt-5.6-sol/high`; an unavailable preflight invokes the native Claude `epic-planner`. A Codex run that has started and fails blocks planning rather than falling back. The selected executor returns a proposal only; it does not write files, approve definitions, activate the Epic, or contact the user.
 
 The orchestrator must independently check the proposal against canonical sources and repository evidence, resolve blockers with the user, and remain responsible for the final displayed plan. Build the proposal with:
 

@@ -1,4 +1,10 @@
-# AI Development Forge v4
+# AI Development Forge v4.1
+
+## Предпочтительный Codex route в Claude Code
+
+Для стадий `epic-planner` и `reviewer` Claude Code сначала проверяет необязательный плагин `openai/codex-plugin-cc`. При доступных Node.js 18.18+, Codex CLI и авторизации он запускает свежую read-only задачу Codex с `gpt-5.6-sol` и reasoning `high`. Если preflight недоступен, без изменения lifecycle используется текущий Claude subagent; ошибка после старта Codex блокирует стадию и не переключает провайдера.
+
+Минимальная проверенная версия плагина — `1.0.6`; установка и `/codex:setup` выполняются пользователем и не требуются для обычного fallback.
 
 AI Development Forge — documentation-first фреймворк для совместной разработки с кодовыми агентами, прежде всего Codex CLI и Claude Code CLI.
 

@@ -1,4 +1,8 @@
-# AI Development Forge v4 — Architecture
+# AI Development Forge v4.1 — Architecture
+
+## Preferred Codex routing in Claude Code
+
+`epic-planner` and `reviewer` keep their neutral definitions and native agents on both platforms. When Claude Code preflight finds `codex-plugin-cc`, Node.js 18.18+, Codex CLI, and authentication, it invokes the managed launcher with a fresh read-only `gpt-5.6-sol/high` task. Otherwise it invokes the matching native Claude subagent with the same contract and assignment. A failure after Codex task creation is never retried through Claude.
 
 Этот документ описывает реализованную архитектуру фреймворка и её обязательные lifecycle-контракты.
 

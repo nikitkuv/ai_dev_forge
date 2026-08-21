@@ -86,6 +86,12 @@ Project configuration may explicitly override these defaults in `.ai/project.yam
 
 Epic planner, reviewer, tester, Epic validator, fuzzer, and security auditor return results to the orchestrator. The orchestrator routes corrections and records compact summaries in the existing TASK or plan; no separate report Markdown files are created.
 
+## Claude Code preferred Codex routing
+
+When this router is active in Claude Code, `epic-planner` and `reviewer` first run the managed `.claude/forge/codex-role-runner.mjs` preflight. When `codex-plugin-cc` 1.0.6+ (`codex@openai-codex`), Node.js 18.18+, local Codex CLI, and Codex authentication are available, it launches a fresh read-only Codex task pinned to `gpt-5.6-sol` with effort `high`, using the complete neutral role contract and the exact current assignment. Do not invoke `/codex:rescue` for this path.
+
+If preflight is unavailable, invoke the matching generated native Claude subagent with the identical assignment and state the fallback reason. After a Codex task starts, any error, timeout, malformed result, or runtime-setting mismatch blocks the stage; never switch providers mid-attempt. The orchestrator alone validates results and owns lifecycle transitions, approvals, and remediation routing.
+
 Run no more than one code-writing Task at a time. Independent read-only research may run in parallel.
 
 ## Platform Boundaries
