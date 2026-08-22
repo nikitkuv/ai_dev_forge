@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 const REQUIRED_NODE = [18, 18, 0];
 const REQUIRED_PLUGIN = [1, 0, 6];
 const REQUIRED_MODEL = "gpt-5.6-sol";
-const REQUIRED_EFFORT = "high";
+const REQUIRED_EFFORT = "medium";
 const REQUIRED_ROLES = new Set(["epic-planner", "reviewer"]);
 
 function json(value) {

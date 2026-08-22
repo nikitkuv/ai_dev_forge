@@ -10,7 +10,7 @@ test("manifest declares the three role-execution modes and both external routes"
   assert.match(manifest, /roles: \[epic-planner, reviewer\]/);
   assert.match(manifest, /supported_modes: \[claude_with_codex, codex_with_claude, native_subagents\]/);
   assert.match(manifest, /fallback: forbidden/);
-  assert.match(manifest, /claude_with_codex:[\s\S]*?orchestrator: claude[\s\S]*?provider: codex-plugin-cc[\s\S]*?model: gpt-5\.6-sol/);
+  assert.match(manifest, /claude_with_codex:[\s\S]*?orchestrator: claude[\s\S]*?provider: codex-plugin-cc[\s\S]*?model: gpt-5\.6-sol[\s\S]*?reasoning_effort: medium/);
   assert.match(manifest, /codex_with_claude:[\s\S]*?orchestrator: codex[\s\S]*?provider: claude-code-cli[\s\S]*?minimum_cli_version: 2\.1\.203[\s\S]*?permission_mode: plan/);
   assert.match(manifest, /native_subagents:[\s\S]*?orchestrator: active_platform[\s\S]*?external_preflight: false/);
 });
@@ -19,6 +19,7 @@ test("project template requires an explicit valid role mode", async () => {
   const project = await read(".ai/templates/project.yaml");
   assert.match(project, /schema_version: 2/);
   assert.match(project, /role_execution:\n  mode: null/);
+  assert.doesNotMatch(project, /(?:reasoning_effort|effort): high/);
   const valid = new Set(["claude_with_codex", "codex_with_claude", "native_subagents"]);
   for (const mode of valid) assert.equal(valid.has(mode), true);
   for (const mode of [undefined, null, "auto", "claude", "reviewer:codex"]) assert.equal(valid.has(mode), false);

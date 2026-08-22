@@ -90,6 +90,7 @@ test("runner source pins read-only fresh Codex task settings", async () => {
   const source = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("../.ai/templates/adapters/claude/codex-role-runner.mjs", import.meta.url), "utf8"));
   assert.match(source, /"task", "--fresh", "--model", REQUIRED_MODEL/);
   assert.match(source, /"--effort", REQUIRED_EFFORT/);
+  assert.match(source, /REQUIRED_EFFORT = "medium"/);
   assert.doesNotMatch(source, /"--write"/);
   assert.doesNotMatch(source, /"--resume/);
   assert.doesNotMatch(source, /"--background"/);

@@ -77,7 +77,7 @@ role_execution:
       minimum_plugin_version: 1.0.6
       launcher: .claude/forge/codex-role-runner.mjs
       model: gpt-5.6-sol
-      reasoning_effort: high
+      reasoning_effort: medium
       permission_mode: read_only
       fresh: true
     codex_with_claude:
