@@ -43,13 +43,13 @@ Model mappings must provide:
 ```yaml
 models:
   codex:
-    strong: {model: gpt-5.6-sol, reasoning_effort: high}
+    strong: {model: gpt-5.6-sol, reasoning_effort: medium}
     balanced: {model: gpt-5.6-terra, reasoning_effort: medium}
     fast: {model: gpt-5.6-luna, reasoning_effort: medium}
   claude:
-    strong: {model: opus, effort: high}
-    balanced: {model: sonnet, effort: high}
-    fast: {model: haiku, effort: high}
+    strong: {model: opus, effort: medium}
+    balanced: {model: sonnet, effort: medium}
+    fast: {model: haiku, effort: medium}
 ```
 
 These are framework defaults, not unresolved placeholders. Accept provider aliases or full model IDs as explicit project overrides. Never invent an override, leave a mapping unresolved, or silently upgrade or downgrade a tier. Warn if the main orchestrator session is not suitable for tier `strong`, but do not change that session.
@@ -140,7 +140,7 @@ Verify the staged outputs:
 - both root routers are byte-identical, contain no unresolved placeholder, and are no more than 150 lines;
 - both root routers contain the same Common Engineering Prohibitions without project-specific weakening;
 - each platform contains every agent and skill ID declared by the manifest;
-- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/high`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
+- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/medium`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
 - every rendered agent contains its concrete model and effort;

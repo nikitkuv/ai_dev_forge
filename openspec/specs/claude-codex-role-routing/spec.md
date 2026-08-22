@@ -29,7 +29,7 @@ Forge SHALL require one project-owned `role_execution.mode` value applying toget
 
 ### Requirement: Claude-to-Codex mode uses the managed plugin route
 
-When `role_execution.mode` is `claude_with_codex`, Forge SHALL require Claude Code as the active orchestrator and SHALL execute both selected roles through the managed `openai/codex-plugin-cc` runtime using a fresh foreground read-only Codex task pinned to `gpt-5.6-sol` with `high` reasoning.
+When `role_execution.mode` is `claude_with_codex`, Forge SHALL require Claude Code as the active orchestrator and SHALL execute both selected roles through the managed `openai/codex-plugin-cc` runtime using a fresh foreground read-only Codex task pinned to `gpt-5.6-sol` with `medium` reasoning.
 
 #### Scenario: Claude plans an Epic
 - **WHEN** Claude Code reaches Epic planning in `claude_with_codex` mode and preflight succeeds

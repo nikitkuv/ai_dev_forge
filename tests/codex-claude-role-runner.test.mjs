@@ -45,7 +45,7 @@ test("preflight verifies supported version and authentication", () => {
 });
 
 test("launcher arguments enforce a fresh non-persistent plan-mode surface", () => {
-  const args = buildClaudeArgs("opus", "high");
+  const args = buildClaudeArgs("opus", "medium");
   assert.deepEqual(args.slice(0, 3), ["-p", "--output-format", "json"]);
   assert.ok(args.includes("plan"));
   assert.ok(args.includes("--no-session-persistence"));
@@ -61,24 +61,24 @@ test("planner and reviewer preserve multiline and large prompts", () => {
   const review = "Review Packet\nrevision: 4\nfingerprint: abc";
   writeFileSync(join(root, "planner.md"), planner);
   writeFileSync(join(root, "review.md"), review);
-  assert.equal(main(["--role", "epic-planner", "--prompt-file", "planner.md", "--model", "opus", "--effort", "high"], { ...env, FAKE_EXPECT_PROMPT: planner }, root), 0);
-  assert.equal(main(["--role", "reviewer", "--prompt-file", "review.md", "--model", "opus", "--effort", "high"], { ...env, FAKE_EXPECT_PROMPT: review }, root), 0);
+  assert.equal(main(["--role", "epic-planner", "--prompt-file", "planner.md", "--model", "opus", "--effort", "medium"], { ...env, FAKE_EXPECT_PROMPT: planner }, root), 0);
+  assert.equal(main(["--role", "reviewer", "--prompt-file", "review.md", "--model", "opus", "--effort", "medium"], { ...env, FAKE_EXPECT_PROMPT: review }, root), 0);
 });
 
 test("preflight unavailability and started failures never fall back", () => {
   const { env, root } = fixture();
   writeFileSync(join(root, "prompt.md"), "packet");
-  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "high"], { ...env, FAKE_AUTH: "missing" }, root), 2);
-  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "high"], { ...env, FAKE_EXIT: "7" }, root), 7);
-  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "high"], { ...env, FAKE_OUTPUT: "malformed" }, root), 1);
-  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "high"], { ...env, FAKE_HANG: "1", FORGE_ROLE_TIMEOUT_MS: "50" }, root), 124);
+  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "medium"], { ...env, FAKE_AUTH: "missing" }, root), 2);
+  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "medium"], { ...env, FAKE_EXIT: "7" }, root), 7);
+  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "medium"], { ...env, FAKE_OUTPUT: "malformed" }, root), 1);
+  assert.equal(main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "medium"], { ...env, FAKE_HANG: "1", FORGE_ROLE_TIMEOUT_MS: "50" }, root), 124);
 });
 
 test("runner creates no prompt or session artifact of its own", () => {
   const { env, root } = fixture();
   writeFileSync(join(root, "prompt.md"), "packet");
   const before = new Set(readdirSync(root));
-  main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "high"], env, root);
+  main(["--role", "reviewer", "--prompt-file", "prompt.md", "--model", "opus", "--effort", "medium"], env, root);
   const after = new Set(readdirSync(root));
   assert.deepEqual(after, before);
 });

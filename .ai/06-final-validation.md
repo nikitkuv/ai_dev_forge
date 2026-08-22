@@ -73,7 +73,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - All rendered agents contain concrete tier mappings and effort.
 - `.ai/project.yaml` contains exactly one supported `role_execution.mode` applying to both roles; active-orchestrator requirements agree with cross-provider modes.
 - Claude contains `.claude/forge/codex-role-runner.mjs`; Codex contains `.codex/forge/claude-role-runner.mjs`; both launchers match their templates, preserve complete neutral prompts, and expose fresh/read-only runtime metadata.
-- The Claude-to-Codex route pins `gpt-5.6-sol/high`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode performs no external preflight.
+- The Claude-to-Codex route pins `gpt-5.6-sol/medium`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode performs no external preflight.
 - Missing selected prerequisites and all post-start failures block the stage. No route implicitly falls back or switches provider.
 - The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite and fuzzer requires current Epic Validation evidence.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
