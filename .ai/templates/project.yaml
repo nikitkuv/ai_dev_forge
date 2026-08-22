@@ -1,13 +1,19 @@
-schema_version: 1
+schema_version: 2
 framework:
   name: ai-dev-forge
-  version: 4.2.0
+  version: 4.3.0
 
 platforms:
   codex:
     enabled: true
   claude:
     enabled: true
+
+# Required before Epic planning or Task review. Bootstrap or migration must
+# replace null with one explicitly approved value: claude_with_codex,
+# codex_with_claude, or native_subagents.
+role_execution:
+  mode: null
 
 models:
   codex:

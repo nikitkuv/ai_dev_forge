@@ -67,7 +67,7 @@ test("many-to-many relationship fixture is traversable in both directions", () =
 
 test("framework upgrade and rollback preserve mixed integration bytes and mappings", () => {
   const before = JSON.stringify({ definitions: fixture.definitions, relationships: fixture.relationships });
-  const stagedFramework = { version: "4.2.0", managedInputs: ["manifest", "contracts", "skills"] };
+  const stagedFramework = { version: "4.3.0", managedInputs: ["manifest", "contracts", "skills"] };
   const afterUpgrade = before;
   const afterRollback = afterUpgrade;
   assert.equal(afterUpgrade, before);

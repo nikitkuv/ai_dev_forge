@@ -1,10 +1,10 @@
 # AI Development Forge v4.2 — Runbook
 
-## Codex route для Claude Code
+## Режим выполнения planner и reviewer
 
-На подготовке Epic и независимом review Claude Code выполняет preflight `codex-plugin-cc`. Доступный runtime получает полный нейтральный контракт роли и тот же Epic assignment или Review Packet, запускается fresh/read-only с `gpt-5.6-sol/high`. Недоступный плагин, Node.js, Codex CLI или login означает fallback на одноимённый Claude subagent с теми же входными данными; начатый Codex run при ошибке блокирует этап.
+Перед Epic planning и независимым review оркестратор читает `.ai/project.yaml`: `claude_with_codex` требует работу из Claude Code и готовый `codex-plugin-cc` 1.0.6+; `codex_with_claude` требует работу из Codex и установленный/авторизованный Claude Code CLI 2.1.203+; `native_subagents` запускает одноимённые внутренние агенты активной платформы без внешней проверки. Обе роли всегда получают полный neutral contract и тот же Epic assignment или Review Packet.
 
-Поддерживается `codex-plugin-cc` версии `1.0.6` и новее. Установка плагина, запуск `/codex:setup` и авторизация — ручные и необязательные действия.
+Выбранный внешний route не имеет fallback: недоступный preflight, несовпадение оркестратора, permission failure, timeout, malformed result или ошибка после старта блокирует стадию. Для переключения измените `role_execution.mode` с явным подтверждением и выполните adapter sync.
 
 Этот runbook описывает повседневные действия. Детальные алгоритмы находятся в skills; основной агент должен явно выбрать нужный skill и сохранить результат в canonical файлах.
 
@@ -252,6 +252,7 @@ Older-migratable schema изменяется только отдельным dif
 
 `.ai/project.yaml` поддерживает:
 
+- `role_execution.mode` — один из `claude_with_codex`, `codex_with_claude`, `native_subagents` для обеих read-only ролей;
 - `manual` — после Task Acceptance и перехода TASK в `DONE` оркестратор предлагает commit, но ждёт отдельного явного разрешения;
 - `auto_commit_after_acceptance` — commit разрешён только после clean review, testing, Task Acceptance и перехода TASK в `DONE`.
 

@@ -12,6 +12,7 @@ description: Adopt AI Development Forge in an existing codebase by collecting re
 3. Ask the `context-collector` for a local read-only inventory of code, tests, documentation, configuration, deployment material, issue artifacts, Git state, any existing product or architecture records, and optional project-owned integration definitions without invoking their connectors.
 4. Summarize apparent behavior, protected compatibility constraints, missing tests, defects, technical debt, dependency risks, architecture violations, and contradictions.
 5. Label each statement as code evidence, test evidence, documentation claim, user-confirmed intent, or inference.
+6. Ask the user to choose exactly one `role_execution.mode` for both `epic-planner` and `reviewer`: `claude_with_codex`, `codex_with_claude`, or `native_subagents`; persist it without probing or installing external runtimes.
 
 Current behavior is evidence, not product truth. Present conflicts and ask the user which target behavior is authoritative. Do not silently copy accidental implementation behavior into canonical documents.
 

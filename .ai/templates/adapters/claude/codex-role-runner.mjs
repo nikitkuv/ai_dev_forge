@@ -94,10 +94,10 @@ function parseArgs(argv) {
 export function main(argv = process.argv.slice(2), env = process.env, cwd = process.cwd()) {
   const options = parseArgs(argv);
   const check = preflight(env, cwd);
-  if (options.preflight) { json({ provider: check.available ? "codex-plugin-cc" : "claude-subagent", ...check }); return check.available ? 0 : 2; }
+  if (options.preflight) { json({ provider: "codex-plugin-cc", ...check }); return check.available ? 0 : 2; }
   if (!REQUIRED_ROLES.has(options.role)) throw new Error("--role must be epic-planner or reviewer.");
   if (!options["prompt-file"]) throw new Error("--prompt-file is required.");
-  if (!check.available) { json({ provider: "claude-subagent", fallback_agent: options.role, ...check }); return 2; }
+  if (!check.available) { json({ provider: "codex-plugin-cc", fallback: "forbidden", ...check }); return 2; }
   const promptFile = resolve(cwd, options["prompt-file"]);
   if (!existsSync(promptFile)) throw new Error(`Prompt file does not exist: ${promptFile}`);
   const result = run(process.execPath, [join(check.pluginRoot, "scripts", "codex-companion.mjs"), "task", "--fresh", "--model", REQUIRED_MODEL, "--effort", REQUIRED_EFFORT, "--prompt-file", promptFile, "--cwd", cwd], { cwd, env });

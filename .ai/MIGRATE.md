@@ -28,6 +28,7 @@ Before writing:
 5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
 6. hash every protected project path before proposing changes;
 7. without invoking MCP, API, CLI, or other connectors, classify each integration definition/state file as `absent`, `current_supported`, `older_migratable`, `malformed`, `unsupported_future`, `custom_profile`, or `ownership_collision`.
+8. inspect `role_execution.mode`; when absent, show the old effective provider behavior and require an explicit selection. For a 4.2 project, offer `claude_with_codex` only as the compatibility-preserving suggestion, never as an implicit write.
 
 Absence of `.ai/integrations/` is the clean Forge baseline. It adds no migration step, preflight, file, or blocker. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself.
 
@@ -82,13 +83,14 @@ Install no global agent or skill. Manage only IDs declared by the staged manifes
 
 ```text
 .codex/agents/
+.codex/forge/claude-role-runner.mjs
 .agents/skills/
 .claude/agents/
 .claude/skills/
 .claude/forge/codex-role-runner.mjs
 ```
 
-Keep all nine generated Claude agents. Copy the managed launcher and preferred-route metadata, but do not install `codex-plugin-cc` 1.0.6+ or run Codex authentication during migration. The launcher is optional: unavailable preflight selects the existing native Claude `epic-planner` or `reviewer`; a Codex task that has already started and fails remains blocked. Roll back by removing the managed launcher and preferred-route metadata through adapter sync; retain the native agents.
+Keep all nine generated agents on both platforms. Copy both managed launchers and the three-mode metadata, but do not install, authenticate, preflight, or invoke either external provider during migration. An unavailable explicitly selected external route blocks its role stage and never falls back; `native_subagents` is the explicit mode for internal agents. Roll back configuration, both launchers, route metadata, adapters, and lock as one unit while retaining project-owned state.
 
 Remove or replace recognized legacy Forge entries, install the complete staged Forge set, and preserve unlisted project-owned entries. Preserve `.codex/config.toml`, Claude settings, commands, hooks, and other adjacent platform configuration. Stop on a same-ID collision until the user chooses the exact replacement.
 
@@ -102,6 +104,7 @@ Show one complete migration preview containing:
 - adapter additions, replacements, preserved files, and collisions;
 - protected-path hashes and canonical schema findings;
 - `.ai/project.yaml` values that must be confirmed when absent;
+- the explicit `role_execution.mode`, old effective behavior, and compatibility-preserving suggestion when applicable;
 - v4 quality-profile, verification-plan, Review-Packet, `VALIDATING`, and Epic Validation compatibility findings;
 - exact paths that will be backed up.
 - the offline integration compatibility matrix, including the clean absent case, isolated consumer blockers, ownership collisions, and any separately available schema migrations.
@@ -114,7 +117,7 @@ After approval:
 
 1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, existing lock, and any project-owned integration paths that the staged operation references;
 2. build staged candidate outputs without changing active targets;
-3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` and `.ai/custom/` project state while preserving optional `.ai/integrations/` and project-owned consumers byte-for-byte; add missing quality configuration only from explicit user decisions and confirmed repository or CI evidence;
+3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` (including one explicit role-execution mode) and `.ai/custom/` project state while preserving optional `.ai/integrations/` and project-owned consumers byte-for-byte; add missing quality configuration only from explicit user decisions and confirmed repository or CI evidence;
 4. replace recognized Forge adapter IDs while preserving unlisted files;
 5. replace the active bundle and both byte-identical routers as one logical operation;
 6. run `forge-check-framework` against the candidate result;
@@ -122,7 +125,7 @@ After approval:
 8. create or update `.ai/framework.lock` only after every validation passes;
 9. remove `.ai-next/` only after success and keep the backup until the user acknowledges the result.
 
-On any framework-migration failure, perform rollback: restore the old `.ai/`, routers, adapters, lock, and exact integration bytes; verify protected hashes again; report the failed stage. Create no migration report Markdown file and require no framework CLI.
+On any framework-migration failure, perform rollback: restore the old `.ai/`, prior project role configuration, routers, both launchers/adapters, lock, and exact integration bytes; verify protected hashes again; report the failed stage. Create no migration report Markdown file and require no framework CLI.
 
 ## Optional Integration-Schema Migration
 

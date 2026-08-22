@@ -93,4 +93,6 @@ test("runner source pins read-only fresh Codex task settings", async () => {
   assert.doesNotMatch(source, /"--write"/);
   assert.doesNotMatch(source, /"--resume/);
   assert.doesNotMatch(source, /"--background"/);
+  assert.doesNotMatch(source, /claude-subagent|fallback_agent/);
+  assert.match(source, /fallback: "forbidden"/);
 });

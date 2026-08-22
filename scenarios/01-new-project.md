@@ -1,6 +1,6 @@
 ## Сценарий 1. Инициализация нового проекта с нуля
 
-> В Claude Code `epic-planner` и `reviewer` предпочитают `codex-plugin-cc` с `gpt-5.6-sol/high`; отсутствие runtime сохраняет штатный Claude-subagent fallback.
+> Bootstrap требует один явный `role_execution.mode` для `epic-planner` и `reviewer`: Claude→Codex, Codex→Claude или native subagents. Внешний route не имеет fallback.
 
 ### Исходное состояние
 
@@ -39,6 +39,7 @@ Bootstrap не запускается автоматически после ко
 >
 > - язык canonical документов — русский;
 > - генерируем обе платформы — Codex CLI и Claude Code CLI;
+> - выбираем один режим обеих read-only ролей: `claude_with_codex`, `codex_with_claude` или `native_subagents`;
 > - Git policy — `manual`;
 > - для каждой платформы нужны выбранные вами model mappings для tiers `strong`, `balanced` и `fast`; для Codex также нужен reasoning effort.
 >
@@ -59,6 +60,7 @@ Bootstrap не запускается автоматически после ко
   documentation_language: ru
   platforms.codex.enabled: true
   platforms.claude.enabled: true
+  role_execution.mode: явно подтверждённое значение
   models: конкретные mappings, подтверждённые пользователем
   git.policy: manual
 ```

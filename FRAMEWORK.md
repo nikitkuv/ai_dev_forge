@@ -1,8 +1,8 @@
 # AI Development Forge v4.2 — Architecture
 
-## Preferred Codex routing in Claude Code
+## Configurable planner/reviewer routing
 
-`epic-planner` and `reviewer` keep their neutral definitions and native agents on both platforms. When Claude Code preflight finds `codex-plugin-cc`, Node.js 18.18+, Codex CLI, and authentication, it invokes the managed launcher with a fresh read-only `gpt-5.6-sol/high` task. Otherwise it invokes the matching native Claude subagent with the same contract and assignment. A failure after Codex task creation is never retried through Claude.
+`epic-planner` and `reviewer` keep neutral definitions and native agents on both platforms. One required `.ai/project.yaml` value selects both roles: `claude_with_codex` means Claude Code orchestration plus the managed `codex-plugin-cc` route; `codex_with_claude` means Codex orchestration plus managed headless Claude Code; `native_subagents` uses the active platform's internal agents. Cross-provider preflight or runtime failure never switches provider implicitly.
 
 Этот документ описывает реализованную архитектуру фреймворка и её обязательные lifecycle-контракты.
 
@@ -124,7 +124,7 @@ Framework control layer написан на английском. Канонич
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Оба root router имеют byte-identical содержимое и ограничены 150 строками. `.ai/project.yaml` сопоставляет tiers с конкретными моделями и effort. Framework defaults:
+Оба root router имеют byte-identical содержимое и ограничены 150 строками. `.ai/project.yaml` хранит `role_execution.mode` и сопоставляет tiers с конкретными моделями и effort. Framework defaults:
 
 | Tier | Codex | Claude Code |
 | --- | --- | --- |

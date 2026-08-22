@@ -14,6 +14,7 @@ description: Use when a consumer repository already contains an older AI Develop
 5. Identify a recoverable rollback source. Stop if the old bundle and affected adapters cannot be restored.
 6. Classify integrations offline as absent, current-supported, older-migratable, malformed, unsupported-future, custom-profile, or ownership collision. Invoke no connector. Absence is the clean baseline; malformed/future/custom/offline entries block only their consumers, while ownership or safety collisions block migration.
 7. For a pre-v4 project, inspect every planned/active/paused workspace, quality configuration, Epic Verification Plans, Task affected/risk/verification fields, Review Packets, and Epic Validation fingerprints. Treat missing fields, an invalid `execution/planned/` mapping, and any Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` without current validation as compatibility findings.
+8. Inspect `role_execution.mode`. If it is absent, show the old effective routing and require the user to choose one supported value. Offer `claude_with_codex` only as the compatibility-preserving suggestion for a 4.2 project; never write it without approval.
 
 Never modify canonical documents, canonical schema, ADRs, execution state, project integrations, project code, tests, data, or unrelated configuration during the framework-upgrade transaction.
 
@@ -22,14 +23,14 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 1. Split `AGENTS.md` and `CLAUDE.md` into project-owned context and legacy Forge instructions. Include any existing shared, Codex-only, and Claude-only custom router overlays as migration inputs. Check project-owned statements against canonical state, especially `BACKLOG.md`, and report contradictions without changing canonical files.
 2. Merge the preserved project-owned context from both routers and all legacy overlays into one `.ai/custom/router-shared.md`. If any inputs disagree, show the conflict and require an explicit user decision; do not silently prefer either platform. Back up legacy platform-specific overlays and remove them only within the approved migration scope after their preserved content is present in the shared overlay.
 3. Derive the new managed adapter membership from the staged manifest IDs.
-4. Preserve native Claude `epic-planner` and `reviewer` agents while adding the staged optional Codex launcher and route metadata. Do not install the plugin or authenticate Codex during migration; unavailable preflight remains a valid native fallback.
+4. Preserve native `epic-planner` and `reviewer` agents on both platforms while adding both staged external launchers (`.claude/forge/codex-role-runner.mjs` and `.codex/forge/claude-role-runner.mjs`) and three-mode route metadata. Do not install, authenticate, preflight, or invoke Codex or Claude during migration. External-mode unavailability is a runtime blocker, not a migration fallback; `native_subagents` is the explicit dependency-free choice.
 5. Recognize legacy Forge agents and skills from the old bundle, old hashes when present, known IDs, and content comparison.
 6. Preserve unlisted agents, skills, platform configuration, settings, commands, hooks, and unknown files.
 7. Preserve project-owned integration consumer skills as unlisted entries. Treat an ambiguous obsolete path or same-ID custom entry as a collision; do not delete it by inference.
 
 ## Preview and authorize
 
-Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, default or overridden model/configuration decisions, rollback source, and the offline integration compatibility matrix.
+Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, the explicit role-execution choice, default or overridden model/configuration decisions, rollback source, and the offline integration compatibility matrix.
 
 Framework upgrade and project integration-schema migration are separate gates. A supported framework upgrade may proceed while an older integration remains unmigrated or a malformed/future/custom integration is preserved but unavailable to core consumers. Do not include any project-owned integration rewrite in the framework diff.
 
@@ -40,7 +41,7 @@ Report canonical schema differences only as compatibility findings outside migra
 After approval:
 
 1. back up active `.ai/`, root routers, every affected adapter entry, the old lock, and exact optional integration bytes;
-2. build a candidate `.ai/` from the staged release plus approved project configuration and the shared overlay while preserving `.ai/integrations/` byte-for-byte;
+2. build a candidate `.ai/` from the staged release plus approved project configuration, including `role_execution.mode`, and the shared overlay while preserving `.ai/integrations/` byte-for-byte;
 3. render byte-identical root `AGENTS.md` and `CLAUDE.md` from the current identical templates and shared overlay;
 4. invoke `forge-sync-adapters` to replace recognized Forge IDs and install the manifest-declared local set while preserving unlisted files;
 5. replace the active bundle and staged outputs as one logical operation;
@@ -48,7 +49,7 @@ After approval:
 7. create or update `.ai/framework.lock` only after every check passes;
 8. remove `.ai-next/` only after success and retain the backup until user acknowledgement.
 
-On any failure, restore the old bundle, routers, adapters, lock, and exact project-owned integration state, then verify protected hashes again and report the failed stage. Create no report Markdown file and require no framework CLI.
+On any failure, restore the old bundle, project configuration including its prior role-execution representation, routers, both launchers/adapters, lock, and exact project-owned integration state, then verify protected hashes again and report the failed stage. Create no report Markdown file and require no framework CLI.
 
 ## Migrate an integration schema separately
 

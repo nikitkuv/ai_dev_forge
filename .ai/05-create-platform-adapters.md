@@ -16,7 +16,7 @@ Read:
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex and Claude adapter templates under `.ai/templates/adapters/`;
-- the Claude Codex-role launcher template `.ai/templates/adapters/claude/codex-role-runner.mjs`;
+- the Claude-side Codex launcher `.ai/templates/adapters/claude/codex-role-runner.mjs` and Codex-side Claude launcher `.ai/templates/adapters/codex/claude-role-runner.mjs`;
 - `.ai/custom/router-shared.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
 
@@ -31,6 +31,7 @@ Create or update `.ai/project.yaml` from its template while preserving project-o
 Require:
 
 - both `platforms.codex.enabled` and `platforms.claude.enabled` to be `true`;
+- `role_execution.mode` to be exactly `claude_with_codex`, `codex_with_claude`, or `native_subagents`, explicitly approved for both selected roles;
 - `documentation_language` to match the user's communication language;
 - `framework_language: en`;
 - an explicit Git policy;
@@ -82,6 +83,7 @@ AGENTS.md
 .codex/agents/epic-validator.toml
 .codex/agents/fuzzer.toml
 .codex/agents/security-auditor.toml
+.codex/forge/claude-role-runner.mjs
 .agents/skills/<fifteen-skill-ids>/SKILL.md
 ```
 
@@ -97,6 +99,7 @@ For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 - the neutral `codex_sandbox_mode`.
 
 Copy all fifteen portable `SKILL.md` files verbatim into `.agents/skills/`.
+Copy the Codex-side Claude launcher template verbatim to `.codex/forge/claude-role-runner.mjs`.
 
 ## Render Claude Code
 
@@ -128,7 +131,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
 Copy all fifteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
-Copy the Claude launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the nine generated Claude agents, including `epic-planner` and `reviewer`: they are the fallback path when the optional Codex plugin is unavailable. Do not preflight, install, authenticate, or otherwise require the plugin while generating adapters.
+Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the nine generated agents on both platforms, including `epic-planner` and `reviewer`, because `native_subagents` is a first-class mode. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime while generating adapters.
 
 ## Validate Before Replacement
 
@@ -137,7 +140,7 @@ Verify the staged outputs:
 - both root routers are byte-identical, contain no unresolved placeholder, and are no more than 150 lines;
 - both root routers contain the same Common Engineering Prohibitions without project-specific weakening;
 - each platform contains every agent and skill ID declared by the manifest;
-- the generated Claude launcher and the two `claude_codex_preferred_routes` exist, pin `gpt-5.6-sol` with `high` reasoning, use fresh read-only task invocation, and point to the matching native Claude fallback agent IDs;
+- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/high`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
 - every rendered agent contains its concrete model and effort;
