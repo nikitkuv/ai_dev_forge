@@ -10,9 +10,9 @@ Project-owned definitions/state не включаются в managed-output hash
 
 ## Совместимость v4.1
 
-v4.1 добавляет необязательный preferred route для Claude Code: `epic-planner` и `reviewer` могут выполняться через установленный `openai/codex-plugin-cc` с `gpt-5.6-sol/high`. Миграция сохраняет оба native Claude agent-файла как fallback, не устанавливает плагин и не выполняет login автоматически. После adapter sync проверьте `/codex:setup`; при недоступности runtime workflow продолжит работу через текущих Claude subagents.
+v4.3 заменяет неявный preferred/fallback route явным `role_execution.mode` для обеих ролей. Доступны `claude_with_codex` (Claude Code + `openai/codex-plugin-cc` 1.0.6+), `codex_with_claude` (Codex + Claude Code CLI 2.1.203+ в headless plan mode) и `native_subagents` (внутренние агенты активной платформы).
 
-Минимальная проверенная версия плагина — `1.0.6`. Для отката удалите managed launcher и preferred-route metadata при следующем adapter sync; native Claude agents остаются рабочими без плагина.
+Для проекта v4.2 миграция показывает прежнее эффективное поведение и предлагает `claude_with_codex` как совместимый вариант, но записывает его только после подтверждения. Она генерирует оба launcher и сохраняет native agents, не устанавливая и не авторизуя внешние runtimes. Недоступный выбранный route блокирует роль без fallback; откат восстанавливает прежнюю конфигурацию, adapters и lock одной транзакцией.
 
 Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `.ai/integrations/`, project-owned consumers, `decisions/`, `execution/`, код и тесты проекта не изменяются framework-транзакцией.
 

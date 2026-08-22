@@ -11,7 +11,7 @@ description: Initialize AI Development Forge in a new product repository from a 
 2. Confirm this is a consumer product repository. If it is the AI Development Forge source repository itself, stop; never self-bootstrap the framework repository.
 3. Inspect existing root files without overwriting unrelated user work.
 4. Record the user's communication language as the documentation language. Keep framework control text, IDs, statuses, paths, and commands in English.
-5. Prepare `.ai/project.yaml` with both Codex and Claude enabled, the bundled model defaults or explicit user-approved overrides, and the selected Git policy.
+5. Ask the user to choose exactly one `role_execution.mode` for both `epic-planner` and `reviewer`: `claude_with_codex`, `codex_with_claude`, or `native_subagents`. Prepare `.ai/project.yaml` with that explicit choice, both Codex and Claude enabled, the bundled model defaults or explicit user-approved overrides, and the selected Git policy. Do not install, authenticate, preflight, or invoke an external runtime during configuration.
 
 ## Run the gated bootstrap
 

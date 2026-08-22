@@ -1,6 +1,6 @@
 ## Сценарий 2. Инициализация существующего проекта
 
-> После adapter sync native Claude agents остаются на месте. Плагин Codex необязателен: preflight выбирает Codex только при готовом локальном runtime.
+> Bootstrap существующего проекта сохраняет native agents обеих платформ и требует явный `role_execution.mode`. Cross-provider runtime используется только в выбранном режиме и не имеет fallback.
 
 ### Исходное состояние
 
@@ -94,7 +94,7 @@ taskflow/
 - незакоммиченный diff пользователя сохранён;
 - collision decisions пока находятся в текущем gate;
 - режим `existing` подтверждён пользователем и восстанавливается вместе с repository evidence и состоянием numbered workflows;
-- `.ai/project.yaml` фиксирует язык, модели, integrations и Git policy.
+- `.ai/project.yaml` фиксирует язык, модели, `role_execution.mode`, integrations и Git policy.
 
 ### Шаг 3. Existing-project Product Discovery
 
@@ -210,7 +210,7 @@ taskflow/
 
 Новый оркестратор не полагается на память предыдущего чата. Он читает:
 
-1. `.ai/project.yaml` — язык, модели, integrations и Git policy;
+1. `.ai/project.yaml` — язык, модели, режим planner/reviewer, integrations и Git policy;
 2. frontmatter `SPEC.md` — документ уже approved;
 3. frontmatter `ARCHITECTURE.md` — draft или отсутствует;
 4. ADR и `DECISIONS.md`;

@@ -1,11 +1,8 @@
-# Claude Codex Role Routing Specification
-
 ## Purpose
 
-Defines deterministic, read-only routing from Claude Code orchestration to Codex for Epic planning and independent Task review, with the existing native Claude role subagents retained as a preflight fallback.
+Generalize deterministic read-only routing for Epic planning and Task review into an explicit project-selected mode supporting Claude-to-Codex, Codex-to-Claude, or native subagents.
 
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Project selects one role-execution mode
 

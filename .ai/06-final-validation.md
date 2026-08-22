@@ -71,14 +71,16 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - Additional project-owned agents and skills are allowed, excluded from Forge parity counts, and unchanged.
 - Unlisted platform configuration, settings, commands, and hooks are preserved and remain outside Forge ownership.
 - All rendered agents contain concrete tier mappings and effort.
-- Claude contains `.claude/forge/codex-role-runner.mjs`, both preferred role routes are pinned to `gpt-5.6-sol` with `high` reasoning and fresh read-only execution, and their fallback IDs resolve to generated native Claude agents.
-- Missing plugin installation, Node.js support, Codex CLI, or Codex authentication selects the native fallback before execution; an error after Codex task start is reported as a blocked stage and never triggers fallback.
+- `.ai/project.yaml` contains exactly one supported `role_execution.mode` applying to both roles; active-orchestrator requirements agree with cross-provider modes.
+- Claude contains `.claude/forge/codex-role-runner.mjs`; Codex contains `.codex/forge/claude-role-runner.mjs`; both launchers match their templates, preserve complete neutral prompts, and expose fresh/read-only runtime metadata.
+- The Claude-to-Codex route pins `gpt-5.6-sol/high`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode performs no external preflight.
+- Missing selected prerequisites and all post-start failures block the stage. No route implicitly falls back or switches provider.
 - The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite and fuzzer requires current Epic Validation evidence.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
 - No unresolved renderer placeholder remains; the shared project overlay appears identically in both routers.
 - Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
 - Both routers contain byte-identical Common Engineering Prohibitions without missing or weakened entries.
-- The framework generated no hooks, MCP configuration, or mandatory CLI dependency. The optional Claude Codex route uses a user-installed plugin and preserves the native Claude fallback. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
+- The framework generated no hooks, MCP configuration, or mandatory CLI dependency. Cross-provider modes use user-installed runtimes only when selected; native mode requires neither. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 - A clean project has no `.ai/integrations/` and passes without connector preflight. Supported, custom, malformed, future-version, or offline integrations remain project-owned; only their consumers are blocked unless an ownership/safety collision exists.
 
 ## Simulate Recovery

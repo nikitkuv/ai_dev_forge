@@ -4,12 +4,24 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("manifest declares fixed Codex routes with native fallback agents", async () => {
+test("manifest declares the three role-execution modes and both external routes", async () => {
   const manifest = await read(".ai/framework/manifest.yaml");
-  assert.match(manifest, /version: 4\.2\.0/);
-  for (const role of ["epic-planner", "reviewer"]) {
-    assert.match(manifest, new RegExp(`${role}:\\n    provider: codex-plugin-cc[\\s\\S]*?minimum_plugin_version: 1\\.0\\.6[\\s\\S]*?model: gpt-5\\.6-sol[\\s\\S]*?reasoning_effort: high[\\s\\S]*?fallback_agent: ${role}`));
-  }
+  assert.match(manifest, /version: 4\.3\.0/);
+  assert.match(manifest, /roles: \[epic-planner, reviewer\]/);
+  assert.match(manifest, /supported_modes: \[claude_with_codex, codex_with_claude, native_subagents\]/);
+  assert.match(manifest, /fallback: forbidden/);
+  assert.match(manifest, /claude_with_codex:[\s\S]*?orchestrator: claude[\s\S]*?provider: codex-plugin-cc[\s\S]*?model: gpt-5\.6-sol/);
+  assert.match(manifest, /codex_with_claude:[\s\S]*?orchestrator: codex[\s\S]*?provider: claude-code-cli[\s\S]*?minimum_cli_version: 2\.1\.203[\s\S]*?permission_mode: plan/);
+  assert.match(manifest, /native_subagents:[\s\S]*?orchestrator: active_platform[\s\S]*?external_preflight: false/);
+});
+
+test("project template requires an explicit valid role mode", async () => {
+  const project = await read(".ai/templates/project.yaml");
+  assert.match(project, /schema_version: 2/);
+  assert.match(project, /role_execution:\n  mode: null/);
+  const valid = new Set(["claude_with_codex", "codex_with_claude", "native_subagents"]);
+  for (const mode of valid) assert.equal(valid.has(mode), true);
+  for (const mode of [undefined, null, "auto", "claude", "reviewer:codex"]) assert.equal(valid.has(mode), false);
 });
 
 test("root routers remain byte-identical and document both provider paths", async () => {
@@ -19,10 +31,11 @@ test("root routers remain byte-identical and document both provider paths", asyn
   ]);
   assert.equal(claude, codex);
   assert.match(claude, /codex@openai-codex/);
-  assert.match(claude, /never switch providers mid-attempt/);
+  assert.match(claude, /claude-code-cli|Claude Code 2\.1\.203/);
+  assert.match(claude, /There is no fallback/);
 });
 
-test("workflow skills preserve native fallback and post-start fail-closed handling", async () => {
+test("workflow skills require explicit routing and prohibit fallback", async () => {
   const [planner, reviewer, preparation] = await Promise.all([
     read(".ai/framework/skills/forge-prepare-epic/SKILL.md"),
     read(".ai/framework/skills/forge-run-task/SKILL.md"),
@@ -31,11 +44,13 @@ test("workflow skills preserve native fallback and post-start fail-closed handli
   for (const source of [planner, reviewer, preparation]) {
     assert.match(source, /preflight/i);
   }
-  assert.match(planner, /fallback/i);
-  assert.match(reviewer, /fallback/i);
-  assert.match(preparation, /falling back/i);
-  assert.match(planner, /never falls back/);
-  assert.match(reviewer, /never falls back/);
+  for (const source of [planner, reviewer, preparation]) {
+    assert.match(source, /role_execution\.mode/);
+    assert.match(source, /claude_with_codex/);
+    assert.match(source, /codex_with_claude/);
+    assert.match(source, /native_subagents/);
+    assert.match(source, /no fallback|never fall(?:s)? back/i);
+  }
 });
 
 test("workflow contracts gate planner and reviewer results before lifecycle changes", async () => {

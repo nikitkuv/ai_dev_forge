@@ -1,7 +1,7 @@
 framework:
   name: ai-dev-forge
-  version: 4.2.0
-  schema_version: 1
+  version: 4.3.0
+  schema_version: 2
 
 adapters: [codex, claude]
 
@@ -64,25 +64,37 @@ skills:
 
 subagents: [context-collector, documentation-researcher, epic-planner, implementer, reviewer, tester, epic-validator, fuzzer, security-auditor]
 
-claude_codex_preferred_routes:
-  epic-planner:
-    provider: codex-plugin-cc
-    plugin_id: codex@openai-codex
-    minimum_plugin_version: 1.0.6
-    model: gpt-5.6-sol
-    reasoning_effort: high
-    mode: read_only
-    fresh: true
-    fallback_agent: epic-planner
-  reviewer:
-    provider: codex-plugin-cc
-    plugin_id: codex@openai-codex
-    minimum_plugin_version: 1.0.6
-    model: gpt-5.6-sol
-    reasoning_effort: high
-    mode: read_only
-    fresh: true
-    fallback_agent: reviewer
+role_execution:
+  config_path: role_execution.mode
+  roles: [epic-planner, reviewer]
+  supported_modes: [claude_with_codex, codex_with_claude, native_subagents]
+  fallback: forbidden
+  routes:
+    claude_with_codex:
+      orchestrator: claude
+      provider: codex-plugin-cc
+      plugin_id: codex@openai-codex
+      minimum_plugin_version: 1.0.6
+      launcher: .claude/forge/codex-role-runner.mjs
+      model: gpt-5.6-sol
+      reasoning_effort: high
+      permission_mode: read_only
+      fresh: true
+    codex_with_claude:
+      orchestrator: codex
+      provider: claude-code-cli
+      minimum_cli_version: 2.1.203
+      launcher: .codex/forge/claude-role-runner.mjs
+      model_source: models.claude.strong
+      permission_mode: plan
+      tools: [Read, Grep, Glob, Bash]
+      disallowed_tools: [Edit, Write, NotebookEdit, Agent, Task, TeamCreate, TeamDelete, SendMessage, WebFetch, WebSearch, Chrome, "mcp__*"]
+      fresh: true
+      session_persistence: false
+    native_subagents:
+      orchestrator: active_platform
+      provider: native
+      external_preflight: false
 
 optional_capabilities:
   hooks: false

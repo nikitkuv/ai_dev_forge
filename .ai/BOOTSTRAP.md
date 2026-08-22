@@ -26,9 +26,10 @@ If the user intent or repository type is ambiguous, ask. Never infer that an exi
    - bootstrap mode;
    - documentation language;
    - both enabled platforms: Codex and Claude;
+   - one role-execution mode for both `epic-planner` and `reviewer`: `claude_with_codex`, `codex_with_claude`, or `native_subagents`;
    - whether the project accepts the bundled default `strong`, `balanced`, and `fast` model mappings or explicitly overrides them;
    - Git policy: `manual` or `auto_commit_after_acceptance`.
-5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, the accepted defaults or explicit model overrides, and Git policy so interrupted bootstrap can recover without conversation history. Step 05 revalidates this configuration before rendering.
+5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, the explicit `role_execution.mode`, the accepted defaults or explicit model overrides, and Git policy so interrupted bootstrap can recover without conversation history. Never install, authenticate, preflight, or invoke either external runtime while recording this choice. Step 05 revalidates this configuration before rendering.
 6. Detect collisions with existing canonical files, project configuration, custom overlays, or generated adapters. Show the exact affected paths and request confirmation before overwriting project work.
 7. Create no framework hooks, MCP configuration, CLI dependency, or `.ai/integrations/` registry. A clean project has no local integrations. Preserve existing project-owned integrations and connector infrastructure outside framework ownership; do not invoke connectors during bootstrap.
 

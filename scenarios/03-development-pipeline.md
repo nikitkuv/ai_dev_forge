@@ -1,6 +1,6 @@
 ## Сценарий 3. Полный pipeline разработки
 
-> На стадиях Epic planning и review Claude Code сначала проверяет Codex route. При отсутствии плагина/авторизации используется текущий Claude subagent; после старта Codex ошибка блокирует текущую стадию.
+> На стадиях Epic planning и review оркестратор следует `role_execution.mode`: Claude→Codex, Codex→Claude или native subagents. Несовпадение платформы и недоступный выбранный runtime блокируют стадию; fallback отсутствует.
 
 ### Исходное состояние
 

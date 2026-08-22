@@ -17,12 +17,12 @@ Do not repair files during this check.
 - Detect obsolete framework-owned paths, unexpected overwrites, generated adapter edits, and ownership collisions.
 - Verify both platform adapters were generated from the same source hashes and project configuration.
 - Verify every manifest-declared agent and skill exists on both platforms with matching IDs, tiers, role boundaries, and concrete model mappings.
-- Verify the managed Claude launcher and every `claude_codex_preferred_routes` entry: it must reuse the matching neutral role contract, pin `gpt-5.6-sol/high`, request a fresh read-only task, and name an existing native Claude fallback agent.
+- Verify `role_execution.mode` is one supported atomic value for both roles; verify both managed launchers and every route reuse the matching neutral role contract, enforce the expected orchestrator, model and permission boundary, request fresh execution, and prohibit fallback. Native mode must perform no external preflight.
 - Verify every Forge-managed `.claude/agents/*.md` file is UTF-8 without BOM and starts at byte zero with the `---` YAML frontmatter delimiter.
 - Permit additional project-owned agents and skills; verify they and other unlisted platform files are excluded from Forge ownership and remain unchanged.
 - Verify the shared router overlay renders identically without copying legacy framework instructions.
 - Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
-- Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies; plugin absence must leave the generated native Claude fallback path valid.
+- Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies during generation. External prerequisites are required only when their mode is selected; `native_subagents` remains dependency-free.
 - Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
 - Classify each integration definition/state file as current-supported, older-migratable, malformed, unsupported-future, custom-profile, or ownership collision. Preserve unknown profiles. Treat only ownership collisions and repository-safety violations as global blockers; other findings block only consuming skills.
 - Verify every invocation-capable integration has an explicit compatible consumer, operation intersection, scope, access policy, and active-platform binding. Do not require live availability for structural conformance.
