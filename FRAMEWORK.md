@@ -1,4 +1,4 @@
-# AI Development Forge v4.1 — Architecture
+# AI Development Forge v4.2 — Architecture
 
 ## Preferred Codex routing in Claude Code
 
@@ -71,7 +71,7 @@ project/
 - `framework/manifest.yaml` с release, ownership, agent и skill IDs;
 - `framework/contracts.yaml` с lifecycle, transitions, gates и fuzzing outcomes;
 - девять нейтральных agent definitions;
-- четырнадцать portable skills;
+- пятнадцать portable skills;
 - canonical и adapter templates.
 
 Ownership разделён на три категории:
@@ -162,10 +162,10 @@ Framework control layer написан на английском. Канонич
 
 ## Skills
 
-Четырнадцать skills сгруппированы по назначению:
+Пятнадцать skills сгруппированы по назначению:
 
 - bootstrap нового и существующего проекта;
-- feature/bug intake и reprioritization;
+- feature/bug/external-work intake и reprioritization;
 - Epic preparation и durable resume;
 - Task execution/completion и Epic completion;
 - security audit;
@@ -269,6 +269,14 @@ Adapter sync пересоздаёт обе платформы как одну о
 
 ## Внешние интеграции
 
-Фреймворк не генерирует hooks или MCP-конфигурацию. Проект может добавить их отдельно как project-owned инфраструктуру.
+Фреймворк не генерирует hooks, MCP/API/CLI-конфигурацию или credentials. Проект может добавить их отдельно как project-owned инфраструктуру.
+
+Универсальный optional registry находится в `.ai/integrations/`; его отсутствие — clean baseline. Определения используют semantic capability profiles, operation allowlist, resource scope, access/data policy, consumers и platform-local bindings. Регистрация не даёт implicit tool authority: effective permission — пересечение integration definition, выбранного consumer skill и user authorization.
+
+Built-in profiles задают общий контракт для `work_source`, `knowledge_source`, `data_source` и `analysis_service`; только `work_source` имеет framework consumer `forge-intake-external-work`. Custom profiles сохраняются и вызываются только project-owned consumers. Неизвестный или повреждённый profile блокирует свой consumer, а не остальной lifecycle.
+
+`work_source` нормализует тикеты разных провайдеров, включая Kaiten, и после approval хранит provider-neutral связи в Backlog `Sources`, TASK `external_sources`, Epic coverage matrix и `.ai/integrations/work-items.yaml`. Внешний status никогда не заменяет Forge gates.
+
+Framework update и integration-schema migration — две операции. Upgrade не вызывает connectors, не включает локальное содержимое в managed-output hashes и сохраняет project-owned файлы. Старую поддерживаемую schema можно отдельно мигрировать после preview/approval/backup; unknown future schema сохраняется byte-for-byte. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
 Подробные пользовательские сценарии приведены в [RUNBOOK.md](RUNBOOK.md).

@@ -17,6 +17,8 @@ Lifecycle state for each individual work item belongs only in its corresponding 
 
 Epic priority, readiness, blocking metadata and lifecycle status belong only in `BACKLOG.md`.
 
+External work-source relationships are traceability metadata only. They never own lifecycle state or approval.
+
 ## Epic Objective
 
 <State the single product or system objective of this Epic.>
@@ -46,6 +48,14 @@ Epic priority, readiness, blocking metadata and lifecycle status belong only in 
 | Requirement or invariant | Planned Task evidence | Epic-level evidence |
 | --- | --- | --- |
 | <FR-/NFR-/BR-ID> | <TASK-NNN acceptance criterion or check> | <Cross-component, regression, manual, or profile-specific check> |
+
+## External Source Coverage
+
+| Source key | Source intent covered by this Epic | Planned TASK coverage | Disposition or gap |
+| --- | --- | --- | --- |
+| <integration-id:external-id or —> | <Source slice retained in this Epic> | <TASK-NNN list or pending until plan approval> | <covered/deferred/duplicate/unresolved> |
+
+Use this matrix only for configured `work_source` integrations. For an Epic with no external work source, keep one `—` row. Every source in the Backlog Epic must be covered, explicitly deferred, or identified as unresolved; one source may map to several TASKs and one TASK may cover several sources.
 
 ## Quality Profiles and Risk Strategy
 

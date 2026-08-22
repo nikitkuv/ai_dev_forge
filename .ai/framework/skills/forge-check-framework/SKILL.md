@@ -7,7 +7,7 @@ description: Use after bootstrap, resume, adapter synchronization, framework upg
 
 ## Read authoritative inputs
 
-Read the manifest, contracts, project configuration, framework lock, custom overlays, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state.
+Read the manifest, lifecycle and integration contracts, project configuration, framework lock, custom overlays, optional project-owned integration definitions/state, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state. Never invoke a local connector during conformance checking.
 
 Do not repair files during this check.
 
@@ -23,6 +23,9 @@ Do not repair files during this check.
 - Verify the shared router overlay renders identically without copying legacy framework instructions.
 - Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
 - Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies; plugin absence must leave the generated native Claude fallback path valid.
+- Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
+- Classify each integration definition/state file as current-supported, older-migratable, malformed, unsupported-future, custom-profile, or ownership collision. Preserve unknown profiles. Treat only ownership collisions and repository-safety violations as global blockers; other findings block only consuming skills.
+- Verify every invocation-capable integration has an explicit compatible consumer, operation intersection, scope, access policy, and active-platform binding. Do not require live availability for structural conformance.
 
 ## Validate canonical and lifecycle state
 
@@ -42,6 +45,7 @@ Do not repair files during this check.
 - Check no Task commit predates explicit Task Acceptance and transition to `DONE`.
 - Check the current gate can be reconstructed without session history.
 - Check Epic Start always consumes one approved planned workspace through an atomic planned-to-active move plus Backlog transition.
+- For configured `work_source` integrations, check Backlog `Sources`, TASK `external_sources`, Epic source coverage, and `.ai/integrations/work-items.yaml` in both directions. Canonical lifecycle state remains authoritative; non-work profiles require no work-item mapping.
 
 ## Report
 

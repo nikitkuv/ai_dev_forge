@@ -1,5 +1,12 @@
 schema_version: 1
 
+integration_contracts:
+  source: .ai/framework/integrations/contracts.yaml
+  optional_registry: .ai/integrations/
+  clean_project_requires_registry: false
+  invocation_requires: [enabled_definition, compatible_profile, explicit_consumer, allowed_operation, active_platform_binding, resource_scope]
+  framework_update_requires_live_connector: false
+
 enums:
   epic_readiness: [OUTLINE, READY]
   epic_status:
@@ -177,6 +184,12 @@ epic_validation:
       requires: [exact_blocker, risk_statement, replan_or_user_direction]
 
 invariants:
+  - local_integrations_are_optional_project_owned_state
+  - absent_integrations_never_block_clean_forge_workflows
+  - integration_registration_never_grants_implicit_invocation
+  - unsupported_integrations_block_only_their_consumers
+  - framework_upgrade_never_invokes_local_connectors
+  - external_work_lifecycle_is_owned_by_forge_canonical_documents
   - blocked_by_is_metadata_not_a_lifecycle_status
   - no_more_than_one_nonterminal_active_work_epic
   - multiple_execution_planned_workspaces_are_allowed

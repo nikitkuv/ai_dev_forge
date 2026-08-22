@@ -10,6 +10,7 @@ definition_approved_at:
 started_at:
 risk_level: standard
 risk_flags: []
+external_sources: []
 ---
 
 # TASK-NNN — <Task Title>
@@ -73,6 +74,7 @@ Removing or weakening an approved check requires an explicit rationale and orche
 - **Decisions:** <ADR-IDs or —>
 - **Epic plan:** <Relative path to plan.md>
 - **Related defects:** <BUG-IDs or —>
+- **External sources:** <Provider-neutral work-source keys from `external_sources`, or —>
 
 ## Workflow State
 

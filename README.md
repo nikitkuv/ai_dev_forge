@@ -1,4 +1,4 @@
-# AI Development Forge v4.1
+# AI Development Forge v4.2
 
 ## Предпочтительный Codex route в Claude Code
 
@@ -102,7 +102,12 @@ Framework defaults для субагентов: Codex `strong = gpt-5.6-sol/high
 
 - Hooks не создаются автоматически.
 - MCP-конфигурация не создаётся автоматически.
-- Проект может добавить собственные hooks и MCP отдельно.
+- Проект может добавить собственные hooks, MCP, API или CLI отдельно.
+- `.ai/integrations/` — необязательный project-owned registry; чистый Forge не содержит эту папку и не выполняет connector preflight.
+
+Локальная интеграция описывает provider-neutral capability (`work_source`, `knowledge_source`, `data_source`, `analysis_service` или project-defined profile), разрешённые операции, scope, consumers и platform-local bindings. Само наличие записи не разрешает вызов: выбранный framework/project-owned skill должен явно потреблять совместимый profile.
+
+Kaiten — только пример `work_source`. Для такого profile Forge может хранить двусторонние ссылки `external item ↔ EPIC/BUG/TASK`; остальные типы не получают искусственных связей с Backlog. Framework upgrade работает offline, сохраняет неизвестные project-owned profiles и отделяет замену Forge от отдельно подтверждаемой миграции integration schema. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
 Feature discovery, root-cause investigation, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Внешние process skills не управляют lifecycle проекта.
 

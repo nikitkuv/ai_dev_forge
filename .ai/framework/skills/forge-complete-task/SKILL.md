@@ -24,6 +24,7 @@ After explicit acceptance:
 3. if the accepted TASK is the approved repair for a `SCHEDULED` Bug, transition that Bug to `RESOLVED`;
 4. leave unrelated Bugs unchanged;
 5. verify plan order and remaining TASK dependencies without copying TASK status into the plan.
+6. preserve `external_sources` and reverse mappings unchanged; Task Acceptance does not mutate or close an external item and does not make the external system authoritative.
 
 ## Apply Git policy
 

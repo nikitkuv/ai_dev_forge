@@ -30,8 +30,8 @@ Require explicit user approval at every document, ADR, Plan Approval, Epic Start
 
 - Create canonical documents at the project root, never inside `.ai/`.
 - Write canonical content in the user's language by filling the provided templates; do not translate technical identifiers.
-- Treat `.ai/` as the framework bundle, `.ai/project.yaml`, `.ai/framework.lock`, and `.ai/custom/` as project-owned state, and generated adapters as replaceable derived outputs.
-- Create no default hooks, MCP configuration, framework CLI, or external lifecycle dependency.
+- Treat `.ai/` as the framework bundle, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, and optional `.ai/integrations/` as project-owned state, and generated adapters as replaceable derived outputs.
+- Create no default hooks, MCP configuration, framework CLI, local integration registry, or external lifecycle dependency. Absence of `.ai/integrations/` is the clean baseline and triggers no connector preflight.
 - Never create separate progress, research, review, test, fuzzing, security, or validation Markdown reports.
 
 Finish only after Step 06 passes and each required approval is recorded in canonical metadata.

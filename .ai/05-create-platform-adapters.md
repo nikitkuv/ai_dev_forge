@@ -12,13 +12,15 @@ Read:
 
 - `.ai/framework/manifest.yaml` and `.ai/framework/contracts.yaml`;
 - nine `.ai/framework/agents/*.yaml` definitions;
-- fourteen `.ai/framework/skills/*/SKILL.md` sources;
+- fifteen `.ai/framework/skills/*/SKILL.md` sources;
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex and Claude adapter templates under `.ai/templates/adapters/`;
 - the Claude Codex-role launcher template `.ai/templates/adapters/claude/codex-role-runner.mjs`;
 - `.ai/custom/router-shared.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
+
+Optional `.ai/integrations/` content is project-owned state, not a render input. Do not create, read for tool discovery, invoke, or embed local definitions while generating adapters.
 
 Stop if source counts, IDs, or framework versions disagree.
 
@@ -80,7 +82,7 @@ AGENTS.md
 .codex/agents/epic-validator.toml
 .codex/agents/fuzzer.toml
 .codex/agents/security-auditor.toml
-.agents/skills/<fourteen-skill-ids>/SKILL.md
+.agents/skills/<fifteen-skill-ids>/SKILL.md
 ```
 
 Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus the shared overlay. Do not copy legacy framework sections into the overlay.
@@ -94,7 +96,7 @@ For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 - the configured `model_reasoning_effort`;
 - the neutral `codex_sandbox_mode`.
 
-Copy all fourteen portable `SKILL.md` files verbatim into `.agents/skills/`.
+Copy all fifteen portable `SKILL.md` files verbatim into `.agents/skills/`.
 
 ## Render Claude Code
 
@@ -112,7 +114,7 @@ CLAUDE.md
 .claude/agents/fuzzer.md
 .claude/agents/security-auditor.md
 .claude/forge/codex-role-runner.mjs
-.claude/skills/<fourteen-skill-ids>/SKILL.md
+.claude/skills/<fifteen-skill-ids>/SKILL.md
 ```
 
 Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus the same shared overlay. Do not copy legacy framework sections into the overlay.
@@ -124,7 +126,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 - the same English role contract used by the Codex adapter.
 - Write every `.claude/agents/*.md` file as UTF-8 **without BOM**. Byte zero must be the first `-` of the opening `---` frontmatter delimiter; never prepend `EF BB BF`.
 
-Copy all fourteen portable `SKILL.md` files verbatim into `.claude/skills/`.
+Copy all fifteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
 Copy the Claude launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the nine generated Claude agents, including `epic-planner` and `reviewer`: they are the fallback path when the optional Codex plugin is unavailable. Do not preflight, install, authenticate, or otherwise require the plugin while generating adapters.
 
@@ -144,6 +146,7 @@ Verify the staged outputs:
 - `.ai/custom/router-shared.md` appears identically in both routers;
 - `.codex/config.toml`, Claude settings, commands, hooks, and all other unlisted platform files are unchanged;
 - no hook or MCP file was generated.
+- no `.ai/integrations/` file or project-local provider/tool name was generated or embedded.
 
 If either platform fails, replace neither. After both pass, replace both adapter sets as one logical operation and restore the previous sets if replacement validation fails.
 
@@ -154,13 +157,15 @@ Only after successful replacement, create or update `.ai/framework.lock` with:
 - lock schema version;
 - framework name and version;
 - hash algorithm;
-- hashes of the manifest, contracts, project configuration, neutral agents, portable skills, renderer templates, and custom overlays;
+- hashes of the manifest, framework contracts including generic integration profile contracts, project configuration, neutral agents, portable skills, renderer templates, and custom overlays;
 - managed generated file paths, IDs, and per-file hashes for both platforms;
 - preserved unlisted adapter paths without claiming their content as Forge-owned;
 - generation timestamp;
 - ownership categories needed to detect later collisions and obsolete files.
 
 The lock is project-owned state; migration must not replace it with a release template.
+
+Do not hash `.ai/integrations/` definitions or state into managed-output provenance: they do not render managed adapters. Validate their schema and references separately as project state, so changing a local board, knowledge source, dataset, or analysis service is not reported as framework drift.
 
 ## Ensure the Project README
 

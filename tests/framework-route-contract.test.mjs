@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("manifest declares fixed Codex routes with native fallback agents", async () => {
   const manifest = await read(".ai/framework/manifest.yaml");
-  assert.match(manifest, /version: 4\.1\.0/);
+  assert.match(manifest, /version: 4\.2\.0/);
   for (const role of ["epic-planner", "reviewer"]) {
     assert.match(manifest, new RegExp(`${role}:\\n    provider: codex-plugin-cc[\\s\\S]*?minimum_plugin_version: 1\\.0\\.6[\\s\\S]*?model: gpt-5\\.6-sol[\\s\\S]*?reasoning_effort: high[\\s\\S]*?fallback_agent: ${role}`));
   }

@@ -7,10 +7,10 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 
 ## Build the render input
 
-1. Read `.ai/project.yaml`, the manifest, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes.
+1. Read `.ai/project.yaml`, the manifest, framework integration profile contracts, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes. Do not use project-owned `.ai/integrations/` definitions/state as render input.
 2. Require both platforms and resolve every configured model tier from the bundled defaults or explicit project overrides. Never invent or silently change a model or effort.
 3. Derive managed membership from the manifest `subagents`, `skills`, `claude_codex_preferred_routes`, root `AGENTS.md`, and `CLAUDE.md`. The two preferred routes supplement rather than replace the native Claude `epic-planner` and `reviewer` agents.
-4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, and adjacent platform files as project-owned content.
+4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, project-owned integration consumers, and adjacent platform files as project-owned content.
 5. Detect manual edits and same-ID collisions in managed entries.
 
 ## Preview collisions
@@ -42,14 +42,16 @@ Stage one synchronized candidate containing:
 Write each generated `.claude/agents/*.md` file as UTF-8 without BOM. Its first bytes must be the opening YAML frontmatter delimiter `---`; do not emit the UTF-8 BOM byte sequence `EF BB BF`, because Claude Code then fails to recognize the frontmatter and does not register the subagent.
 
 Install no global agent or skill. Generate no hook, MCP configuration, platform settings, commands, or framework CLI dependency.
+Generate no `.ai/integrations/` content and embed no project-local integration IDs, provider names, scopes, bindings, or credentials. Generic profile/consumer routing comes only from framework-owned sources.
 
 ## Validate and finalize
 
 1. verify both routers are byte-identical, have no unresolved placeholder, and remain within the configured line limit;
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
 3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify each preferred Claude Codex route reuses its neutral role contract, pins `gpt-5.6-sol/high`, uses a fresh read-only task, and names the matching native fallback ID;
-4. verify additional project-owned agents and skills and all unlisted platform files are unchanged;
+4. verify additional project-owned agents, skills, integration consumers, and all unlisted platform files are unchanged;
 5. verify every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
-6. run the read-only framework conformance check.
+6. verify the framework lock contains only inputs that render managed outputs and that local integration changes are reported separately rather than as adapter drift;
+7. run the read-only framework conformance check.
 
 If either platform fails, replace neither. Back up every affected managed path before replacement and restore both adapter sets on failure. Update managed source/output hashes and preserved-path ownership in `.ai/framework.lock` only after success. Create no sync report file.

@@ -31,6 +31,7 @@ project/
 |- decisions/
 |- execution/{planned,active,paused,completed}/
 |- .ai/{project.yaml,framework.lock,custom/}
+|- .ai/integrations/                 # optional, project-owned, absent by default
 |- .codex/
 |- .claude/
 `- .agents/
@@ -45,10 +46,20 @@ project/
 Ownership is defined by `.ai/framework/manifest.yaml`.
 
 - Framework-owned: bootstrap control documents, `CONVENTIONS.md`, `.ai/templates/`, and `.ai/framework/`.
-- Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical documents, decisions, execution state, and project-specific hooks or MCP.
+- Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, canonical documents, decisions, execution state, and project-specific hooks, MCP, APIs, or CLIs.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, and `.agents/`. Unlisted entries remain project-owned.
 
 Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` and `CLAUDE.md` are byte-identical. Do not edit them manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
+
+## Project-local integrations
+
+`.ai/integrations/` is an optional project-owned registry. A clean Forge project does not contain it and runs bootstrap, migration, adapter synchronization, validation, and the complete development lifecycle without connector discovery or integration-specific blockers.
+
+Definitions use `.ai/framework/integrations/contracts.yaml`. They describe provider-neutral capability profiles, semantic operations, resource scope, access/data policy, allowed consumer skills, and platform-local bindings. Registration never grants implicit tool authority: a selected framework-owned or project-owned skill must explicitly consume a compatible profile, and effective access is the intersection of both contracts. Credentials and raw MCP/API/CLI configuration stay outside the registry.
+
+`work_source` is one optional profile. Only it uses `.ai/integrations/work-items.yaml`, Backlog `Sources`, TASK `external_sources`, and an Epic source-coverage matrix. Knowledge, data, analysis, and custom profiles do not receive synthetic Epic or Task links.
+
+Framework upgrades preserve unknown profiles, definitions, state, and project-owned consumers. Unsupported or malformed integrations block only their consumers unless they collide with a framework-owned path or violate repository safety. Local integration content is not a managed adapter input and its normal changes are not framework drift.
 
 Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not introduce additional lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
 
@@ -65,6 +76,7 @@ Each kind of information has one canonical owner:
 - Task scope, acceptance criteria, affected surface, risk flags, review focus, Verification Plan, lifecycle state, and implementation/structured-review/testing/user-validation summaries: the Task file.
 - Architectural decision content: its ADR; ADR navigation: `DECISIONS.md`.
 - File history: Git.
+- Local integration definitions and reverse source mappings: optional `.ai/integrations/`; Forge lifecycle and acceptance remain owned by Backlog, plans, and TASK files.
 
 Do not create separate progress, report, checkpoint, user-validation, security, research, or fuzzing Markdown files. Keep document approval status separate from lifecycle status. If source documents disagree, report the inconsistency instead of silently reconciling it.
 

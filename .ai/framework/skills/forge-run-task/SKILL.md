@@ -8,7 +8,7 @@ description: Execute one approved Forge TASK through implementation, independent
 ## Start the TASK
 
 1. Require `definition_status: approved`, lifecycle `status: TODO`, satisfied dependencies, no unresolved blocker, and no other code-writing TASK in progress.
-2. Show the TASK goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus, and constraints.
+2. Show the TASK goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus, constraints, and any `external_sources` with their source intent. Do not require connector access for an unlinked TASK.
 3. Obtain explicit Task Start authorization.
 4. Let only the orchestrator transition the TASK to `IN PROGRESS`, record the gate, and establish the next implementation revision.
 
@@ -31,6 +31,7 @@ description: Execute one approved Forge TASK through implementation, independent
    - changed paths and reproducible scoped diff;
    - acceptance criteria, affected components and contracts, risk level and flags, and review focus;
    - implementation summary, tests added or changed, RED/GREEN evidence, selected checks, and known limitations.
+   - linked external source keys and the approved source intent covered by this TASK, when applicable.
 8. Transition to `IN REVIEW`. On Codex, invoke the strong read-only `reviewer` with the exact Review Packet. On Claude Code, read the complete neutral `.ai/framework/agents/reviewer.yaml` contract, build a prompt containing that contract and the exact Review Packet, and run `.claude/forge/codex-role-runner.mjs --preflight`. If preflight is available, write the prompt to a secure temporary file and invoke the runner with `--role reviewer --prompt-file <path>`; always remove the temporary file. If preflight is unavailable, invoke the generated native Claude `reviewer` with the identical Review Packet and report the fallback reason. Once a Codex task starts, a non-zero exit, timeout, malformed output, or model/effort mismatch blocks review and never falls back.
 9. If review finds anything actionable:
    - let the orchestrator return the TASK to `IN PROGRESS`;

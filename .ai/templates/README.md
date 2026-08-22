@@ -40,4 +40,6 @@
 - [Codex instructions](AGENTS.md) — Codex CLI project workflow.
 - [Claude Code instructions](CLAUDE.md) — Claude Code project workflow.
 
+When this project deliberately configures local capabilities, document the project-owned `.ai/integrations/` definitions and external connector setup here without copying credentials. Omit this guidance for a clean project with no integrations.
+
 This README is operational orientation, not a canonical source for product requirements, architecture, execution status, or architectural decisions. Follow the linked canonical documents when information differs.

@@ -1,0 +1,27 @@
+# Optional project-owned file. Do not instantiate it for a clean Forge project.
+schema_version: 1
+id: <stable-kebab-case-id>
+profile: <work_source|knowledge_source|data_source|analysis_service|project-defined-profile>
+profile_version: 1
+enabled: true
+access: read_only
+consumers:
+  - <framework-or-project-owned-skill-id>
+scope:
+  resource: <explicit-account-workspace-board-dataset-or-service-scope>
+operations:
+  - semantic_name: <profile-operation>
+    access: read_only
+bindings:
+  codex:
+    connector: <existing-project-owned-connector-id>
+    operations:
+      <profile-operation>: <platform-local-tool-name>
+  claude:
+    connector: <existing-project-owned-connector-id>
+    operations:
+      <profile-operation>: <platform-local-tool-name>
+
+# Profile-specific configuration is optional and validated by the selected
+# consumer. Never store credentials or raw MCP/API/CLI configuration here.
+profile_config: {}

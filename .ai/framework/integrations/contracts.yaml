@@ -1,0 +1,77 @@
+schema_version: 1
+
+registry:
+  optional: true
+  project_owned_root: .ai/integrations/
+  definition_glob: "*.yaml"
+  reserved_state_files: [work-items.yaml]
+  absent_behavior: clean_forge_baseline
+  credentials_allowed: false
+  raw_connector_configuration_allowed: false
+
+definition:
+  current_schema_version: 1
+  required_fields: [schema_version, id, profile, profile_version, enabled, access, consumers, scope, operations, bindings]
+  id_format: "^[a-z][a-z0-9-]*$"
+  access_modes: [read_only, write_with_explicit_authorization]
+  required_operation_fields: [semantic_name, access]
+  required_binding_fields: [connector, operations]
+  platforms: [codex, claude]
+  secret_field_names_forbidden: [token, password, secret, api_key, private_key, credentials]
+  invocation_requires:
+    - enabled_definition
+    - structurally_valid_definition
+    - compatible_profile
+    - explicitly_selected_consumer
+    - consumer_declares_profile_and_operation
+    - operation_is_allowlisted
+    - active_platform_binding
+    - request_within_scope
+
+profiles:
+  built_in:
+    work_source:
+      current_version: 1
+      consumer: forge-intake-external-work
+      required_operations: [list_candidates, get_item]
+      optional_operations: [get_relationships, get_attachment_metadata]
+      allowed_access: [read_only]
+      state_contract: work_items
+    knowledge_source:
+      current_version: 1
+      example_operations: [search, get_document]
+      framework_consumer: null
+    data_source:
+      current_version: 1
+      example_operations: [describe, query]
+      framework_consumer: null
+    analysis_service:
+      current_version: 1
+      example_operations: [analyze]
+      framework_consumer: null
+  custom:
+    ownership: project
+    requires_project_owned_consumer: true
+    unknown_profile_behavior: preserve_without_core_invocation
+
+work_items:
+  schema_version: 1
+  applicable_profile: work_source
+  identity_key: [integration_id, external_id]
+  required_fields: [integration_id, external_id, source_ref, disposition, canonical_refs, reviewed_at]
+  optional_fields: [source_version, content_fingerprint, group_refs, decision]
+  canonical_ref_patterns: ["EPIC-[0-9]{3}", "BUG-[0-9]{3}", "TASK-[0-9]{3}"]
+  dispositions: [retained, deferred, rejected, duplicate]
+  full_external_body_allowed: false
+  lifecycle_authority: forge_canonical_documents
+
+compatibility:
+  structural_scan_is_offline: true
+  classifications: [absent, current_supported, older_migratable, malformed, unsupported_future, custom_profile, ownership_collision]
+  isolated_findings: [malformed, unsupported_future, custom_profile]
+  global_blockers: [ownership_collision, repository_safety_violation]
+  framework_upgrade_and_schema_migration_are_separate: true
+  schema_migration_requires: [exact_diff, recoverable_backup, explicit_approval, staged_validation, atomic_apply, rollback_verification]
+  preserve_unknown_content_byte_for_byte: true
+  local_content_is_framework_lock_input: false
+  live_connector_required_for_upgrade: false
