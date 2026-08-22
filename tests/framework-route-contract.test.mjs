@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("manifest declares fixed Codex routes with native fallback agents", async () => {
   const manifest = await read(".ai/framework/manifest.yaml");
-  assert.match(manifest, /version: 4\.1\.0/);
+  assert.match(manifest, /version: 4\.2\.0/);
   for (const role of ["epic-planner", "reviewer"]) {
     assert.match(manifest, new RegExp(`${role}:\\n    provider: codex-plugin-cc[\\s\\S]*?minimum_plugin_version: 1\\.0\\.6[\\s\\S]*?model: gpt-5\\.6-sol[\\s\\S]*?reasoning_effort: high[\\s\\S]*?fallback_agent: ${role}`));
   }
@@ -47,4 +47,20 @@ test("workflow contracts gate planner and reviewer results before lifecycle chan
   assert.match(planner, /independently verify the proposal/i);
   assert.match(reviewer, /malformed output.*blocks review/i);
   assert.match(reviewer, /If review finds anything actionable/i);
+});
+
+test("task review findings are limited to code and implementation artifacts", async () => {
+  const [role, workflow, taskTemplate] = await Promise.all([
+    read(".ai/framework/agents/reviewer.yaml"),
+    read(".ai/framework/skills/forge-run-task/SKILL.md"),
+    read(".ai/templates/TASK.md")
+  ]);
+
+  assert.match(role, /canonical documents.*reference inputs.*not review targets/is);
+  assert.match(role, /must not become an actionable finding.*final outcome/is);
+  assert.match(role, /implementation code, tests, and code-owned artifacts/i);
+  assert.match(workflow, /code-review surface/i);
+  assert.match(workflow, /canonical-only issue.*orchestrator/is);
+  assert.match(taskTemplate, /code_review_paths: \[\]/);
+  assert.match(taskTemplate, /canonical-only issues are handled by the orchestrator/i);
 });

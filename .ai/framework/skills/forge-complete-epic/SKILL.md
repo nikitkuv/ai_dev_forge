@@ -7,7 +7,7 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 
 ## Enter Epic Validation
 
-1. Verify every planned TASK is `DONE`; every accepted implementation has current structured review and selected Task-testing evidence; requirement coverage is complete; and the approved Epic Verification Plan contains evidenced commands or explicit blockers.
+1. Verify every planned TASK is `DONE`; every accepted implementation has current structured review and selected Task-testing evidence; requirement coverage is complete; any work-source coverage matrix has no unexplained gaps or contradictory reverse mappings; and the approved Epic Verification Plan contains evidenced commands or explicit blockers.
 2. Establish one reproducible aggregate commit, tree, or scoped-diff fingerprint covering the Epic implementation and accepted Task evidence.
 3. Transition the Epic from `ACTIVE` to `VALIDATING` in `BACKLOG.md`.
 4. Invoke `epic-validator` automatically for the exact fingerprint. No extra confirmation is required because the role makes no source changes.
@@ -56,5 +56,7 @@ After explicit Epic Acceptance:
 2. record acceptance in `plan.md`;
 3. move its directory from `execution/active/` to `execution/completed/`;
 4. validate Backlog and directory state as one logical transition and roll back partial changes on failure.
+
+Preserve external source identities and canonical mappings throughout completion. Do not move, edit, comment on, or close an external item; bidirectional write-back requires a separate capability and explicit authorization.
 
 Do not activate the next Epic automatically. Report queued `execution/planned/` candidates in Backlog order, identify the first eligible one and its blockers, and wait for its separate Epic Start gate. An unprepared `PLANNED + READY` Epic requires Plan Approval before Epic Start.

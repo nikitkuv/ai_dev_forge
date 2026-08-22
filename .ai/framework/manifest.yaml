@@ -1,6 +1,6 @@
 framework:
   name: ai-dev-forge
-  version: 4.1.0
+  version: 4.2.0
   schema_version: 1
 
 adapters: [codex, claude]
@@ -22,6 +22,7 @@ ownership:
     - .ai/project.yaml
     - .ai/framework.lock
     - .ai/custom/
+    - .ai/integrations/
     - README.md
     - SPEC.md
     - ARCHITECTURE.md
@@ -49,6 +50,7 @@ skills:
   - forge-bootstrap-existing
   - forge-intake-feature
   - forge-intake-bug
+  - forge-intake-external-work
   - forge-reprioritize-backlog
   - forge-prepare-epic
   - forge-resume-development
@@ -86,3 +88,6 @@ optional_capabilities:
   hooks: false
   mcp: false
   cli: false
+  local_integrations:
+    supported: true
+    generated_by_default: false

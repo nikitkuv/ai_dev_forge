@@ -21,7 +21,7 @@ If the user intent or repository type is ambiguous, ask. Never infer that an exi
 
 1. Confirm `.ai/framework/manifest.yaml`, `.ai/framework/contracts.yaml`, `.ai/CONVENTIONS.md`, numbered steps, neutral agents, portable skills, and templates belong to the same framework release.
 2. Confirm the repository is a consumer project. If it is the framework source repository, stop without creating root canonical documents or generated adapters.
-3. Inspect root canonical files, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, generated adapters, Git state, and unrelated user files.
+3. Inspect root canonical files, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional project-owned `.ai/integrations/`, generated adapters, Git state, and unrelated user files.
 4. Determine with the user:
    - bootstrap mode;
    - documentation language;
@@ -30,7 +30,7 @@ If the user intent or repository type is ambiguous, ask. Never infer that an exi
    - Git policy: `manual` or `auto_commit_after_acceptance`.
 5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, the accepted defaults or explicit model overrides, and Git policy so interrupted bootstrap can recover without conversation history. Step 05 revalidates this configuration before rendering.
 6. Detect collisions with existing canonical files, project configuration, custom overlays, or generated adapters. Show the exact affected paths and request confirmation before overwriting project work.
-7. Create no framework hooks, MCP configuration, or CLI dependency. Existing project-owned hooks or MCP remain outside framework ownership.
+7. Create no framework hooks, MCP configuration, CLI dependency, or `.ai/integrations/` registry. A clean project has no local integrations. Preserve existing project-owned integrations and connector infrastructure outside framework ownership; do not invoke connectors during bootstrap.
 
 ## Interrupted Bootstrap Recovery
 
@@ -62,7 +62,7 @@ Each step has its own explicit user approval. Report its proposed outputs and wa
 ## Ownership and Language
 
 - Framework-owned release content stays under `.ai/` as declared by the manifest.
-- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical documents, ADRs, and execution state are project-owned.
+- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, canonical documents, ADRs, and execution state are project-owned.
 - Root routers and native agent/skill directories are generated adapter outputs; detect manual edits before regeneration.
 - Write framework control text, generated routers, agent contracts, and skills in English.
 - Write root canonical documents in the user's documentation language. Keep IDs, statuses, paths, model IDs, and commands in English.

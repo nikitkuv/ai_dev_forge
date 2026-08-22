@@ -33,6 +33,7 @@ Investigation before scheduling is read-only with respect to production code and
 2. Allocate the next global `BUG-NNN`.
 3. Add it to the Backlog Defect Queue as `OPEN`.
 4. Record observable problem, impact severity, user-defined priority, related requirement, and no Scheduled TASK yet.
+5. When invoked from approved external-work intake, record compact provider-neutral `Sources` keys and stage reverse provenance; otherwise use `—` and create no integration state.
 
 Severity describes consequences; priority belongs to the user.
 

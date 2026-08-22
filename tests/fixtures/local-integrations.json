@@ -1,0 +1,97 @@
+{
+  "definitions": [
+    {
+      "schema_version": 1,
+      "id": "kaiten-board",
+      "profile": "work_source",
+      "profile_version": 1,
+      "enabled": true,
+      "access": "read_only",
+      "consumers": ["forge-intake-external-work"],
+      "scope": {"resource": "space/board"},
+      "operations": [
+        {"semantic_name": "list_candidates", "access": "read_only"},
+        {"semantic_name": "get_item", "access": "read_only"}
+      ],
+      "bindings": {"codex": {"connector": "project-kaiten", "operations": {"list_candidates": "list_cards", "get_item": "get_card"}}}
+    },
+    {
+      "schema_version": 1,
+      "id": "other-work-system",
+      "profile": "work_source",
+      "profile_version": 1,
+      "enabled": true,
+      "access": "read_only",
+      "consumers": ["forge-intake-external-work"],
+      "scope": {"resource": "team/queue"},
+      "operations": [
+        {"semantic_name": "list_candidates", "access": "read_only"},
+        {"semantic_name": "get_item", "access": "read_only"}
+      ],
+      "bindings": {"claude": {"connector": "local-work", "operations": {"list_candidates": "items", "get_item": "item"}}}
+    },
+    {
+      "schema_version": 1,
+      "id": "knowledge",
+      "profile": "knowledge_source",
+      "profile_version": 1,
+      "enabled": true,
+      "access": "read_only",
+      "consumers": ["project-search"],
+      "scope": {"resource": "approved-library"},
+      "operations": [{"semantic_name": "search", "access": "read_only"}],
+      "bindings": {"codex": {"connector": "knowledge", "operations": {"search": "search_docs"}}}
+    },
+    {
+      "schema_version": 1,
+      "id": "data",
+      "profile": "data_source",
+      "profile_version": 1,
+      "enabled": true,
+      "access": "read_only",
+      "consumers": ["project-query-data"],
+      "scope": {"resource": "approved-dataset"},
+      "operations": [{"semantic_name": "query", "access": "read_only"}],
+      "bindings": {"codex": {"connector": "data", "operations": {"query": "run_query"}}}
+    },
+    {
+      "schema_version": 1,
+      "id": "analysis",
+      "profile": "analysis_service",
+      "profile_version": 1,
+      "enabled": true,
+      "access": "read_only",
+      "consumers": ["project-analyze"],
+      "scope": {"resource": "local-analysis"},
+      "operations": [{"semantic_name": "analyze", "access": "read_only"}],
+      "bindings": {"claude": {"connector": "analysis", "operations": {"analyze": "analyze"}}}
+    },
+    {
+      "schema_version": 1,
+      "id": "custom-reserves",
+      "profile": "reserves_analysis",
+      "profile_version": 1,
+      "enabled": true,
+      "access": "read_only",
+      "consumers": ["project-reserves-analysis"],
+      "scope": {"resource": "local-scenarios"},
+      "operations": [{"semantic_name": "analyze", "access": "read_only"}],
+      "bindings": {"codex": {"connector": "reserves", "operations": {"analyze": "calculate"}}}
+    }
+  ],
+  "invalid": {
+    "missing_scope": {"schema_version": 1, "id": "missing-scope", "profile": "knowledge_source", "profile_version": 1, "enabled": true, "access": "read_only", "consumers": ["project-search"], "operations": [], "bindings": {}},
+    "unauthorized_consumer": {"schema_version": 1, "id": "wrong-consumer", "profile": "work_source", "profile_version": 1, "enabled": true, "access": "read_only", "consumers": ["project-other"], "scope": {"resource": "board"}, "operations": [{"semantic_name": "list_candidates", "access": "read_only"}, {"semantic_name": "get_item", "access": "read_only"}], "bindings": {"codex": {"connector": "board", "operations": {"list_candidates": "list", "get_item": "get"}}}},
+    "mutation": {"schema_version": 1, "id": "mutation", "profile": "work_source", "profile_version": 1, "enabled": true, "access": "write_with_explicit_authorization", "consumers": ["forge-intake-external-work"], "scope": {"resource": "board"}, "operations": [{"semantic_name": "move_item", "access": "write"}], "bindings": {"codex": {"connector": "board", "operations": {"move_item": "move"}}}},
+    "secret": {"schema_version": 1, "id": "secret", "profile": "data_source", "profile_version": 1, "enabled": true, "access": "read_only", "consumers": ["project-query-data"], "scope": {"resource": "dataset"}, "operations": [{"semantic_name": "query", "access": "read_only"}], "bindings": {}, "api_key": "must-not-be-here"},
+    "future": {"schema_version": 9, "id": "future", "profile": "knowledge_source", "profile_version": 9, "enabled": true, "access": "read_only", "consumers": ["project-search"], "scope": {"resource": "library"}, "operations": [], "bindings": {}}
+  },
+  "relationships": {
+    "backlog_sources": {"EPIC-010": ["kaiten-board:card-1", "kaiten-board:card-2"]},
+    "task_sources": {"TASK-020": ["kaiten-board:card-1"], "TASK-021": ["kaiten-board:card-1", "kaiten-board:card-2"]},
+    "reverse": {
+      "kaiten-board:card-1": ["EPIC-010", "TASK-020", "TASK-021"],
+      "kaiten-board:card-2": ["EPIC-010", "TASK-021"]
+    }
+  }
+}

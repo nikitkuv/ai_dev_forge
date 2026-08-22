@@ -22,11 +22,14 @@ Stop if the directories resolve to the same path, the staged manifest is incompl
 Before writing:
 
 1. read both manifests, contracts, workflows, templates, neutral agents, and portable skills;
-2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, and `.ai/custom/`;
+2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, and project-owned `.ai/integrations/`; read old and staged integration contracts when present;
 3. inspect Git status and identify a recoverable baseline;
 4. inspect `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, and `.claude/`;
 5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
-6. hash every protected project path before proposing changes.
+6. hash every protected project path before proposing changes;
+7. without invoking MCP, API, CLI, or other connectors, classify each integration definition/state file as `absent`, `current_supported`, `older_migratable`, `malformed`, `unsupported_future`, `custom_profile`, or `ownership_collision`.
+
+Absence of `.ai/integrations/` is the clean Forge baseline. It adds no migration step, preflight, file, or blocker. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself.
 
 For upgrades to v4 or later, also inspect:
 
@@ -49,8 +52,11 @@ Treat all paths outside the approved framework and adapter allowlist as read-onl
 - `decisions/`;
 - `execution/`;
 - project source code, tests, data, and unrelated configuration.
+- `.ai/integrations/`, project-owned integration consumers, and connector configuration.
 
 Report a canonical schema difference as a compatibility finding. Do not edit, rename, reformat, or migrate canonical content in this workflow.
+
+Framework migration and integration-schema migration are separate approvals and transactions. Preserve every integration definition, unknown profile, state file, and custom consumer byte-for-byte while replacing the framework bundle. Do not downgrade, normalize, or silently rewrite an unsupported or malformed file.
 
 A pre-v4 planned, active, or paused plan is not silently upgraded or moved. After the framework migration, use `forge-resume-development` and present the exact plan/TASK compatibility diff. Changes to approved Task scope, order, or composition still require Replan; adding or correcting in-scope verification evidence requires an explicit rationale and may not remove or weaken an approved check. A pre-v4 Epic in `FUZZING` or `AWAITING EPIC ACCEPTANCE` cannot continue to Epic Acceptance until current Epic Validation passes under the new contract.
 
@@ -98,6 +104,7 @@ Show one complete migration preview containing:
 - `.ai/project.yaml` values that must be confirmed when absent;
 - v4 quality-profile, verification-plan, Review-Packet, `VALIDATING`, and Epic Validation compatibility findings;
 - exact paths that will be backed up.
+- the offline integration compatibility matrix, including the clean absent case, isolated consumer blockers, ownership collisions, and any separately available schema migrations.
 
 Request explicit approval for this exact scope. Approval of migration never authorizes canonical edits, product changes, commits, or pushes.
 
@@ -105,14 +112,28 @@ Request explicit approval for this exact scope. Approval of migration never auth
 
 After approval:
 
-1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, and existing lock;
+1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, existing lock, and any project-owned integration paths that the staged operation references;
 2. build staged candidate outputs without changing active targets;
-3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` and `.ai/custom/` project state; add missing quality configuration only from explicit user decisions and confirmed repository or CI evidence;
+3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` and `.ai/custom/` project state while preserving optional `.ai/integrations/` and project-owned consumers byte-for-byte; add missing quality configuration only from explicit user decisions and confirmed repository or CI evidence;
 4. replace recognized Forge adapter IDs while preserving unlisted files;
 5. replace the active bundle and both byte-identical routers as one logical operation;
 6. run `forge-check-framework` against the candidate result;
-7. re-hash protected paths and fail on any difference;
+7. re-hash protected paths and fail on any unauthorized difference; validate integration files structurally but do not include their contents in managed-output lock hashes;
 8. create or update `.ai/framework.lock` only after every validation passes;
 9. remove `.ai-next/` only after success and keep the backup until the user acknowledges the result.
 
-On any failure, perform rollback: restore the old `.ai/`, routers, adapters, and lock; verify protected hashes again; report the failed stage. Create no migration report Markdown file and require no framework CLI.
+On any framework-migration failure, perform rollback: restore the old `.ai/`, routers, adapters, lock, and exact integration bytes; verify protected hashes again; report the failed stage. Create no migration report Markdown file and require no framework CLI.
+
+## Optional Integration-Schema Migration
+
+After a compatible framework upgrade, an `older_migratable` integration may be migrated through a separate gate:
+
+1. show the exact definition, state, Backlog source-field, plan coverage, and TASK frontmatter diff;
+2. identify the supported source/target schema versions and every affected consumer;
+3. create a recoverable pre-migration copy outside the replacement targets;
+4. request explicit approval for only this project-owned migration;
+5. stage all related files, validate schemas, unique identities, consumer compatibility, and bidirectional work-source references offline;
+6. atomically replace only the approved integration and relationship files;
+7. on failure, restore the complete pre-migration representation without rolling back an otherwise valid framework install.
+
+Framework rollback never deletes project-owned integrations. Before re-enabling an affected consumer, select the newest representation supported by the restored framework or report an explicit compatibility blocker. External identities and canonical Epic, Bug, and Task records are never deleted as rollback cleanup.

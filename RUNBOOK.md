@@ -1,4 +1,4 @@
-# AI Development Forge v4.1 — Runbook
+# AI Development Forge v4.2 — Runbook
 
 ## Codex route для Claude Code
 
@@ -67,6 +67,16 @@ Skill `forge-resume-development` определяет:
 - незавершённый Git diff.
 
 История сессии необязательна. Если результат агента не сохранён в TASK или plan, соответствующий этап выполняется повторно.
+
+## 3A. Локальные интеграции
+
+Чистый Forge не имеет `.ai/integrations/`: никакой connector preflight не запускается, а bootstrap, lifecycle, adapter sync и migration работают без дополнительных требований.
+
+Для локальной capability проект вручную добавляет definition по `.ai/templates/integration.yaml` и отдельно настраивает MCP/API/CLI. Definition содержит profile, semantic operations, scope, access policy, consumers и platform bindings, но не credentials. Интеграция вызывается только явно выбранным совместимым skill.
+
+Для доски задач используется profile `work_source` и skill `forge-intake-external-work`. Запрос может назвать тикет или попросить прочитать configured queue. Агент показывает retrieval boundary, классификацию и split/combine proposal, затем использует обычные feature/bug/Replan/Plan Approval gates. Связи с Epic/Bug/Task записываются только после approval; доска не становится lifecycle authority и не изменяется.
+
+Knowledge/data/analysis/custom profiles используют тот же registry, но не получают `EPIC/BUG/TASK` links. Полные примеры: [docs/local-integrations.md](docs/local-integrations.md).
 
 ## 4. Новая feature или идея
 
@@ -143,7 +153,7 @@ Task Start
 → AWAITING USER ACCEPTANCE
 ```
 
-Implementer пишет production-код и focused tests. Reviewer не исправляет код, получает обязательный Review Packet, независимо трассирует acceptance criteria и выполняет ordered adversarial review protocol. Tester не пишет тесты и запускает:
+Implementer пишет production-код и focused tests. Reviewer не исправляет код, получает обязательный Review Packet, независимо трассирует acceptance criteria и выполняет ordered adversarial review protocol только для кода, тестов и code-owned artifacts. Canonical-документы остаются контекстом: reviewer не создаёт по ним findings и не меняет итог code review, а ошибки в них исправляет оркестратор. Tester не пишет тесты и запускает:
 
 1. новые/изменённые тесты;
 2. выбранные affected-component tests;
@@ -229,6 +239,14 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 - framework release.
 
 Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет byte-identical root routers, parity остальных adapters и обновляет `.ai/framework.lock`.
+
+Project-owned `.ai/integrations/` не является render input и не попадает в managed-output hashes. Изменение board scope или другого локального definition не требует adapter sync само по себе.
+
+## 14A. Framework upgrade с локальными интеграциями
+
+`forge-migrate-framework` offline классифицирует integration files как absent/current/older-migratable/malformed/future/custom/collision. Отсутствие — обычный clean path. Framework bundle обновляется отдельно и сохраняет integrations byte-for-byte; unavailable connector не блокирует upgrade.
+
+Older-migratable schema изменяется только отдельным diff и approval с recoverable backup, staged validation и rollback. Malformed/future/custom profile блокирует только свой consumer. Ownership collision блокирует migration до решения. Rollback framework не удаляет external identities или canonical work links.
 
 ## 15. Git policy
 

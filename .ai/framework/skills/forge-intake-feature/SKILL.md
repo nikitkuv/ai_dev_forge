@@ -23,7 +23,8 @@ Discovery ends at the applicable canonical approval gate. Do not invoke implemen
 1. Present the proposed feature candidate and request explicit user approval to retain it.
 2. Allocate the next global `EPIC-NNN`.
 3. Add it to the Epic Roadmap as `PLANNED` with readiness `OUTLINE`, linked requirements marked `TBD` where necessary, user-defined priority, dependencies, and `Blocked by`.
-4. Do not activate it or change active work.
+4. When invoked from approved external-work intake, add the compact provider-neutral `Sources` keys and stage the matching reverse provenance; otherwise use `—` and create no integration state.
+5. Do not activate it or change active work.
 
 Every retained future idea is an Epic; do not create a separate idea list.
 

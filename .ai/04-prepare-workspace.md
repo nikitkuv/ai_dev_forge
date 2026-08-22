@@ -12,6 +12,7 @@ Use:
 - `.ai/templates/TASK.md`;
 - `.ai/CONVENTIONS.md`;
 - `.ai/framework/contracts.yaml`.
+- optional Backlog `Sources` and `.ai/integrations/work-items.yaml` entries for the selected Epic.
 
 This step prepares execution state only. Plan Approval does not change the Epic lifecycle status. Epic Start moves one approved planned workspace to active state. Neither action modifies product code, implements a Task, or starts the first Task.
 
@@ -45,6 +46,7 @@ The orchestrator must independently check the proposal against canonical sources
 6. select applicable quality profiles and risk flags;
 7. define Task-focused and affected verification without a mandatory full suite;
 8. define Epic-wide full regression, project-wide checks, critical paths, profile gates, fuzzing, and user-validation gates.
+9. when the Epic has work-source references, map every source slice to proposed TASK coverage and identify deferred, duplicate, or unresolved scope.
 
 Use the plan template without adding Task lifecycle state or a duplicated execution-status section.
 
@@ -62,6 +64,7 @@ For every TASK:
 - defer the full project suite and unscoped project-wide checks to Epic Validation;
 - add reproducible manual verification;
 - link requirements, architecture sections, ADRs, defects, and the Epic plan where applicable;
+- copy only the provider-neutral work-source keys covered by this TASK into `external_sources`;
 - record dependencies through the ordered plan;
 - initialize lifecycle `status: TODO`;
 - keep `definition_status: draft` until the user approves the complete plan.
@@ -87,7 +90,8 @@ After explicit Plan Approval:
 3. write `plan.md` with `document_status: approved` and approval metadata;
 4. write every TASK with `definition_status: approved` and `status: TODO`;
 5. leave the Backlog Epic status `PLANNED` and preserve its priority, order, dependencies and blockers;
-6. validate links, IDs, dependencies, directory uniqueness and the absence of product-code changes.
+6. when external sources apply, update TASK references, the plan coverage matrix, and `.ai/integrations/work-items.yaml` reverse mappings together;
+7. validate links, IDs, dependencies, source coverage, directory uniqueness and the absence of product-code changes.
 
 Treat planned-workspace creation as one logical write. On failure, remove only the partial newly created workspace and preserve the prior Backlog and other planned/active workspaces. Approval of a TASK definition is not authorization to implement it.
 
@@ -132,12 +136,14 @@ The first TASK remains TODO after workspace creation. Starting it requires the s
 
 ## Replan Gate
 
-After the plan is approved, any change to Task scope, order, or composition requires the **Replan gate**, whether the workspace is planned, active, or paused:
+After the plan is approved, any change to Task scope, order, composition, or external-source coverage requires the **Replan gate**, whether the workspace is planned, active, or paused:
 
 1. explain the reason;
 2. show the exact plan and TASK diff;
 3. request explicit user confirmation;
 4. only then add, cancel, split, merge, reorder, or rescope TASK definitions.
+
+For work-source changes, re-read versioned source records before applying the diff. Atomically update TASK `external_sources`, the plan coverage matrix, and reverse provenance. A partial or stale update leaves all three unchanged.
 
 Typo and link corrections do not require Replan. Replan approval does not start any new or changed TASK; each still requires its own Task Start gate.
 
@@ -156,6 +162,7 @@ Before reporting completion, verify:
 - all TASK lifecycle values remain `TODO`;
 - Task dependencies reference existing IDs and contain no cycle;
 - requirement, architecture, ADR, defect, plan, and Task links resolve;
+- Backlog source keys, TASK `external_sources`, plan coverage, and work-item reverse mappings agree when `work_source` is configured;
 - no product code, hooks, MCP configuration, or unrelated documentation changed.
 
 ## Outputs

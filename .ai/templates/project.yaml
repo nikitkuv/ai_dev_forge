@@ -1,7 +1,7 @@
 schema_version: 1
 framework:
   name: ai-dev-forge
-  version: 4.0.0
+  version: 4.2.0
 
 platforms:
   codex:
@@ -24,6 +24,10 @@ framework_language: en
 
 git:
   policy: manual
+
+# Local integrations are deliberately not configured here. A clean Forge
+# project has no `.ai/integrations/`. When needed, create project-owned
+# definitions from `.ai/templates/integration.yaml`; never store credentials.
 
 # Populate only from confirmed repository, build-system, and CI evidence.
 # An empty profile or command list must be resolved in the approved Epic plan as

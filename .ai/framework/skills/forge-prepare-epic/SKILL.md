@@ -7,7 +7,7 @@ description: Prepare one PLANNED and READY Epic as an approved queued workspace 
 
 ## Verify eligibility
 
-1. Read `BACKLOG.md`, approved SPEC and ARCHITECTURE, relevant ADRs, execution state, templates, conventions, and framework contracts.
+1. Read `BACKLOG.md`, approved SPEC and ARCHITECTURE, relevant ADRs, execution state, templates, conventions, framework contracts, and any Backlog source keys plus optional work-source provenance relevant to the selected Epic.
 2. Require the selected Epic to be `PLANNED + READY` with approved requirements and boundaries and explicitly declared dependencies and blockers.
 3. Allow declared unsatisfied dependencies, `Blocked by`, another active-work Epic, and other planned workspaces during planning. They prevent Epic Start, not Plan Approval.
 4. Require no workspace for the same Epic in another execution state and no conflicting planned directory or global Task ID. An existing planned workspace may change only through Replan.
@@ -22,9 +22,10 @@ Follow `.ai/04-prepare-workspace.md`:
 3. independently verify the proposal; never treat agent output as approval or canonical truth;
 4. allocate project-global TASK IDs without restarting per Epic or reusing retired IDs;
 5. create each TASK definition with scope, exclusions, constraints, acceptance criteria, affected surface, risk flags, review focus, selected Task checks, manual verification, references, and `status: TODO`;
-6. reserve the full project suite and unscoped global checks for Epic Validation;
-7. keep plan `document_status` and TASK `definition_status` in `draft` while revising the proposal;
-8. do not require a generic atomicity classifier; reshape work only for a concrete planning or execution need.
+6. when the Epic has external work sources, map every source slice to one or more proposed TASKs, set each TASK's `external_sources`, and populate the plan's source-coverage matrix without treating source status as Forge approval;
+7. reserve the full project suite and unscoped global checks for Epic Validation;
+8. keep plan `document_status` and TASK `definition_status` in `draft` while revising the proposal;
+9. do not require a generic atomicity classifier; reshape work only for a concrete planning or execution need.
 
 Show the complete plan, TASK definitions, and exact planned-workspace diff. Request explicit **Plan Approval**. After approval, atomically write the approved plan and `TODO` TASK definitions to `execution/planned/EPIC-NNN-<short-name>/` without changing the Backlog Epic from `PLANNED`.
 
@@ -45,6 +46,6 @@ Plan Approval and Epic Start are separate gates. One user message may grant both
 
 The first TASK remains `TODO`. Do not implement it until its separate Task Start gate.
 
-Any later Task scope, order, or composition change requires a displayed diff and the Replan gate in planned, active, or paused workspaces. Replan approval does not activate an Epic or start a TASK.
+Any later Task scope, order, composition, or external-source coverage change requires a displayed diff and the Replan gate in planned, active, or paused workspaces. Apply TASK source references, plan coverage, and `.ai/integrations/work-items.yaml` reverse mappings as one validated logical transition. Re-read versioned source items before approval; stale material content invalidates the proposal. Replan approval does not activate an Epic or start a TASK.
 
 Return the planned or active workspace, validation result, queue position from Backlog, and the pending Epic Start or first Task Start decision.

@@ -21,7 +21,8 @@ For ongoing work, recover state from canonical files and Git, not session histor
 5. Every queued `execution/planned/` Epic — approved strategy and `TODO` Task definitions pending Epic Start, ordered only by Backlog.
 6. Active or paused Epic `plan.md` — strategy, Task order, quality profiles, Epic Validation, fuzzing, and user validation.
 7. TASK files — the only Task lifecycle state and Task evidence.
-8. Git status and diff — unfinished file changes.
+8. Optional `.ai/integrations/` — project-owned capability definitions and work-source provenance; absence is the clean baseline.
+9. Git status and diff — unfinished file changes.
 
 Report contradictions instead of silently reconciling them.
 
@@ -56,7 +57,7 @@ Report contradictions instead of silently reconciling them.
 Explicitly invoke the matching bundled Forge skill by its exact name using the platform-native syntax. Do not rely only on implicit skill matching. When delegating, name both the workflow skill and the selected agent in the assignment context.
 
 - Bootstrap: `forge-bootstrap-new`, `forge-bootstrap-existing`.
-- Intake and priority: `forge-intake-feature`, `forge-intake-bug`, `forge-reprioritize-backlog`.
+- Intake and priority: `forge-intake-feature`, `forge-intake-bug`, `forge-intake-external-work`, `forge-reprioritize-backlog`.
 - Execution: `forge-prepare-epic`, `forge-resume-development`, `forge-run-task`, `forge-complete-task`, `forge-complete-epic`.
 - Maintenance: `forge-migrate-framework`, `forge-security-audit`, `forge-check-framework`, `forge-sync-adapters`.
 
@@ -100,5 +101,6 @@ Run no more than one code-writing Task at a time. Independent read-only research
 - Generated adapters are derived from `.ai/framework/`, `.ai/project.yaml`, and `.ai/custom/router-shared.md`.
 - Project-specific router additions belong only in `.ai/custom/router-shared.md`; synchronize rather than editing generated files.
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.
+- `.ai/integrations/` is optional project-owned state. Registration alone grants no tool authority; only an explicitly selected compatible consumer may use allowed operations. Missing or invalid integrations block only their consumers, and framework upgrade never requires a live connector.
 
 {{ custom.router_shared }}

@@ -10,6 +10,7 @@ definition_approved_at:
 started_at:
 risk_level: standard
 risk_flags: []
+external_sources: []
 ---
 
 # TASK-NNN — <Task Title>
@@ -73,6 +74,7 @@ Removing or weakening an approved check requires an explicit rationale and orche
 - **Decisions:** <ADR-IDs or —>
 - **Epic plan:** <Relative path to plan.md>
 - **Related defects:** <BUG-IDs or —>
+- **External sources:** <Provider-neutral work-source keys from `external_sources`, or —>
 
 ## Workflow State
 
@@ -90,6 +92,7 @@ review_packet:
   implementation_fingerprint:
   diff_fingerprint:
   changed_paths: []
+  code_review_paths: []
 review:
   revision:
   fingerprint:
@@ -130,7 +133,7 @@ Do not paste full agent responses or long tool logs.
 - **Acceptance traceability:** <Criterion-to-implementation/test evidence summary>
 - **Protocol coverage:** <Scope/context, adversarial, architecture, contracts/data/security, test quality, verification-selection result>
 - **Focused diagnostics:** <Commands and results, or —>
-- **Findings:** <None or compact actionable summary>
+- **Findings:** <None or compact actionable code-review summary; canonical-only issues are handled by the orchestrator and excluded>
 
 ## Test Summary
 

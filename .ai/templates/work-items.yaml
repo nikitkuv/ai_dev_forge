@@ -1,0 +1,14 @@
+# Optional project-owned state for integrations implementing `work_source`.
+# Do not create this file for a clean project or a non-work integration.
+schema_version: 1
+items:
+  - integration_id: <integration-id>
+    external_id: <stable-external-id>
+    source_ref: <integration-id>:<external-id>
+    source_version:
+    content_fingerprint:
+    disposition: retained
+    canonical_refs: []
+    group_refs: []
+    reviewed_at: <YYYY-MM-DD>
+    decision:

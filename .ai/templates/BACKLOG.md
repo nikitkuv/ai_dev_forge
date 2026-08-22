@@ -18,18 +18,20 @@ The user controls `P0`–`P3` priority and row order within each priority. The a
 
 ## Epic Roadmap
 
-| ID | Epic and intended outcome | Requirements | Priority | Readiness | Dependencies | Status | Blocked by |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| EPIC-001 | <Name — observable outcome> | <FR-/NFR-/BR-IDs or `TBD` while OUTLINE> | P0 | READY | — | PLANNED | — |
-| EPIC-002 | <Name — observable outcome> | TBD | P1 | OUTLINE | EPIC-001 | PLANNED | EPIC-001 |
+| ID | Epic and intended outcome | Requirements | Sources | Priority | Readiness | Dependencies | Status | Blocked by |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| EPIC-001 | <Name — observable outcome> | <FR-/NFR-/BR-IDs or `TBD` while OUTLINE> | <provider-neutral source keys or —> | P0 | READY | — | PLANNED | — |
+| EPIC-002 | <Name — observable outcome> | TBD | — | P1 | OUTLINE | EPIC-001 | PLANNED | EPIC-001 |
 
 Readiness and lifecycle values are defined only in `.ai/framework/contracts.yaml`. An `OUTLINE` Epic cannot receive an approved detailed workspace. A `PLANNED + READY` Epic may have one approved workspace under `execution/planned/` even while its declared dependencies or blockers prevent activation. At most one Epic may occupy the nonterminal active-work states `ACTIVE`, `VALIDATING`, `FUZZING`, or `AWAITING EPIC ACCEPTANCE`.
 
 ## Defect Queue
 
-| ID | Problem | Severity | User priority | Related requirement | Status | Scheduled TASK |
-| --- | --- | --- | --- | --- | --- | --- |
-| BUG-001 | <Observable failure and affected user or system> | <critical/high/medium/low> | P1 | <FR-/NFR-/BR-ID or —> | OPEN | — |
-| BUG-002 | <Observable failure> | <severity> | P2 | <requirement or —> | SCHEDULED | TASK-001 |
+| ID | Problem | Severity | User priority | Related requirement | Sources | Status | Scheduled TASK |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BUG-001 | <Observable failure and affected user or system> | <critical/high/medium/low> | P1 | <FR-/NFR-/BR-ID or —> | <provider-neutral source keys or —> | OPEN | — |
+| BUG-002 | <Observable failure> | <severity> | P2 | <requirement or —> | — | SCHEDULED | TASK-001 |
 
 Severity describes impact; user priority controls repair order. Defect lifecycle values are defined only in `.ai/framework/contracts.yaml`. A problem found in an unaccepted Task remains in that Task and does not receive a separate Bug ID.
+
+`Sources` is optional and contains compact references only for approved work originating from a configured `work_source`. It never controls priority, readiness, status, acceptance, or completion. Existing Backlogs without the column remain valid until a separately approved canonical-schema migration adds it.
