@@ -193,7 +193,7 @@ TODO
 
 1. отдельный Task Start;
 2. implementer пишет код и необходимые тесты;
-3. strong reviewer получает обязательный Review Packet и по ordered protocol проверяет acceptance traceability, diff/context, adversarial cases, архитектуру, контракты, данные, безопасность и тесты;
+3. strong reviewer получает обязательный Review Packet и по ordered protocol проверяет acceptance traceability, code-review diff/context, adversarial cases, архитектуру, контракты, данные, безопасность и тесты; canonical-документы используются только как контекст, не проверяются reviewer-ом и исправляются оркестратором;
 4. tester запускает focused, selected affected и scoped quality checks; полный project suite и unscoped global checks остаются Epic gate;
 5. пользователь тестирует вручную;
 6. отдельный Task Acceptance переводит TASK в `DONE`.

@@ -92,7 +92,7 @@ Framework defaults для субагентов: Codex `strong = gpt-5.6-sol/high
 
 ## Проверка качества
 
-Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks. Strong reviewer получает обязательный Review Packet, независимо трассирует каждый acceptance criterion и проверяет diff, соседний код, adversarial cases, архитектуру, контракты, данные, безопасность и качество тестов. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
+Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks. Strong reviewer получает обязательный Review Packet, независимо трассирует каждый acceptance criterion и проверяет code-review diff, соседний код, adversarial cases, архитектуру, контракты, данные, безопасность и качество тестов. Canonical-документы служат ему только контекстом и не являются объектом review: их ошибки исправляет оркестратор и они не создают code findings. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
 
 После принятия последней TASK Epic переходит в `VALIDATING`. Отдельный `epic-validator` запускает полный regression suite, глобальные quality checks, critical-path validation и применимые gates выбранных project profiles. Только текущий passing Epic Validation fingerprint допускается к fuzzing и последующему Epic Acceptance.
 

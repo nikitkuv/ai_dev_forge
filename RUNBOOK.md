@@ -153,7 +153,7 @@ Task Start
 → AWAITING USER ACCEPTANCE
 ```
 
-Implementer пишет production-код и focused tests. Reviewer не исправляет код, получает обязательный Review Packet, независимо трассирует acceptance criteria и выполняет ordered adversarial review protocol. Tester не пишет тесты и запускает:
+Implementer пишет production-код и focused tests. Reviewer не исправляет код, получает обязательный Review Packet, независимо трассирует acceptance criteria и выполняет ordered adversarial review protocol только для кода, тестов и code-owned artifacts. Canonical-документы остаются контекстом: reviewer не создаёт по ним findings и не меняет итог code review, а ошибки в них исправляет оркестратор. Tester не пишет тесты и запускает:
 
 1. новые/изменённые тесты;
 2. выбранные affected-component tests;

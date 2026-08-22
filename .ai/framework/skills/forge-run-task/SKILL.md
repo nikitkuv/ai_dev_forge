@@ -28,17 +28,19 @@ description: Execute one approved Forge TASK through implementation, independent
 7. Build a Review Packet containing:
    - TASK and Epic-plan paths;
    - base and implementation fingerprints and implementation revision;
-   - changed paths and reproducible scoped diff;
+   - code-review paths and a reproducible code-review diff limited to implementation code, tests, and code-owned artifacts;
    - acceptance criteria, affected components and contracts, risk level and flags, and review focus;
    - implementation summary, tests added or changed, RED/GREEN evidence, selected checks, and known limitations.
    - linked external source keys and the approved source intent covered by this TASK, when applicable.
-8. Transition to `IN REVIEW`. On Codex, invoke the strong read-only `reviewer` with the exact Review Packet. On Claude Code, read the complete neutral `.ai/framework/agents/reviewer.yaml` contract, build a prompt containing that contract and the exact Review Packet, and run `.claude/forge/codex-role-runner.mjs --preflight`. If preflight is available, write the prompt to a secure temporary file and invoke the runner with `--role reviewer --prompt-file <path>`; always remove the temporary file. If preflight is unavailable, invoke the generated native Claude `reviewer` with the identical Review Packet and report the fallback reason. Once a Codex task starts, a non-zero exit, timeout, malformed output, or model/effort mismatch blocks review and never falls back.
-9. If review finds anything actionable:
+   Exclude canonical documents, ADRs, Epic plans, TASK files, lifecycle metadata, and review-record edits from the code-review paths and diff. They remain reference inputs for interpreting the acceptance criteria. Before invocation, the orchestrator independently validates and, within its existing authority, corrects its canonical records.
+8. Transition to `IN REVIEW`. On Codex, invoke the strong read-only `reviewer` with the exact Review Packet. On Claude Code, read the complete neutral `.ai/framework/agents/reviewer.yaml` contract, build a prompt containing that contract and the exact Review Packet, and run `.claude/forge/codex-role-runner.mjs --preflight`. If preflight is available, write the prompt to a secure temporary file and invoke the runner with `--role reviewer --prompt-file <path>`; always remove the temporary file. If preflight is unavailable, invoke the generated native Claude `reviewer` with the identical Review Packet and report the fallback reason. Both routes use the same code-only review boundary. Once a Codex task starts, a non-zero exit, timeout, malformed output, or model/effort mismatch blocks review and never falls back.
+9. If review finds anything actionable in the code-review surface:
    - let the orchestrator return the TASK to `IN PROGRESS`;
    - route findings to `implementer`;
    - invalidate prior review and testing evidence;
    - record the new revision/fingerprint after fixes;
    - repeat independent review.
+   A canonical-only issue is out of contract: the orchestrator handles it, does not route it to the implementer, and does not return the TASK to `IN PROGRESS` or treat it as a non-clean code-review outcome.
 10. After a clean, protocol-complete review, transition to `IN TESTING` and invoke `tester` for the exact reviewed revision, fingerprint, changed surface, Verification Plan, and review evidence.
 11. Require tests added or changed by the TASK, selected affected-component tests, and configured scoped quality checks. Do not require the full project suite or unscoped project-wide checks.
 12. If testing fails, coverage or selection is missing, or the plan is stale, route evidence through the orchestrator to `implementer`, then repeat structured review and selected testing after any code change.

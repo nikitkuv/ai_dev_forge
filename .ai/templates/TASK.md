@@ -92,6 +92,7 @@ review_packet:
   implementation_fingerprint:
   diff_fingerprint:
   changed_paths: []
+  code_review_paths: []
 review:
   revision:
   fingerprint:
@@ -132,7 +133,7 @@ Do not paste full agent responses or long tool logs.
 - **Acceptance traceability:** <Criterion-to-implementation/test evidence summary>
 - **Protocol coverage:** <Scope/context, adversarial, architecture, contracts/data/security, test quality, verification-selection result>
 - **Focused diagnostics:** <Commands and results, or —>
-- **Findings:** <None or compact actionable summary>
+- **Findings:** <None or compact actionable code-review summary; canonical-only issues are handled by the orchestrator and excluded>
 
 ## Test Summary
 
