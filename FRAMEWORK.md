@@ -128,11 +128,13 @@ Framework control layer написан на английском. Канонич
 
 | Tier | Codex | Claude Code |
 | --- | --- | --- |
-| `strong` | `gpt-5.6-sol`, `high` | `opus`, `high` |
-| `balanced` | `gpt-5.6-terra`, `medium` | `sonnet`, `high` |
-| `fast` | `gpt-5.6-luna`, `medium` | `haiku`, `high` |
+| `strong` | `gpt-5.6-sol`, `medium` | `opus`, `medium` |
+| `balanced` | `gpt-5.6-terra`, `medium` | `sonnet`, `medium` |
+| `fast` | `gpt-5.6-luna`, `medium` | `haiku`, `medium` |
 
 Проект может явно переопределить defaults. Aliases и полные model IDs поддерживаются; скрытая замена tier запрещена.
+
+В режиме `native_subagents` генерация применяет к Claude Code режимный override `effort: high` для всех native agents. Он не изменяет Codex agents или effort внешнего маршрута `codex_with_claude`.
 
 `.ai/framework.lock` хранит версии и hashes neutral sources и generated outputs, чтобы обнаруживать drift и ручные изменения.
 

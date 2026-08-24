@@ -95,6 +95,7 @@ role_execution:
       orchestrator: active_platform
       provider: native
       external_preflight: false
+      claude_reasoning_effort: high
 
 optional_capabilities:
   hooks: false

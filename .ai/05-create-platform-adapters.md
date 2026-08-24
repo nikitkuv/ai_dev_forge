@@ -126,6 +126,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
 - native YAML frontmatter;
 - its `id`, English description, concrete Claude model and effort, and allowed tools;
+- `effort: high` for every generated Claude agent when `role_execution.mode` is `native_subagents`; in the other modes, preserve the configured Claude tier effort so the native-only override does not change the managed `codex_with_claude` route;
 - the same English role contract used by the Codex adapter.
 - Write every `.claude/agents/*.md` file as UTF-8 **without BOM**. Byte zero must be the first `-` of the opening `---` frontmatter delimiter; never prepend `EF BB BF`.
 
@@ -143,7 +144,7 @@ Verify the staged outputs:
 - `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/medium`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
-- every rendered agent contains its concrete model and effort;
+- every rendered agent contains its concrete model and effort; when `role_execution.mode` is `native_subagents`, every Claude agent has `effort: high` while Codex agents retain their configured tier effort;
 - every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 - generated files contain English control text;
 - `.ai/custom/router-shared.md` appears identically in both routers;
