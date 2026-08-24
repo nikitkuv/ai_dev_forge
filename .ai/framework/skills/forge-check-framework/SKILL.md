@@ -40,7 +40,8 @@ Do not repair files during this check.
 - Check SPEC and ARCHITECTURE contain target state, not execution tracking.
 - Check Review Packet, structured review, and selected Task-testing fingerprints match current implementation.
 - Check Task verification does not require a full project suite or unscoped global command without an explicit early-run request.
-- Check the approved Epic Verification Plan, selected quality profiles, full-suite/project-wide Epic Validation evidence, and aggregate fingerprint are current before fuzzing.
+- Check the approved Epic Verification Plan, Epic Fuzzing Plan, selected quality profiles, full-suite/project-wide Epic Validation evidence, and aggregate fingerprint are current before the fuzzing gate.
+- Check every TASK records final `Fuzzing impact` and `Task fuzz smoke` evidence. A skipped fuzzer invocation is valid only for approved `not applicable` with all final impacts `none`, matching actual affected surfaces, passing alternative risk coverage, and the same aggregate fingerprint; `applicable`, `unresolved`, or contradictory evidence must show a fuzzer invocation.
 - Check code changes invalidate affected Task evidence plus aggregate Epic Validation and fuzzing evidence.
 - Check no Task commit predates explicit Task Acceptance and transition to `DONE`.
 - Check the current gate can be reconstructed without session history.

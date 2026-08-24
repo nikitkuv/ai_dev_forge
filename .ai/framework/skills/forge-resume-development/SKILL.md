@@ -17,7 +17,7 @@ description: Recover planned, active, or paused Forge development state after in
    - the current gate from TASK Workflow State and Epic state;
    - implementation revision and fingerprint;
    - current Review Packet, structured review, selected Task-testing, Epic Validation, fuzzing, and user-validation evidence;
-   - selected quality profiles, Task verification selections, Epic Verification Plan, and any unresolved command configuration;
+   - selected quality profiles, Task verification selections, Epic Verification Plan, Epic Fuzzing Plan, every final Task fuzzing impact and smoke result, and any unresolved command configuration;
    - staged, unstaged, and untracked changes relevant to the work.
    - for configured `work_source` integrations, linked source keys, per-TASK coverage, uncovered source slices, last reviewed source versions, and forward/reverse mapping integrity.
 4. Report duplicate Epic workspaces, planned directories without `PLANNED + READY` Backlog entries, planned workspaces with non-approved definitions, duplicate active Epics, invalid transitions, mismatched directories, stale fingerprints, broken links, contradictory source mappings, or conflicting canonical facts before continuing. An unavailable or invalid integration blocks only work that consumes it; absence of `.ai/integrations/` is the clean baseline.
@@ -29,7 +29,7 @@ description: Recover planned, active, or paused Forge development state after in
 - Re-evaluate dependencies and `Blocked by` before offering Epic Start; Backlog order, not filesystem order, determines the next queued candidate.
 - Rerun structured review or selected Task testing when evidence is missing, refers to another revision/fingerprint, or affected code changed afterward.
 - Rerun Epic Validation when aggregate evidence is missing, commands or profile gates are unresolved, the fingerprint changed, or a migrated pre-v4 plan lacks the required verification contract.
-- Never enter or resume fuzzing without current passing Epic Validation evidence on the same aggregate fingerprint. Rerun Epic Validation and fuzzing when Epic code changed after either result.
+- Never enter or resume the fuzzing gate without current passing Epic Validation evidence on the same aggregate fingerprint. For approved `not applicable`, reconstruct the skip conditions from final Task impacts, actual affected surfaces, alternative coverage, and fingerprint; invoke the fuzzer if any condition is missing, stale, unresolved, applicable, or contradictory. Rerun Epic Validation and the fuzzing gate when Epic code changed after either result.
 - Keep a TASK at `AWAITING USER ACCEPTANCE` while the user is still validating; no timeout applies.
 - Require explicit user authorization before resuming a `PAUSED` Epic or TASK, starting a `TODO` TASK, accepting work, replanning, or crossing another gate.
 - Do not infer acceptance or completion from a clean Git tree, a prior chat message, or an agent invocation alone.

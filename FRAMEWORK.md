@@ -56,7 +56,7 @@ project/
 | Epic, приоритет, readiness, status и дефекты | `BACKLOG.md` |
 | Содержание одного архитектурного решения | соответствующий ADR |
 | Навигация по решениям | генерируемый `DECISIONS.md` |
-| Стратегия Epic, порядок TASK, verification plan, Epic Validation, fuzzing и user validation | `plan.md` |
+| Стратегия Epic, порядок TASK, verification и fuzzing plans, Epic Validation, fuzzing outcome и user validation | `plan.md` |
 | TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
 | История файлов | Git |
 
@@ -155,9 +155,9 @@ Framework control layer написан на английском. Канонич
 | `epic-planner` | strong | read-only Epic decomposition, risks, review focus и verification planning |
 | `implementer` | balanced | одна TASK, production-код и тесты |
 | `reviewer` | strong | независимый read-only review |
-| `tester` | fast | selected focused, affected и scoped Task checks |
+| `tester` | fast | selected focused, affected, bounded fuzz smoke и scoped Task checks |
 | `epic-validator` | balanced | полный regression, project-wide checks, critical paths и quality profiles |
-| `fuzzer` | balanced | воспроизводимый Epic fuzzing без исправлений |
+| `fuzzer` | balanced | воспроизводимый Epic fuzzing без исправлений, когда план или итоговые evidence требуют вызов |
 | `security-auditor` | strong | явный on-demand local security audit |
 
 Субагенты не вызывают друг друга. Одновременно выполняется не более одной code-writing TASK; независимый read-only research может выполняться параллельно.
@@ -196,7 +196,7 @@ TODO
 1. отдельный Task Start;
 2. implementer пишет код и необходимые тесты;
 3. strong reviewer получает обязательный Review Packet и по ordered protocol проверяет acceptance traceability, code-review diff/context, adversarial cases, архитектуру, контракты, данные, безопасность и тесты; canonical-документы используются только как контекст, не проверяются reviewer-ом и исправляются оркестратором;
-4. tester запускает focused, selected affected и scoped quality checks; полный project suite и unscoped global checks остаются Epic gate;
+4. tester запускает focused, selected affected, применимый bounded Task fuzz smoke и scoped quality checks; для fuzzing impact `none` сверяет rationale с actual surface; полный project suite и unscoped global checks остаются Epic gate;
 5. пользователь тестирует вручную;
 6. отдельный Task Acceptance переводит TASK в `DONE`.
 
@@ -210,9 +210,11 @@ PLANNED → ACTIVE → VALIDATING → FUZZING → AWAITING EPIC ACCEPTANCE → C
 
 Также поддерживаются `PAUSED` и `CANCELLED`.
 
+При подготовке Epic `epic-planner` создаёт evidence-based Epic Fuzzing Plan с applicability, targets, harness readiness, Task mapping, reproducible campaign и alternative risk coverage. Каждая TASK отдельно хранит `Fuzzing impact` и `Task fuzz smoke` в своём Verification Plan.
+
 После принятия последней TASK отдельный `epic-validator` на точном aggregate fingerprint запускает полный project suite, project-wide lint/typecheck/build, integration/E2E, requirement coverage и применимые quality-profile gates. Только `PASSED` или `PASSED WITH ACCEPTED EXCEPTIONS` после явного принятия риска переводит Epic в `FUZZING`.
 
-Затем автоматически запускается read-only fuzzer:
+В `FUZZING` оркестратор не вызывает fuzzer для approved `not applicable`, только если все итоговые Task impacts равны `none`, affected surface совпадает с планом, alternative coverage прошёл и fingerprint актуален; тогда он записывает `NOT APPLICABLE`. Для `applicable`, `unresolved` или противоречащих итоговых evidence автоматически запускается read-only fuzzer. Fuzzing gate сохраняет четыре outcome:
 
 - `PASSED`;
 - `NOT APPLICABLE` с rationale и alternative risk coverage;

@@ -56,6 +56,8 @@ external_sources: []
 - **Selection rationale:** <Map changed and affected surfaces to the selected commands.>
 - **Epic-only checks:** <Full project suite and unscoped project-wide checks deferred to Epic Validation.>
 - **Execution constraints:** <Required services, fixtures, datasets, environments, budgets, or objective limitations.>
+- **Fuzzing impact:** <existing target affected/new target/harness required/none, with target or rationale.>
+- **Task fuzz smoke:** <Bounded command and budget for an affected target, or explicit not-applicable rationale.>
 
 Removing or weakening an approved check requires an explicit rationale and orchestrator disposition. Expanding implementation beyond the affected surface requires scope correction or Replan, not a silent fallback to the full project suite.
 

@@ -77,12 +77,12 @@ Project configuration may explicitly override these defaults in `.ai/project.yam
 
 - `context-collector` — fast local state and code context.
 - `documentation-researcher` — fast authoritative external research.
-- `epic-planner` — strong read-only Epic decomposition, risk analysis, and verification planning.
+- `epic-planner` — strong read-only Epic decomposition, risk analysis, verification planning, and fuzzing applicability planning.
 - `implementer` — balanced code and test implementation for one authorized TASK.
 - `reviewer` — strong independent read-only review.
 - `tester` — fast selected Task and affected verification without the full project suite.
 - `epic-validator` — balanced full regression, project-wide checks, critical paths, and quality-profile validation.
-- `fuzzer` — balanced read-only Epic fuzzing after current Epic Validation passes.
+- `fuzzer` — balanced read-only Epic fuzzing after current Epic Validation passes when the approved plan is `applicable` or `unresolved`, or final evidence is contradictory.
 - `security-auditor` — strong on-demand local read-only security analysis.
 
 Epic planner, reviewer, tester, Epic validator, fuzzer, and security auditor return results to the orchestrator. The orchestrator routes corrections and records compact summaries in the existing TASK or plan; no separate report Markdown files are created.

@@ -67,7 +67,7 @@ gates:
     note: Task acceptance and permission to start the next task are separate gates; one message may authorize both only when it explicitly states both decisions.
   epic_plan_approval:
     effect: "write approved plan and TASK definitions under execution/planned without changing Epic lifecycle status"
-    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, explicit_user_approval]
+    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, valid_epic_fuzzing_plan_proposal, explicit_user_approval]
     permits: [declared_unsatisfied_dependencies, declared_blockers, another_active_work_epic]
   epic_start:
     transition: "PLANNED -> ACTIVE"
@@ -75,7 +75,7 @@ gates:
     atomic_effects: [move_execution_planned_to_active, update_backlog_status]
   epic_validation:
     transition: "ACTIVE -> VALIDATING"
-    requires: [all_planned_tasks_DONE, current_task_evidence, approved_epic_verification_plan]
+    requires: [all_planned_tasks_DONE, current_task_evidence, approved_epic_verification_plan, approved_epic_fuzzing_plan]
   epic_fuzzing:
     transition: "VALIDATING -> FUZZING"
     requires: [current_epic_validation_evidence, epic_validation_acceptance_satisfied]
@@ -93,6 +93,21 @@ gates:
 
 fuzzing:
   mandatory_after: epic_validation_acceptance_satisfied
+  mandatory_subject: fuzzing_gate
+  planning_applicability: [applicable, "not applicable", unresolved]
+  plan_requirements:
+    applicable: [risk_surfaces, targets_and_invariants, harness_readiness, task_mapping, reproducible_campaign, failure_criteria, artifact_handling, execution_constraints]
+    "not applicable": [rationale, alternative_risk_coverage]
+    unresolved: [exact_missing_evidence_or_blocker]
+  agent_invocation:
+    required_when: [planned_applicable, planned_unresolved, final_evidence_contradicts_planned_not_applicable]
+    skipped_when:
+      - approved_plan_not_applicable
+      - all_final_task_fuzzing_impacts_none
+      - actual_affected_surface_matches_approved_plan
+      - alternative_risk_coverage_passed
+      - current_aggregate_fingerprint_matches_epic_validation
+    skipped_outcome: "NOT APPLICABLE"
   acceptance_gate:
     id: fuzzing_acceptance_satisfied
     satisfied_by:
@@ -133,6 +148,7 @@ quality_gates:
       - affected_surface_and_risk_flags
       - focused_behavior_evidence
       - selected_affected_checks
+      - planned_fuzzing_impact_and_task_smoke
       - current_structured_review
       - current_task_test_evidence
       - reproducible_manual_verification
@@ -149,6 +165,7 @@ quality_gates:
       - project_wide_lint_typecheck_and_build
       - cross_component_and_critical_path_validation
       - applicable_quality_profile_gates
+      - approved_epic_fuzzing_plan
       - current_fuzzing_outcome
       - current_documentation_and_operational_evidence
       - no_unaccepted_blocking_risk
@@ -203,5 +220,7 @@ invariants:
   - task_check_selection_is_justified_by_changed_and_affected_surfaces
   - task_tester_never_silently_expands_to_the_full_project_suite
   - epic_validation_precedes_epic_fuzzing
+  - planned_not_applicable_skips_fuzzer_only_with_current_final_evidence
+  - planned_applicable_unresolved_or_contradictory_evidence_invokes_fuzzer
   - task_commit_never_precedes_explicit_user_acceptance
   - next_epic_never_starts_automatically

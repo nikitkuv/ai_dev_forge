@@ -157,7 +157,8 @@ Implementer пишет production-код и focused tests. Reviewer не исп�
 
 1. новые/изменённые тесты;
 2. выбранные affected-component tests;
-3. scoped lint, typecheck, build и применимые profile-specific checks.
+3. bounded `Task fuzz smoke`, если итоговый fuzzing impact затрагивает target или готовый harness; для `none` сверяет rationale с actual surface;
+4. scoped lint, typecheck, build и применимые profile-specific checks.
 
 Полный project test suite и unscoped project-wide checks не являются Task gate и по умолчанию запрещены implementer, reviewer и tester. Ранний полный прогон допустим только по явному запросу пользователя и не заменяет Epic Validation. После любого исправления structured review и selected testing выполняются заново.
 
@@ -197,12 +198,12 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 - `FAILED` → `ACTIVE`, Replan и remediation TASK;
 - `BLOCKED` → `ACTIVE` и явное решение по отсутствующей capability или environment.
 
-После passing Epic Validation автоматически вызывается read-only fuzzer для существующих harnesses.
+После passing Epic Validation Epic входит в обязательный fuzzing gate. Для approved `not applicable` оркестратор не вызывает fuzzer, только если все итоговые Task fuzzing impacts равны `none`, actual affected surface совпадает с approved Epic Fuzzing Plan, alternative risk coverage прошёл и fingerprint совпадает с Epic Validation. В этом случае он записывает `NOT APPLICABLE` с freshness evidence. Для `applicable`, `unresolved` или противоречащих итоговых evidence автоматически вызывается read-only fuzzer.
 
 Результаты:
 
 - `PASSED` → ожидание Epic Acceptance;
-- `NOT APPLICABLE` → требуются rationale и alternative risk coverage;
+- `NOT APPLICABLE` → требуются rationale, passing alternative risk coverage и текущий fingerprint; outcome может записать оркестратор по skip-условиям или вернуть вызванный fuzzer;
 - `HARNESS REQUIRED` → Replan и отдельная harness TASK;
 - `FINDINGS` → Replan и remediation TASK.
 

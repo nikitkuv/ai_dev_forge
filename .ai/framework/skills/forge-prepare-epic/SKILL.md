@@ -18,14 +18,16 @@ description: Prepare one PLANNED and READY Epic as an approved queued workspace 
 Follow `.ai/04-prepare-workspace.md`:
 
 1. Read `.ai/project.yaml` and require a valid `role_execution.mode`. Build one assignment from the complete neutral `.ai/framework/agents/epic-planner.yaml` contract plus the canonical, repository, CI, quality-configuration, convention, contract, and template evidence. Route it exactly as configured: `native_subagents` invokes the active platform's generated planner with no external preflight; `claude_with_codex` requires Claude Code and uses `.claude/forge/codex-role-runner.mjs`; `codex_with_claude` requires Codex and uses `.codex/forge/claude-role-runner.mjs` with `models.claude.strong.model` and effort. For either external route, run preflight, block on unavailability or active-orchestrator mismatch, pass the assignment through a secure temporary prompt file, and always remove the file. There is no fallback before or after execution; a non-zero exit, timeout, permission failure, runtime mismatch, or malformed result blocks planning;
-2. require a proposal containing the Epic strategy, requirement coverage, selected quality profiles, risks, ordered Task graph, Task definitions, Task verification selections, review focus, and Epic Verification Plan;
+2. require a proposal containing the Epic strategy, requirement coverage, selected quality profiles, risks, ordered Task graph, Task definitions, Task verification selections, review focus, Epic Verification Plan, and an evidence-based Epic Fuzzing Plan;
 3. independently verify the proposal; never treat agent output as approval or canonical truth;
 4. allocate project-global TASK IDs without restarting per Epic or reusing retired IDs;
 5. create each TASK definition with scope, exclusions, constraints, acceptance criteria, affected surface, risk flags, review focus, selected Task checks, manual verification, references, and `status: TODO`;
 6. when the Epic has external work sources, map every source slice to one or more proposed TASKs, set each TASK's `external_sources`, and populate the plan's source-coverage matrix without treating source status as Forge approval;
-7. reserve the full project suite and unscoped global checks for Epic Validation;
-8. keep plan `document_status` and TASK `definition_status` in `draft` while revising the proposal;
-9. do not require a generic atomicity classifier; reshape work only for a concrete planning or execution need.
+7. require the Epic Fuzzing Plan to classify applicability as `applicable`, `not applicable`, or `unresolved`; map risk surfaces, targets and invariants, harness readiness, missing harness work, Task smoke coverage, reproducible campaign configuration, failure criteria, artifact handling, constraints, and alternative coverage; reject `not applicable` without both rationale and alternative risk coverage, and reject `unresolved` without the exact missing evidence or blocker;
+8. require every TASK Verification Plan to record `Fuzzing impact` and a bounded `Task fuzz smoke` command and budget or explicit not-applicable rationale;
+9. reserve the full project suite and unscoped global checks for Epic Validation;
+10. keep plan `document_status` and TASK `definition_status` in `draft` while revising the proposal;
+11. do not require a generic atomicity classifier; reshape work only for a concrete planning or execution need.
 
 Show the complete plan, TASK definitions, and exact planned-workspace diff. Request explicit **Plan Approval**. After approval, atomically write the approved plan and `TODO` TASK definitions to `execution/planned/EPIC-NNN-<short-name>/` without changing the Backlog Epic from `PLANNED`.
 

@@ -45,7 +45,7 @@ The orchestrator must independently check the proposal against canonical sources
 5. map requirements to planned Task and Epic-level evidence;
 6. select applicable quality profiles and risk flags;
 7. define Task-focused and affected verification without a mandatory full suite;
-8. define Epic-wide full regression, project-wide checks, critical paths, profile gates, fuzzing, and user-validation gates.
+8. define Epic-wide full regression, project-wide checks, critical paths, profile gates, user-validation gates, and an evidence-based Epic Fuzzing Plan with applicability `applicable`, `not applicable`, or `unresolved`; targets and invariants; harness readiness and Task ownership; Task smoke mapping; reproducible tools/seeds/budgets; failure criteria; artifact handling; constraints; rationale plus alternative risk coverage for `not applicable`; and exact missing evidence or blocker for `unresolved`;
 9. when the Epic has work-source references, map every source slice to proposed TASK coverage and identify deferred, duplicate, or unresolved scope.
 
 Use the plan template without adding Task lifecycle state or a duplicated execution-status section.
@@ -61,6 +61,7 @@ For every TASK:
 - add objectively verifiable acceptance criteria;
 - record affected components and contracts, risk level and flags, and review focus;
 - add required Task-specific, affected-component, and scoped quality checks;
+- record `Fuzzing impact` as `existing target affected`, `new target`, `harness required`, or `none`, plus a bounded `Task fuzz smoke` command and budget or an explicit not-applicable rationale;
 - defer the full project suite and unscoped project-wide checks to Epic Validation;
 - add reproducible manual verification;
 - link requirements, architecture sections, ADRs, defects, and the Epic plan where applicable;

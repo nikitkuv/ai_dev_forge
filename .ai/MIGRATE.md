@@ -35,9 +35,9 @@ Absence of `.ai/integrations/` is the clean Forge baseline. It adds no migration
 For upgrades to v4 or later, also inspect:
 
 - whether `.ai/project.yaml` has approved `quality.profiles`, Task-scoped command catalogs, Epic-wide commands, and selection rules;
-- whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, and appropriate evidence;
+- whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, an Epic Fuzzing Plan, and appropriate evidence;
 - whether any existing `execution/planned/` directory maps to exactly one `PLANNED + READY` Backlog Epic and contains only approved `TODO` definitions;
-- whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans, Review Packets, and structured review evidence;
+- whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans with fuzzing impact and Task smoke, Review Packets, and structured review evidence;
 - whether an Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` has a current passing Epic Validation result on the same aggregate fingerprint.
 
 A legacy project may be without `.ai/framework.lock`. In that case use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence. Do not infer permission to delete an ambiguous file.

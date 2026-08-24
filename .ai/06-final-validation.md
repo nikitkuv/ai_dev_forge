@@ -49,7 +49,7 @@ If an earlier step is incomplete, return to that step and its approval gate.
 - Review Packet, structured review, and selected Task-testing revision/fingerprint evidence matches current implementation; code changes invalidate older evidence.
 - Task evidence contains no mandatory full project suite or unscoped project-wide check unless an explicit early-run request is recorded.
 - Epic Validation evidence is absent before `VALIDATING`, or current for the exact aggregate fingerprint and contains the full suite, project-wide checks, critical paths, requirement coverage, and applicable quality profiles.
-- Fuzzing evidence is absent before passing Epic Validation, or current for the same validated Epic fingerprint.
+- Fuzzing evidence is absent before passing Epic Validation, or current for the same validated Epic fingerprint. A `NOT APPLICABLE` result without a fuzzer invocation requires an approved `not applicable` plan, all final Task fuzzing impacts `none`, matching affected surfaces, passing alternative coverage, and recorded orchestrator freshness evidence; every `applicable`, `unresolved`, or contradictory case requires fuzzer evidence.
 - Task Acceptance, next Task Start, Epic Start, Replan, ADR Approval, and Epic Acceptance remain separate explicit gates.
 
 If no Epic was activated, report all approved planned workspaces in Backlog order, their Epic Start eligibility or blockers, and that no Task may start before one planned workspace passes Epic Start. Do not claim active development.
@@ -75,7 +75,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - Claude contains `.claude/forge/codex-role-runner.mjs`; Codex contains `.codex/forge/claude-role-runner.mjs`; both launchers match their templates, preserve complete neutral prompts, and expose fresh/read-only runtime metadata.
 - The Claude-to-Codex route pins `gpt-5.6-sol/medium`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode performs no external preflight.
 - Missing selected prerequisites and all post-start failures block the stage. No route implicitly falls back or switches provider.
-- The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite and fuzzer requires current Epic Validation evidence.
+- The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite, and fuzzer requires current Epic Validation evidence plus planned `applicable`, `unresolved`, or contradictory final evidence.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
 - No unresolved renderer placeholder remains; the shared project overlay appears identically in both routers.
 - Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.

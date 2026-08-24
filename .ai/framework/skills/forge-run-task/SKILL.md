@@ -22,7 +22,7 @@ description: Execute one approved Forge TASK through implementation, independent
    - rerun the focused tests and selected affected checks;
    - refactor only while tests remain green, then repeat for the next behavior.
 3. Documentation-only changes, generated artifacts, and simple configuration may record a concise TDD-not-applicable rationale instead. Exploration code is not completion evidence until the final implementation satisfies this contract.
-4. Run applicable scoped quality checks. Do not require the full project suite or unscoped project-wide checks; those belong to Epic Validation. An early full run requires the user's explicit request.
+4. Run applicable scoped quality checks and the bounded `Task fuzz smoke` when the actual fuzzing impact identifies an existing or new target or a completed harness. For impact `none`, verify the approved rationale still matches the actual changed and affected surfaces. Do not require the full project suite or unscoped project-wide checks; those belong to Epic Validation. An early full run requires the user's explicit request.
 5. If the actual changed or affected surface exceeds the approved Verification Plan, correct the implementation scope or update the in-scope verification selection with an explicit rationale. Removing or weakening an approved check requires orchestrator disposition; changed Task scope still requires Replan.
 6. Record a compact Implementation Summary, including base revision, affected-surface or risk changes, RED/GREEN evidence or the not-applicable rationale, selected command evidence, incremented revision, and reproducible fingerprint in the TASK.
 7. Build a Review Packet containing:
@@ -42,7 +42,7 @@ description: Execute one approved Forge TASK through implementation, independent
    - repeat independent review.
    A canonical-only issue is out of contract: the orchestrator handles it, does not route it to the implementer, and does not return the TASK to `IN PROGRESS` or treat it as a non-clean code-review outcome.
 10. After a clean, protocol-complete review, transition to `IN TESTING` and invoke `tester` for the exact reviewed revision, fingerprint, changed surface, Verification Plan, and review evidence.
-11. Require tests added or changed by the TASK, selected affected-component tests, and configured scoped quality checks. Do not require the full project suite or unscoped project-wide checks.
+11. Require tests added or changed by the TASK, selected affected-component tests, the applicable bounded Task fuzz smoke, and configured scoped quality checks. Record the final fuzzing impact and smoke result or current not-applicable rationale. Do not require the full project suite or unscoped project-wide checks.
 12. If testing fails, coverage or selection is missing, or the plan is stale, route evidence through the orchestrator to `implementer`, then repeat structured review and selected testing after any code change.
 
 The tester never writes tests or fixes code. The reviewer and tester report only to the orchestrator. Agents never invoke one another.
