@@ -8,7 +8,7 @@ Do not redesign, implement, silently repair canonical state, or create a validat
 
 ## Required Inputs
 
-Read the framework manifest and lifecycle/integration contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, both generated adapter sets, custom overlays, optional project-owned integration definitions/state, and Git state. Do not invoke local connectors.
+Read the framework manifest and lifecycle/integration/mutation-testing contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, both generated adapter sets, custom overlays, optional project-owned integration definitions/state, optional project-owned mutation history, and Git state. Do not invoke local connectors or mutation backends.
 
 If an earlier step is incomplete, return to that step and its approval gate.
 
@@ -49,7 +49,7 @@ If an earlier step is incomplete, return to that step and its approval gate.
 - Review Packet, structured review, and selected Task-testing revision/fingerprint evidence matches current implementation; code changes invalidate older evidence.
 - Task evidence contains no mandatory full project suite or unscoped project-wide check unless an explicit early-run request is recorded.
 - Epic Validation evidence is absent before `VALIDATING`, or current for the exact aggregate fingerprint and contains the full suite, project-wide checks, critical paths, requirement coverage, and applicable quality profiles.
-- Fuzzing evidence is absent before passing Epic Validation, or current for the same validated Epic fingerprint.
+- Fuzzing evidence is absent before passing Epic Validation, or current for the same validated Epic fingerprint. A `NOT APPLICABLE` result without a fuzzer invocation requires an approved `not applicable` plan, all final Task fuzzing impacts `none`, matching affected surfaces, passing alternative coverage, and recorded orchestrator freshness evidence; every `applicable`, `unresolved`, or contradictory case requires fuzzer evidence.
 - Task Acceptance, next Task Start, Epic Start, Replan, ADR Approval, and Epic Acceptance remain separate explicit gates.
 
 If no Epic was activated, report all approved planned workspaces in Backlog order, their Epic Start eligibility or blockers, and that no Task may start before one planned workspace passes Epic Start. Do not claim active development.
@@ -57,7 +57,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 ## Validate Ownership State
 
 - Framework-owned, project-owned, and generated paths match `.ai/framework/manifest.yaml`.
-- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, canonical documents, ADRs, and execution state were not overwritten as framework release content.
+- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, optional `quality/mutation-testing/`, canonical documents, ADRs, and execution state were not overwritten as framework release content.
 - Lock source hashes match actual managed-output inputs: neutral sources, renderers, configuration, and custom overlays. Local integration definitions/state are validated separately and do not create framework drift.
 - Generated adapter hashes match current outputs or the collision is explicitly reported.
 - Obsolete framework-owned files, including the former Step 05, are absent.
@@ -75,13 +75,15 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - Claude contains `.claude/forge/codex-role-runner.mjs`; Codex contains `.codex/forge/claude-role-runner.mjs`; both launchers match their templates, preserve complete neutral prompts, and expose fresh/read-only runtime metadata.
 - The Claude-to-Codex route pins `gpt-5.6-sol/medium`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode performs no external preflight.
 - Missing selected prerequisites and all post-start failures block the stage. No route implicitly falls back or switches provider.
-- The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite and fuzzer requires current Epic Validation evidence.
+- The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite, and fuzzer requires current Epic Validation evidence plus planned `applicable`, `unresolved`, or contradictory final evidence.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
 - No unresolved renderer placeholder remains; the shared project overlay appears identically in both routers.
 - Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
 - Both routers contain byte-identical Common Engineering Prohibitions without missing or weakened entries.
 - The framework generated no hooks, MCP configuration, or mandatory CLI dependency. Cross-provider modes use user-installed runtimes only when selected; native mode requires neither. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 - A clean project has no `.ai/integrations/` and passes without connector preflight. Supported, custom, malformed, future-version, or offline integrations remain project-owned; only their consumers are blocked unless an ownership/safety collision exists.
+- A clean project has no `quality/mutation-testing/` and passes without a mutation backend or preflight. When history exists, registry and `MUT-NNNN` records pass the independent schema, identity, fingerprint, metrics, artifact, analysis-authorization and disposition checks; their outcomes have no lifecycle or gate effect.
+- The generated set contains fast `mutation-runner`, strong `mutation-analyzer`, and `forge-mutation-test` on both platforms. Metrics-only is the default, strong analysis requires explicit authorization plus current candidates and budget, and neither role may install tools, edit tracked files, remediate, change lifecycle state, or spawn agents.
 
 ## Simulate Recovery
 
@@ -97,7 +99,8 @@ Ignore conversation history and reconstruct:
 8. current Review Packet, selected Task checks, Epic Verification Plan, quality profiles, Epic Validation and fuzzing evidence;
 9. unfinished changes from Git status and diff;
 10. adapter provenance from `.ai/framework.lock`.
-11. optional integration compatibility and work-source relationships from project-owned `.ai/integrations/`, without using them as lifecycle authority.
+11. optional integration compatibility and work-source relationships from project-owned `.ai/integrations/`, without using them as lifecycle authority;
+12. optional mutation history from `quality/mutation-testing/`, without using it as lifecycle or development evidence authority.
 
 The same repository state must yield the same current gate. Missing persisted agent evidence means that stage must be rerun.
 

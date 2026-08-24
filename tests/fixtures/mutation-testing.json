@@ -1,0 +1,65 @@
+[
+  {
+    "name": "metrics-only success",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 4, "noCoverage": 1, "fingerprintCurrent": true, "artifactsCurrent": true},
+    "analysisAuthorized": false,
+    "analysisBudget": 20,
+    "expectedAnalysis": "not_requested"
+  },
+  {
+    "name": "all mutants killed",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 0, "noCoverage": 0, "fingerprintCurrent": true, "artifactsCurrent": true},
+    "analysisAuthorized": true,
+    "analysisBudget": 20,
+    "expectedAnalysis": "skipped_no_candidates"
+  },
+  {
+    "name": "authorized survivors",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 3, "noCoverage": 0, "fingerprintCurrent": true, "artifactsCurrent": true},
+    "analysisAuthorized": true,
+    "analysisBudget": 20,
+    "expectedAnalysis": "invoke"
+  },
+  {
+    "name": "deferred current analysis",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 2, "noCoverage": 0, "fingerprintCurrent": true, "artifactsCurrent": true, "existingRunId": "MUT-0007"},
+    "analysisAuthorized": true,
+    "analysisBudget": 10,
+    "expectedAnalysis": "invoke_without_rerun"
+  },
+  {
+    "name": "setup required",
+    "run": {"outcome": "SETUP REQUIRED", "baseline": "not_run", "survived": 0, "noCoverage": 0, "fingerprintCurrent": true, "artifactsCurrent": false},
+    "analysisAuthorized": true,
+    "analysisBudget": 20,
+    "expectedAnalysis": "blocked"
+  },
+  {
+    "name": "baseline failure",
+    "run": {"outcome": "BLOCKED", "baseline": "failed", "survived": 0, "noCoverage": 0, "fingerprintCurrent": true, "artifactsCurrent": false},
+    "analysisAuthorized": true,
+    "analysisBudget": 20,
+    "expectedAnalysis": "blocked"
+  },
+  {
+    "name": "stale fingerprint",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 2, "noCoverage": 0, "fingerprintCurrent": false, "artifactsCurrent": true},
+    "analysisAuthorized": true,
+    "analysisBudget": 20,
+    "expectedAnalysis": "stale"
+  },
+  {
+    "name": "bounded partial analysis",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 50, "noCoverage": 10, "fingerprintCurrent": true, "artifactsCurrent": true},
+    "analysisAuthorized": true,
+    "analysisBudget": 20,
+    "expectedAnalysis": "invoke_partial"
+  },
+  {
+    "name": "later disposition remains informational",
+    "run": {"outcome": "COMPLETED", "baseline": "passed", "survived": 1, "noCoverage": 0, "fingerprintCurrent": true, "artifactsCurrent": true, "disposition": {"status": "scheduled", "references": ["EPIC-014", "TASK-031"]}},
+    "analysisAuthorized": false,
+    "analysisBudget": 20,
+    "expectedAnalysis": "not_requested"
+  }
+]

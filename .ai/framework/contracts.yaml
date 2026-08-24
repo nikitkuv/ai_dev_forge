@@ -20,6 +20,62 @@ enums:
   epic_validation_outcomes: [PASSED, "PASSED WITH ACCEPTED EXCEPTIONS", FAILED, BLOCKED]
   task_risk_levels: [low, standard, high]
   quality_profiles: [backend, frontend, ml, data_pipeline, infrastructure, library_cli]
+  mutation_run_outcomes: [COMPLETED, PARTIAL, INCONCLUSIVE, "SETUP REQUIRED", BLOCKED, CANCELLED]
+  mutation_analysis_statuses: [not_requested, skipped_no_candidates, completed, partial, blocked, stale]
+
+mutation_testing:
+  invocation: explicit_user_request_only
+  lifecycle_coupling: forbidden
+  default_mode: metrics_only
+  optional_registry: quality/mutation-testing/
+  clean_project_requires_registry: false
+  backend_required_by_default: false
+  install_or_configuration_requires: separate_explicit_user_authorization
+  run_packet_requires:
+    - mutation_run_id
+    - repository_root
+    - source_scope
+    - test_scope
+    - exclusions
+    - base_revision
+    - scoped_fingerprint
+    - baseline_command
+    - mutation_command
+    - backend_identity_and_version
+    - execution_budget
+    - runtime_artifact_destination
+  runner:
+    model_tier: fast
+    baseline_first: true
+    fingerprint_checks: [before_baseline, before_mutation, after_mutation]
+    write_policy: runtime_artifacts_only
+    normalized_metrics: [generated, killed, survived, no_coverage, timeout, invalid_or_error, duration, backend_reported_score]
+    forbidden: [tool_installation, tracked_source_edits, tracked_test_edits, apply_mutant, lifecycle_edits, development_work_creation, agent_spawning]
+  analyzer:
+    model_tier: strong
+    explicit_authorization_required: true
+    invocation_requires: [current_run_fingerprint, current_artifact_checksums, positive_analysis_budget, analysis_candidates]
+    candidates: [survived, no_coverage, explicitly_configured]
+    skip_when: [analysis_not_requested, no_candidates, baseline_failed, setup_required, unusable_run, stale_artifacts, zero_budget]
+    supports_deferred_analysis_without_rerun: true
+    write_policy: runtime_artifacts_only
+    classifications: [actionable_test_gap, likely_equivalent, low_value, unreachable_code, wrong_test_selection, production_defect_suspected, unresolved]
+    forbidden: [tool_installation, source_edits, test_edits, remediation, lifecycle_edits, development_work_creation, agent_spawning]
+  records:
+    id_format: MUT-NNNN
+    registry: quality/mutation-testing/registry.yaml
+    run_glob: quality/mutation-testing/runs/MUT-*.yaml
+    allocate_for_every_attempt: true
+    orchestrator_owned_updates: true
+    raw_artifacts_tracked_by_default: false
+    run_required_fields: [schema_version, id, started_at, run, scope, fingerprint, tool, budget, baseline, results, artifacts, analysis, disposition]
+    analysis_updates_same_run: true
+  development_effects:
+    lifecycle_status_changes: forbidden
+    gate_satisfaction: forbidden
+    evidence_invalidation: forbidden
+    automatic_bug_task_epic_or_replan: forbidden
+    follow_up_requires: separate_user_decision_and_existing_workflow
 
 # Stable machine-friendly spellings for status values that contain spaces.
 machine_tokens:
@@ -67,7 +123,7 @@ gates:
     note: Task acceptance and permission to start the next task are separate gates; one message may authorize both only when it explicitly states both decisions.
   epic_plan_approval:
     effect: "write approved plan and TASK definitions under execution/planned without changing Epic lifecycle status"
-    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, explicit_user_approval]
+    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, valid_epic_fuzzing_plan_proposal, explicit_user_approval]
     permits: [declared_unsatisfied_dependencies, declared_blockers, another_active_work_epic]
   epic_start:
     transition: "PLANNED -> ACTIVE"
@@ -75,7 +131,7 @@ gates:
     atomic_effects: [move_execution_planned_to_active, update_backlog_status]
   epic_validation:
     transition: "ACTIVE -> VALIDATING"
-    requires: [all_planned_tasks_DONE, current_task_evidence, approved_epic_verification_plan]
+    requires: [all_planned_tasks_DONE, current_task_evidence, approved_epic_verification_plan, approved_epic_fuzzing_plan]
   epic_fuzzing:
     transition: "VALIDATING -> FUZZING"
     requires: [current_epic_validation_evidence, epic_validation_acceptance_satisfied]
@@ -93,6 +149,21 @@ gates:
 
 fuzzing:
   mandatory_after: epic_validation_acceptance_satisfied
+  mandatory_subject: fuzzing_gate
+  planning_applicability: [applicable, "not applicable", unresolved]
+  plan_requirements:
+    applicable: [risk_surfaces, targets_and_invariants, harness_readiness, task_mapping, reproducible_campaign, failure_criteria, artifact_handling, execution_constraints]
+    "not applicable": [rationale, alternative_risk_coverage]
+    unresolved: [exact_missing_evidence_or_blocker]
+  agent_invocation:
+    required_when: [planned_applicable, planned_unresolved, final_evidence_contradicts_planned_not_applicable]
+    skipped_when:
+      - approved_plan_not_applicable
+      - all_final_task_fuzzing_impacts_none
+      - actual_affected_surface_matches_approved_plan
+      - alternative_risk_coverage_passed
+      - current_aggregate_fingerprint_matches_epic_validation
+    skipped_outcome: "NOT APPLICABLE"
   acceptance_gate:
     id: fuzzing_acceptance_satisfied
     satisfied_by:
@@ -133,6 +204,7 @@ quality_gates:
       - affected_surface_and_risk_flags
       - focused_behavior_evidence
       - selected_affected_checks
+      - planned_fuzzing_impact_and_task_smoke
       - current_structured_review
       - current_task_test_evidence
       - reproducible_manual_verification
@@ -149,6 +221,7 @@ quality_gates:
       - project_wide_lint_typecheck_and_build
       - cross_component_and_critical_path_validation
       - applicable_quality_profile_gates
+      - approved_epic_fuzzing_plan
       - current_fuzzing_outcome
       - current_documentation_and_operational_evidence
       - no_unaccepted_blocking_risk
@@ -184,6 +257,11 @@ epic_validation:
       requires: [exact_blocker, risk_statement, replan_or_user_direction]
 
 invariants:
+  - mutation_testing_is_explicit_on_demand_and_lifecycle_independent
+  - mutation_attempts_have_durable_project_owned_records
+  - mutation_runner_is_fast_baseline_first_and_runtime_artifacts_only
+  - mutation_analyzer_requires_explicit_authorization_current_candidates_and_budget
+  - mutation_findings_never_create_or_change_development_work_automatically
   - local_integrations_are_optional_project_owned_state
   - absent_integrations_never_block_clean_forge_workflows
   - integration_registration_never_grants_implicit_invocation
@@ -203,5 +281,7 @@ invariants:
   - task_check_selection_is_justified_by_changed_and_affected_surfaces
   - task_tester_never_silently_expands_to_the_full_project_suite
   - epic_validation_precedes_epic_fuzzing
+  - planned_not_applicable_skips_fuzzer_only_with_current_final_evidence
+  - planned_applicable_unresolved_or_contradictory_evidence_invokes_fuzzer
   - task_commit_never_precedes_explicit_user_acceptance
   - next_epic_never_starts_automatically

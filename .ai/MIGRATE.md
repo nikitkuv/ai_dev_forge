@@ -22,7 +22,7 @@ Stop if the directories resolve to the same path, the staged manifest is incompl
 Before writing:
 
 1. read both manifests, contracts, workflows, templates, neutral agents, and portable skills;
-2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, and project-owned `.ai/integrations/`; read old and staged integration contracts when present;
+2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, project-owned `.ai/integrations/`, and project-owned `quality/mutation-testing/`; read old and staged integration and mutation-testing contracts when present;
 3. inspect Git status and identify a recoverable baseline;
 4. inspect `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, and `.claude/`;
 5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
@@ -30,14 +30,14 @@ Before writing:
 7. without invoking MCP, API, CLI, or other connectors, classify each integration definition/state file as `absent`, `current_supported`, `older_migratable`, `malformed`, `unsupported_future`, `custom_profile`, or `ownership_collision`.
 8. inspect `role_execution.mode`; when absent, show the old effective provider behavior and require an explicit selection. For a 4.2 project, offer `claude_with_codex` only as the compatibility-preserving suggestion, never as an implicit write.
 
-Absence of `.ai/integrations/` is the clean Forge baseline. It adds no migration step, preflight, file, or blocker. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself.
+Absence of `.ai/integrations/` and `quality/mutation-testing/` is the clean Forge baseline. Neither absence adds a migration step, preflight, file, or blocker. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself. Existing mutation history is preserved byte-for-byte and never used as managed render input.
 
 For upgrades to v4 or later, also inspect:
 
 - whether `.ai/project.yaml` has approved `quality.profiles`, Task-scoped command catalogs, Epic-wide commands, and selection rules;
-- whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, and appropriate evidence;
+- whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, an Epic Fuzzing Plan, and appropriate evidence;
 - whether any existing `execution/planned/` directory maps to exactly one `PLANNED + READY` Backlog Epic and contains only approved `TODO` definitions;
-- whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans, Review Packets, and structured review evidence;
+- whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans with fuzzing impact and Task smoke, Review Packets, and structured review evidence;
 - whether an Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` has a current passing Epic Validation result on the same aggregate fingerprint.
 
 A legacy project may be without `.ai/framework.lock`. In that case use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence. Do not infer permission to delete an ambiguous file.
@@ -54,6 +54,7 @@ Treat all paths outside the approved framework and adapter allowlist as read-onl
 - `execution/`;
 - project source code, tests, data, and unrelated configuration.
 - `.ai/integrations/`, project-owned integration consumers, and connector configuration.
+- `quality/mutation-testing/` registry, runs, retained artifacts, and dispositions.
 
 Report a canonical schema difference as a compatibility finding. Do not edit, rename, reformat, or migrate canonical content in this workflow.
 
@@ -90,7 +91,7 @@ Install no global agent or skill. Manage only IDs declared by the staged manifes
 .claude/forge/codex-role-runner.mjs
 ```
 
-Keep all nine generated agents on both platforms. Copy both managed launchers and the three-mode metadata, but do not install, authenticate, preflight, or invoke either external provider during migration. An unavailable explicitly selected external route blocks its role stage and never falls back; `native_subagents` is the explicit mode for internal agents. Roll back configuration, both launchers, route metadata, adapters, and lock as one unit while retaining project-owned state.
+Keep all eleven generated agents on both platforms, including the fast `mutation-runner` and strong `mutation-analyzer`. Copy both managed launchers and the three-mode metadata, but do not install, authenticate, preflight, or invoke either external provider or a mutation backend during migration. An unavailable explicitly selected external route blocks its role stage and never falls back; `native_subagents` is the explicit mode for internal agents. Roll back configuration, both launchers, route metadata, adapters, and lock as one unit while retaining project-owned state.
 
 Remove or replace recognized legacy Forge entries, install the complete staged Forge set, and preserve unlisted project-owned entries. Preserve `.codex/config.toml`, Claude settings, commands, hooks, and other adjacent platform configuration. Stop on a same-ID collision until the user chooses the exact replacement.
 
@@ -115,9 +116,9 @@ Request explicit approval for this exact scope. Approval of migration never auth
 
 After approval:
 
-1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, existing lock, and any project-owned integration paths that the staged operation references;
+1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, existing lock, project-owned mutation history, and any project-owned integration paths that the staged operation references;
 2. build staged candidate outputs without changing active targets;
-3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` (including one explicit role-execution mode) and `.ai/custom/` project state while preserving optional `.ai/integrations/` and project-owned consumers byte-for-byte; add missing quality configuration only from explicit user decisions and confirmed repository or CI evidence;
+3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` (including one explicit role-execution mode) and `.ai/custom/` project state while preserving optional `.ai/integrations/`, `quality/mutation-testing/`, and project-owned consumers byte-for-byte; add missing quality or mutation configuration only from explicit user decisions and confirmed repository or CI evidence, and never install a mutation backend;
 4. replace recognized Forge adapter IDs while preserving unlisted files;
 5. replace the active bundle and both byte-identical routers as one logical operation;
 6. run `forge-check-framework` against the candidate result;

@@ -1,7 +1,7 @@
 schema_version: 2
 framework:
   name: ai-dev-forge
-  version: 4.3.0
+  version: 4.4.0
 
 platforms:
   codex:
@@ -55,3 +55,21 @@ quality:
     integration_commands: []
     e2e_commands: []
   selection_rules: []
+
+# Optional and lifecycle-independent. Leave null unless the user separately
+# approves a mutation backend and every command is supported by repository,
+# build-system, or CI evidence. Bootstrap and migration never install a backend
+# or create `quality/mutation-testing/` history.
+mutation_testing:
+  backend: null
+  version_command: null
+  baseline_command: null
+  mutation_command: null
+  result_adapter: null
+  scope_syntax: null
+  execution_constraints: []
+  budgets:
+    timeout_seconds: null
+    workers: null
+    maximum_candidates: null
+  artifact_policy: compact_only

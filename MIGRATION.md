@@ -1,5 +1,13 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.4
+
+v4.4 добавляет независимый `forge-mutation-test`, fast `mutation-runner`, strong `mutation-analyzer` и project-owned историю `quality/mutation-testing/`. Эти возможности не добавляют Epic/TASK transition или quality gate, не требуют mutation backend по умолчанию и не запускаются во время bootstrap, migration, adapter sync или обычной разработки.
+
+Migration устанавливает новые manifest-declared agent/skill adapters, но не устанавливает `mutmut` или другой backend и не создаёт mutation registry. Существующий `quality/mutation-testing/` сохраняется byte-for-byte, не входит в managed-output hashes и восстанавливается при rollback. Отсутствие каталога — clean baseline и не является blocker.
+
+Если старый проект уже имеет собственный файл или skill с ID `mutation-runner`, `mutation-analyzer` или `forge-mutation-test`, migration показывает same-ID collision и ждёт точного решения пользователя. Неизвестные mutation artifacts вне нового project-owned path остаются защищёнными как unrelated project state.
+
 ## Обновление до v4.2
 
 v4.2 добавляет необязательный универсальный registry локальных интеграций и `work_source` intake. Чистый Forge по-прежнему не имеет `.ai/integrations/`, не требует connector runtime и проходит migration по прежнему основному пути.
@@ -14,7 +22,7 @@ v4.3 заменяет неявный preferred/fallback route явным `role_e
 
 Для проекта v4.2 миграция показывает прежнее эффективное поведение и предлагает `claude_with_codex` как совместимый вариант, но записывает его только после подтверждения. Она генерирует оба launcher и сохраняет native agents, не устанавливая и не авторизуя внешние runtimes. Недоступный выбранный route блокирует роль без fallback; откат восстанавливает прежнюю конфигурацию, adapters и lock одной транзакцией.
 
-Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `.ai/integrations/`, project-owned consumers, `decisions/`, `execution/`, код и тесты проекта не изменяются framework-транзакцией.
+Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `.ai/integrations/`, `quality/mutation-testing/`, project-owned consumers, `decisions/`, `execution/`, код и тесты проекта не изменяются framework-транзакцией.
 
 ## Что получится
 
@@ -120,7 +128,7 @@ Communicate with me in Russian.
 
 Сначала агент работает read-only и показывает полный diff: замену `.ai/`, объединение проектного содержимого routers и legacy platform-specific overlays в shared overlay, два идентичных итоговых router-файла, удаляемые старые Forge adapters, устанавливаемые локальные adapters, integration compatibility matrix, collisions и rollback source. Legacy `.ai/custom/codex-router.md` и `.ai/custom/claude-router.md` удаляются только после backup и явного подтверждения их merge. Противоречия с `BACKLOG.md` агент сообщает, но сам `BACKLOG.md` не изменяет. Ничего не подтверждайте, пока в framework diff присутствует canonical, integration или product path.
 
-Для проекта со старым planned/active/paused Epic агент отдельно покажет compatibility findings: отсутствующие quality profiles, Verification Plans, Review Packets, planned-workspace mapping и Epic Validation evidence. Миграция не создаёт `execution/planned/` из строк Backlog и не перемещает execution-каталоги автоматически. После миграции findings исправляются через `forge-resume-development` и требуемые user gates. Старый Epic в `FUZZING` или `AWAITING EPIC ACCEPTANCE` нельзя завершить, пока полный Epic Validation не пройдёт на текущем aggregate fingerprint.
+Для проекта со старым planned/active/paused Epic агент отдельно покажет compatibility findings: отсутствующие quality profiles, Epic Verification Plan, Epic Fuzzing Plan, Task fuzzing impact/smoke, Review Packets, planned-workspace mapping и Epic Validation evidence. Миграция не создаёт `execution/planned/` из строк Backlog и не перемещает execution-каталоги автоматически. После миграции findings исправляются через `forge-resume-development` и требуемые user gates. Старый Epic в `FUZZING` или `AWAITING EPIC ACCEPTANCE` нельзя завершить, пока полный Epic Validation не пройдёт на текущем aggregate fingerprint и fuzzing gate не получит актуальный outcome.
 
 После подтверждения агент создаёт backup, применяет staged-кандидаты, проверяет защищённые пути и точное сохранение `.ai/integrations/`, и только затем создаёт `.ai/framework.lock`. При ошибке он восстанавливает старую `.ai/`, адаптеры и project-owned integration bytes. После успеха `.ai-next/` удаляется.
 

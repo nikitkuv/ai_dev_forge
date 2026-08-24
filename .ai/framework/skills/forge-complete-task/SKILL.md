@@ -41,4 +41,4 @@ Never include unrelated user changes in the commit.
 
 Task Acceptance and permission to start the next TASK are separate decisions. Do not start, delegate, or transition the next TASK unless the user explicitly authorizes its Task Start gate, even when the same message accepted the previous TASK.
 
-If accepted work was the final TASK in the Epic, hand control to `forge-complete-epic` for automatic Epic Validation followed by read-only fuzzing. Otherwise report the next eligible TASK and ask whether the user wants to start it.
+If accepted work was the final TASK in the Epic, hand control to `forge-complete-epic` for automatic Epic Validation followed by the fuzzing gate; the fuzzer is invoked only for planned `applicable`, `unresolved`, or contradictory final evidence. Otherwise report the next eligible TASK and ask whether the user wants to start it.

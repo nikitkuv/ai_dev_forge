@@ -1,6 +1,6 @@
 framework:
   name: ai-dev-forge
-  version: 4.3.0
+  version: 4.4.0
   schema_version: 2
 
 adapters: [codex, claude]
@@ -30,6 +30,7 @@ ownership:
     - DECISIONS.md
     - decisions/
     - execution/
+    - quality/mutation-testing/
     - hooks/
     - mcp/
   generated_adapter_outputs:
@@ -59,10 +60,11 @@ skills:
   - forge-complete-epic
   - forge-migrate-framework
   - forge-security-audit
+  - forge-mutation-test
   - forge-check-framework
   - forge-sync-adapters
 
-subagents: [context-collector, documentation-researcher, epic-planner, implementer, reviewer, tester, epic-validator, fuzzer, security-auditor]
+subagents: [context-collector, documentation-researcher, epic-planner, implementer, reviewer, tester, epic-validator, fuzzer, security-auditor, mutation-runner, mutation-analyzer]
 
 role_execution:
   config_path: role_execution.mode
@@ -104,3 +106,7 @@ optional_capabilities:
   local_integrations:
     supported: true
     generated_by_default: false
+  mutation_testing:
+    supported: true
+    generated_by_default: false
+    backend_required_by_default: false

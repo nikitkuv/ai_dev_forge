@@ -22,7 +22,8 @@ For ongoing work, recover state from canonical files and Git, not session histor
 6. Active or paused Epic `plan.md` — strategy, Task order, quality profiles, Epic Validation, fuzzing, and user validation.
 7. TASK files — the only Task lifecycle state and Task evidence.
 8. Optional `.ai/integrations/` — project-owned capability definitions and work-source provenance; absence is the clean baseline.
-9. Git status and diff — unfinished file changes.
+9. Optional `quality/mutation-testing/` — project-owned, lifecycle-independent mutation run history; absence is the clean baseline.
+10. Git status and diff — unfinished file changes.
 
 Report contradictions instead of silently reconciling them.
 
@@ -59,7 +60,8 @@ Explicitly invoke the matching bundled Forge skill by its exact name using the p
 - Bootstrap: `forge-bootstrap-new`, `forge-bootstrap-existing`.
 - Intake and priority: `forge-intake-feature`, `forge-intake-bug`, `forge-intake-external-work`, `forge-reprioritize-backlog`.
 - Execution: `forge-prepare-epic`, `forge-resume-development`, `forge-run-task`, `forge-complete-task`, `forge-complete-epic`.
-- Maintenance: `forge-migrate-framework`, `forge-security-audit`, `forge-check-framework`, `forge-sync-adapters`.
+- Diagnostics: `forge-security-audit`, `forge-mutation-test`.
+- Maintenance: `forge-migrate-framework`, `forge-check-framework`, `forge-sync-adapters`.
 
 Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not add lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
 
@@ -77,15 +79,17 @@ Project configuration may explicitly override these defaults in `.ai/project.yam
 
 - `context-collector` — fast local state and code context.
 - `documentation-researcher` — fast authoritative external research.
-- `epic-planner` — strong read-only Epic decomposition, risk analysis, and verification planning.
+- `epic-planner` — strong read-only Epic decomposition, risk analysis, verification planning, and fuzzing applicability planning.
 - `implementer` — balanced code and test implementation for one authorized TASK.
 - `reviewer` — strong independent read-only review.
 - `tester` — fast selected Task and affected verification without the full project suite.
 - `epic-validator` — balanced full regression, project-wide checks, critical paths, and quality-profile validation.
-- `fuzzer` — balanced read-only Epic fuzzing after current Epic Validation passes.
+- `fuzzer` — balanced read-only Epic fuzzing after current Epic Validation passes when the approved plan is `applicable` or `unresolved`, or final evidence is contradictory.
 - `security-auditor` — strong on-demand local read-only security analysis.
+- `mutation-runner` — fast bounded baseline and mutation-backend execution with normalized runtime evidence.
+- `mutation-analyzer` — strong explicitly authorized analysis of current mutation candidates.
 
-Epic planner, reviewer, tester, Epic validator, fuzzer, and security auditor return results to the orchestrator. The orchestrator routes corrections and records compact summaries in the existing TASK or plan; no separate report Markdown files are created.
+Epic planner, reviewer, tester, Epic validator, fuzzer, security auditor, mutation runner, and mutation analyzer return results to the orchestrator. Mutation records live only under optional project-owned `quality/mutation-testing/` and never change development lifecycle state. Other corrections and compact summaries remain in the existing TASK or plan; no separate report Markdown files are created.
 
 ## Planner and reviewer execution mode
 
@@ -102,5 +106,6 @@ Run no more than one code-writing Task at a time. Independent read-only research
 - Project-specific router additions belong only in `.ai/custom/router-shared.md`; synchronize rather than editing generated files.
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.
 - `.ai/integrations/` is optional project-owned state. Registration alone grants no tool authority; only an explicitly selected compatible consumer may use allowed operations. Missing or invalid integrations block only their consumers, and framework upgrade never requires a live connector.
+- `quality/mutation-testing/` is optional project-owned history created only by an explicit mutation request. A bare request is metrics-only; strong analysis requires separate authorization and current candidates. Mutation outcomes never change Epic, TASK, Backlog, gate, evidence, acceptance, or commit state.
 
 {{ custom.router_shared }}

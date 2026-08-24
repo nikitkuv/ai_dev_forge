@@ -148,7 +148,8 @@ Tester не пишет тесты и не исправляет код. Он за
 
 1. новые и изменённые TASK tests;
 2. выбранные affected-component tests;
-3. scoped lint, typecheck, build и применимые profile-specific checks.
+3. bounded `Task fuzz smoke` для affected target или completed harness; для impact `none` проверяет rationale против actual surface;
+4. scoped lint, typecheck, build и применимые profile-specific checks.
 
 #### Ветка A: тесты упали
 
@@ -271,8 +272,9 @@ Commit требует отдельного разрешения при manual po
 2. Устанавливает exact aggregate fingerprint и переводит Epic `ACTIVE → VALIDATING`.
 3. Автоматически вызывает `epic-validator` с tier `balanced` для full suite, project-wide checks, critical paths и выбранных quality profiles.
 4. Записывает Epic Validation Summary в `plan.md`.
-5. Только после passing outcome переводит Epic `VALIDATING → FUZZING` и вызывает read-only `fuzzer`.
-6. Записывает Fuzzing Summary в `plan.md` и не создаёт отдельных validation/fuzzing report-файлов.
+5. Только после passing outcome переводит Epic `VALIDATING → FUZZING` и сверяет approved Epic Fuzzing Plan с итоговыми Task impacts, actual affected surface, alternative coverage и fingerprint.
+6. Для текущего approved `not applicable` записывает `NOT APPLICABLE` без вызова subagent; для `applicable`, `unresolved` или противоречащих evidence вызывает read-only `fuzzer`.
+7. Записывает Fuzzing Summary в `plan.md` и не создаёт отдельных validation/fuzzing report-файлов.
 
 Epic Validation outcomes: `PASSED`, `PASSED WITH ACCEPTED EXCEPTIONS`, `FAILED` и `BLOCKED`. Failures или blockers возвращают Epic в `ACTIVE`; remediation требует Replan и нового TASK lifecycle. Любое implementation change требует повторной Epic Validation перед fuzzing.
 
@@ -286,10 +288,14 @@ FUZZING → AWAITING EPIC ACCEPTANCE
 
 #### `NOT APPLICABLE`
 
-Разрешён только с двумя записями в plan:
+Разрешён только с текущими evidence в plan:
 
 - почему подходящего fuzz target нет;
 - какое alternative risk coverage выполнено.
+- почему все итоговые Task fuzzing impacts и actual affected surface всё ещё соответствуют approved plan;
+- какой aggregate fingerprint совпадает с passing Epic Validation.
+
+Если эти условия выполнены для approved `not applicable`, оркестратор не вызывает fuzzer. При любом расхождении вызывает его.
 
 После этого Epic может перейти в `AWAITING EPIC ACCEPTANCE`.
 
@@ -434,7 +440,7 @@ IN REVIEW
   ├── findings ───────────────► IN PROGRESS
   ▼ clean
 IN TESTING
-  │ tester: focused + selected affected + scoped checks
+  │ tester: focused + selected affected + fuzz smoke + scoped checks
   ├── failure ────────────────► IN PROGRESS → review again
   ▼ pass
 AWAITING USER ACCEPTANCE
@@ -455,7 +461,7 @@ AWAITING USER ACCEPTANCE
 | `reviewer` | strong | после implementation revision | нет | нет |
 | `tester` | fast | после clean review | нет | нет |
 | `epic-validator` | balanced | после `DONE` всех planned TASK | нет | нет |
-| `fuzzer` | balanced | после passing Epic Validation | нет | нет |
+| `fuzzer` | balanced | после passing Epic Validation для `applicable`, `unresolved` или противоречащих evidence | нет | нет |
 | `security-auditor` | strong | только явный запрос пользователя | нет | нет |
 
 Субагенты не вызывают друг друга. Все результаты возвращаются оркестратору.
@@ -516,7 +522,7 @@ AWAITING USER ACCEPTANCE
 - Любая Task-правка кода требует нового structured review и selected Task testing; aggregate changes также инвалидируют Epic Validation и fuzzing.
 - Проблема в непринятой TASK остаётся в этой TASK.
 - Проблема в принятом коде получает `BUG-*` только после подтверждения.
-- После последней TASK автоматически запускается полный Epic Validation; read-only fuzzing начинается только после passing outcome.
+- После последней TASK автоматически запускается полный Epic Validation; затем обязательный fuzzing gate либо подтверждает текущий `NOT APPLICABLE` без subagent, либо вызывает read-only fuzzer для `applicable`, `unresolved` или противоречащих evidence.
 - Security audit запускается только вручную.
 - История чата полезна, но не является источником истины.
 - Следующая TASK и следующий Epic никогда не стартуют автоматически.

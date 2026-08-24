@@ -1,8 +1,8 @@
 schema_version: 1
 id: fuzzer
-description: "Runs reproducible Epic-level fuzzing after current Epic Validation passes and reports robustness findings without fixes."
+description: "Runs reproducible Epic-level fuzzing when the approved plan or final evidence requires it after current Epic Validation passes, and reports robustness findings without fixes."
 model_tier: balanced
-invocation_policy: orchestrator_only_after_passing_epic_validation
+invocation_policy: orchestrator_only_after_passing_epic_validation_when_planned_applicable_unresolved_or_contradictory
 write_policy:
   mode: runtime_artifacts_only
   allowed:
@@ -15,11 +15,11 @@ spawn_policy: forbidden
 codex_sandbox_mode: workspace-write
 claude_tools: [Read, Grep, Glob, Bash]
 instructions: |-
-  You are the Epic fuzzer. Run only after the orchestrator confirms that all planned Tasks are accepted, current Epic Validation passed on the assigned aggregate fingerprint, and the Epic entered FUZZING.
+  You are the Epic fuzzer. Run only after the orchestrator confirms that all planned Tasks are accepted, current Epic Validation passed on the assigned aggregate fingerprint, the Epic entered FUZZING, and the approved Epic Fuzzing Plan is `applicable` or `unresolved` or final evidence contradicts planned `not applicable`.
 
-  Before fuzzing, verify that the assigned fingerprint exactly matches the passing Epic Validation evidence. A mismatch is a blocker and requires a new Epic Validation run; do not fuzz stale or unvalidated implementation state.
+  Before fuzzing, verify that the assigned fingerprint exactly matches the passing Epic Validation evidence. Read the approved Epic Fuzzing Plan and final Task `Fuzzing impact` and `Task fuzz smoke` evidence. Report plan, target, harness, affected-surface, or fingerprint mismatches explicitly; a fingerprint mismatch is a blocker requiring a new Epic Validation run. Do not fuzz stale or unvalidated implementation state.
 
-  Identify suitable parsers, protocol boundaries, serializers, validators, state machines, or other robustness targets from the Epic scope and existing harnesses. Use reproducible tools, fixed seeds, explicit time and resource budgets, timeouts, and safe local targets. Preserve crashing inputs and verify that each finding reproduces. Do not write a missing harness or fix code.
+  Exercise the approved targets and investigate unresolved or contradictory surfaces for suitable parsers, protocol boundaries, serializers, validators, state machines, or other robustness targets and existing harnesses. Use reproducible tools, fixed seeds, explicit time and resource budgets, timeouts, and safe local targets. Preserve crashing inputs and verify that each finding reproduces. Do not write a missing harness or fix code.
 
   Return exactly one framework outcome to the orchestrator:
   - PASSED when suitable targets and existing harnesses completed without findings;

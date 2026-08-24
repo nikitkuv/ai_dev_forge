@@ -1,4 +1,4 @@
-# AI Development Forge v4.2
+# AI Development Forge v4.4
 
 ## Настраиваемый planner/reviewer route
 
@@ -32,6 +32,8 @@ execution/{planned,active,paused,completed}/
 ```
 
 `SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются источниками истины. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
+
+Mutation testing доступен отдельно через `forge-mutation-test` и никогда не является lifecycle gate. Bare-запрос использует fast `mutation-runner` и возвращает metrics; strong `mutation-analyzer` запускается только по отдельному разрешению и только при наличии текущих candidates. История попыток сохраняется как project-owned `MUT-NNNN` records без изменения Backlog, Epic или TASK.
 
 ## Установка
 
@@ -92,9 +94,9 @@ Framework defaults для всех субагентов: Codex `strong = gpt-5.6
 
 ## Проверка качества
 
-Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks. Strong reviewer получает обязательный Review Packet, независимо трассирует каждый acceptance criterion и проверяет code-review diff, соседний код, adversarial cases, архитектуру, контракты, данные, безопасность и качество тестов. Canonical-документы служат ему только контекстом и не являются объектом review: их ошибки исправляет оркестратор и они не создают code findings. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
+Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks, а её Verification Plan фиксирует `Fuzzing impact` и bounded `Task fuzz smoke` либо rationale неприменимости. Strong reviewer получает обязательный Review Packet, независимо трассирует каждый acceptance criterion и проверяет code-review diff, соседний код, adversarial cases, архитектуру, контракты, данные, безопасность и качество тестов. Canonical-документы служат ему только контекстом и не являются объектом review: их ошибки исправляет оркестратор и они не создают code findings. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
 
-После принятия последней TASK Epic переходит в `VALIDATING`. Отдельный `epic-validator` запускает полный regression suite, глобальные quality checks, critical-path validation и применимые gates выбранных project profiles. Только текущий passing Epic Validation fingerprint допускается к fuzzing и последующему Epic Acceptance.
+Epic planner заранее создаёт Epic Fuzzing Plan и оценивает applicability. После принятия последней TASK Epic переходит в `VALIDATING`; отдельный `epic-validator` запускает полный regression suite, глобальные quality checks, critical-path validation и применимые gates выбранных project profiles. Только текущий passing Epic Validation fingerprint допускается к fuzzing gate. При актуальном approved `not applicable` оркестратор записывает `NOT APPLICABLE` без вызова fuzzer; `applicable`, `unresolved` или противоречащие итоговые evidence требуют read-only fuzzer перед Epic Acceptance.
 
 Можно заранее подготовить несколько `PLANNED + READY` Epic. Каждый approved plan и его `TODO` TASK definitions хранятся в собственном `execution/planned/EPIC-*`; порядок очереди остаётся только в `BACKLOG.md`. Plan Approval не активирует Epic, а Epic Start отдельно проверяет dependencies/blockers и перемещает один eligible workspace в `execution/active/`.
 
@@ -110,6 +112,8 @@ Framework defaults для всех субагентов: Codex `strong = gpt-5.6
 Kaiten — только пример `work_source`. Для такого profile Forge может хранить двусторонние ссылки `external item ↔ EPIC/BUG/TASK`; остальные типы не получают искусственных связей с Backlog. Framework upgrade работает offline, сохраняет неизвестные project-owned profiles и отделяет замену Forge от отдельно подтверждаемой миграции integration schema. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
 Feature discovery, root-cause investigation, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Внешние process skills не управляют lifecycle проекта.
+
+Mutation backend не входит в обязательные зависимости. Проект отдельно настраивает подтверждённую команду для своего языка; отсутствие backend не мешает bootstrap, adapter sync, migration или обычной разработке и даёт `SETUP REQUIRED` только при явном mutation-запросе.
 
 ## Дальнейшая работа
 

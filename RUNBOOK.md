@@ -1,4 +1,4 @@
-# AI Development Forge v4.2 — Runbook
+# AI Development Forge v4.4 — Runbook
 
 ## Режим выполнения planner и reviewer
 
@@ -157,7 +157,8 @@ Implementer пишет production-код и focused tests. Reviewer не исп�
 
 1. новые/изменённые тесты;
 2. выбранные affected-component tests;
-3. scoped lint, typecheck, build и применимые profile-specific checks.
+3. bounded `Task fuzz smoke`, если итоговый fuzzing impact затрагивает target или готовый harness; для `none` сверяет rationale с actual surface;
+4. scoped lint, typecheck, build и применимые profile-specific checks.
 
 Полный project test suite и unscoped project-wide checks не являются Task gate и по умолчанию запрещены implementer, reviewer и tester. Ранний полный прогон допустим только по явному запросу пользователя и не заменяет Epic Validation. После любого исправления structured review и selected testing выполняются заново.
 
@@ -197,12 +198,12 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 - `FAILED` → `ACTIVE`, Replan и remediation TASK;
 - `BLOCKED` → `ACTIVE` и явное решение по отсутствующей capability или environment.
 
-После passing Epic Validation автоматически вызывается read-only fuzzer для существующих harnesses.
+После passing Epic Validation Epic входит в обязательный fuzzing gate. Для approved `not applicable` оркестратор не вызывает fuzzer, только если все итоговые Task fuzzing impacts равны `none`, actual affected surface совпадает с approved Epic Fuzzing Plan, alternative risk coverage прошёл и fingerprint совпадает с Epic Validation. В этом случае он записывает `NOT APPLICABLE` с freshness evidence. Для `applicable`, `unresolved` или противоречащих итоговых evidence автоматически вызывается read-only fuzzer.
 
 Результаты:
 
 - `PASSED` → ожидание Epic Acceptance;
-- `NOT APPLICABLE` → требуются rationale и alternative risk coverage;
+- `NOT APPLICABLE` → требуются rationale, passing alternative risk coverage и текущий fingerprint; outcome может записать оркестратор по skip-условиям или вернуть вызванный fuzzer;
 - `HARNESS REQUIRED` → Replan и отдельная harness TASK;
 - `FINDINGS` → Replan и remediation TASK.
 
@@ -228,6 +229,32 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 - без production/external scanning.
 
 Расширение каждого ограничения требует отдельного разрешения. Пользователь решает, какие findings превратить в Bug, TASK или Epic. Отдельный security report не создаётся.
+
+## 13A. Standalone mutation testing
+
+Mutation testing не является частью Task/Epic lifecycle и может запускаться в любой момент, включая отсутствие active work:
+
+```text
+Проведи mutation testing для src/billing с тестами tests/billing.
+```
+
+Skill `forge-mutation-test` требует exact scope, fingerprint, подтверждённые baseline/backend commands и resource budget. Bare-запрос запускает только fast `mutation-runner`: ordinary baseline, затем mutation backend, normalized metrics и запись `quality/mutation-testing/runs/MUT-NNNN.yaml`. Он не устанавливает backend; отсутствие настройки даёт сохранённый `SETUP REQUIRED`.
+
+Для немедленного strong analysis укажите его явно:
+
+```text
+Проведи mutation testing для src/billing и проанализируй выжившие мутанты, максимум 20 candidates.
+```
+
+Даже после разрешения `mutation-analyzer` пропускается, если candidates нет, baseline упал, setup отсутствует, artifacts stale или budget равен нулю. Если candidates больше budget, record получает `analysis.status: partial` и remaining count.
+
+Можно сначала получить дешёвые metrics, а позже проанализировать тот же результат без повторного campaign:
+
+```text
+Проанализируй mutation run MUT-0007, максимум 20 candidates.
+```
+
+Deferred analysis требует current fingerprint и artifact checksum. Mutation run никогда не меняет Backlog, Epic/TASK status, gates или development evidence и ничего не создаёт автоматически. Если пользователь решит улучшить тесты или исправить вероятный product defect, он отдельно запускает существующий feature/bug/Replan workflow; `MUT-*` хранит только informational disposition references.
 
 ## 14. Adapter sync
 

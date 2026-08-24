@@ -87,6 +87,22 @@ Changing Task scope, order, or composition after plan approval requires the Repl
 - **Profile-specific validation:** <Performance, accessibility, migrations, ML evaluation, infrastructure plan, compatibility, or other selected-profile checks.>
 - **Execution constraints:** <Environment, services, datasets, credentials, resource budgets, or explicit limitations.>
 
+## Epic Fuzzing Plan
+
+- **Applicability:** <applicable/not applicable/unresolved>.
+- **Risk surfaces:** <Parsers, protocol or API boundaries, serializers, validators, state machines, public inputs, or none.>
+- **Targets and invariants:** <Target-to-property mapping, or explicit unresolved evidence.>
+- **Harness readiness and Task ownership:** <Existing harness identifiers; missing harness mapped to TASK-NNN; or not applicable.>
+- **Task-level fuzz smoke:** <TASK-NNN to target, command, and bounded budget mapping; or not applicable rationale.>
+- **Epic campaign:** <Tools, commands, corpus, deterministic seeds, time and resource budgets; or unresolved blocker.>
+- **Failure criteria:** <Crash, hang, timeout, sanitizer finding, invariant violation, security-relevant behavior, or other objective outcome.>
+- **Artifact handling:** <Corpus, crashing-input, log, and reproduction locations or retention constraints.>
+- **Execution constraints:** <Environment, platform, service, credential, safety, or resource limitations.>
+- **Not-applicable rationale:** <Why no suitable fuzzable boundary exists; required for `not applicable`, otherwise —.>
+- **Alternative risk coverage:** <Checks covering the relevant robustness risk; required for `not applicable`, otherwise —.>
+
+`not applicable` is a planning assessment, not a standalone waiver. After passing Epic Validation, the orchestrator may record `NOT APPLICABLE` without invoking the fuzzer only when final Task fuzzing-impact evidence, actual affected surfaces, alternative-coverage results, and the current aggregate fingerprint still match this approved plan. `applicable`, `unresolved`, or contradictory evidence requires the fuzzer.
+
 ## Mandatory Quality Gates
 
 - [ ] Every Task completed implementation, structured independent review, selected Task verification, and explicit Task Acceptance gates.
