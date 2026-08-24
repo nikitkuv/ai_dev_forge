@@ -1,4 +1,4 @@
-# AI Development Forge v4.2 — Architecture
+# AI Development Forge v4.4 — Architecture
 
 ## Configurable planner/reviewer routing
 
@@ -38,6 +38,9 @@ project/
 │   │   └── tasks/TASK-NNN-<name>.md
 │   ├── paused/
 │   └── completed/
+├── quality/mutation-testing/       # optional, создаётся первым явным запуском
+│   ├── registry.yaml
+│   └── runs/MUT-NNNN.yaml
 ├── .ai/
 ├── .codex/agents/
 ├── .agents/skills/
@@ -58,6 +61,7 @@ project/
 | Навигация по решениям | генерируемый `DECISIONS.md` |
 | Стратегия Epic, порядок TASK, verification и fuzzing plans, Epic Validation, fuzzing outcome и user validation | `plan.md` |
 | TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
+| Независимая история mutation testing | `quality/mutation-testing/` |
 | История файлов | Git |
 
 `README.md`, root routers, agent-файлы и `SKILL.md` являются инфраструктурой, но не владельцами execution-состояния.
@@ -69,15 +73,15 @@ project/
 - `BOOTSTRAP.md` и шесть numbered workflows;
 - `CONVENTIONS.md`;
 - `framework/manifest.yaml` с release, ownership, agent и skill IDs;
-- `framework/contracts.yaml` с lifecycle, transitions, gates и fuzzing outcomes;
-- девять нейтральных agent definitions;
-- пятнадцать portable skills;
+- `framework/contracts.yaml` с lifecycle, transitions, gates, fuzzing и независимыми mutation-testing contracts;
+- одиннадцать нейтральных agent definitions;
+- шестнадцать portable skills;
 - canonical и adapter templates.
 
 Ownership разделён на три категории:
 
 - framework-owned release files поставляются текущей версией Forge;
-- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, canonical и execution-файлы сохраняются;
+- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
 - generated adapters пересоздаются после collision preview.
 
 ## Канонические документы
@@ -108,6 +112,7 @@ EPIC-001
 TASK-001
 BUG-001
 ADR-001
+MUT-0001
 ```
 
 Следующий ID равен максимальному существующему ID данного типа плюс один. TASK numbering не начинается заново в каждом Epic.
@@ -159,18 +164,21 @@ Framework control layer написан на английском. Канонич
 | `epic-validator` | balanced | полный regression, project-wide checks, critical paths и quality profiles |
 | `fuzzer` | balanced | воспроизводимый Epic fuzzing без исправлений, когда план или итоговые evidence требуют вызов |
 | `security-auditor` | strong | явный on-demand local security audit |
+| `mutation-runner` | fast | bounded baseline и mutation-backend execution с normalized runtime evidence |
+| `mutation-analyzer` | strong | отдельно разрешённый semantic analysis только текущих mutation candidates |
 
 Субагенты не вызывают друг друга. Одновременно выполняется не более одной code-writing TASK; независимый read-only research может выполняться параллельно.
 
 ## Skills
 
-Пятнадцать skills сгруппированы по назначению:
+Шестнадцать skills сгруппированы по назначению:
 
 - bootstrap нового и существующего проекта;
 - feature/bug/external-work intake и reprioritization;
 - Epic preparation и durable resume;
 - Task execution/completion и Epic completion;
 - security audit;
+- standalone mutation testing;
 - framework conformance check;
 - adapter synchronization.
 
@@ -266,6 +274,16 @@ Severity описывает последствия, а priority задаётся
 - не сканирует production или внешние targets.
 
 Расширение scope требует отдельного точного разрешения. Принятые findings превращаются в существующую TASK, Bug или Epic; отдельный security report не создаётся.
+
+## Standalone mutation testing
+
+`forge-mutation-test` запускается только по явному запросу и не зависит от наличия или статуса Epic/TASK. Он не меняет Backlog, lifecycle, gates, review/testing/validation/fuzzing evidence, acceptance или commit permissions.
+
+Новый запуск фиксирует точный production/test scope, backend и версию, команды, budgets и fingerprint. Fast `mutation-runner` сначала выполняет обычный baseline, затем вызывает только подтверждённый mutation backend и возвращает normalized metrics: generated, killed, survived, no coverage, timeout, invalid/error, duration и backend-reported score. Если backend отсутствует, результат `SETUP REQUIRED` записывается без установки инструмента или изменения конфигурации.
+
+По умолчанию запуск metrics-only и strong model не используется. `mutation-analyzer` вызывается только после отдельного разрешения и только если текущий результат содержит candidates и положительный analysis budget. Все mutants killed — analyzer пропускается. Deferred analysis использует сохранённый `MUT-NNNN` без повторения campaign; stale fingerprint или artifact checksum блокирует анализ. Большие candidate sets анализируются bounded batches с явным `partial` и remaining count.
+
+Каждая попытка получает независимый `MUT-NNNN` и сохраняется в project-owned `quality/mutation-testing/`. Findings не создают Bug, TASK, Epic или Replan автоматически. Любое remediation начинается только отдельным решением пользователя через существующий lifecycle; mutation record может хранить лишь информационные ссылки на уже утверждённую работу.
 
 ## Синхронизация адаптеров
 

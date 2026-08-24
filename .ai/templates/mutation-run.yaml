@@ -1,0 +1,78 @@
+schema_version: 1
+id: MUT-NNNN
+started_at: null
+completed_at: null
+
+run:
+  outcome: null
+  reason: null
+
+scope:
+  production_paths: []
+  test_paths: []
+  exclusions: []
+  selection_rationale: null
+
+fingerprint:
+  base_revision: null
+  working_tree: null
+  scoped_diff_hash: null
+  dependency_inputs: []
+
+tool:
+  backend: null
+  version: null
+  version_command: null
+  baseline_command: null
+  mutation_command: null
+  result_adapter: null
+  execution_constraints: []
+
+budget:
+  timeout_seconds: null
+  workers: null
+  maximum_candidates: null
+
+baseline:
+  outcome: null
+  exit_code: null
+  passed: null
+  failed: null
+  duration_seconds: null
+
+results:
+  generated: null
+  killed: null
+  survived: null
+  no_coverage: null
+  timeout: null
+  invalid_or_error: null
+  duration_seconds: null
+  backend_reported_score: null
+  candidates: []
+
+artifacts:
+  retained: false
+  normalized_path: null
+  normalized_checksum: null
+  raw_path: null
+  raw_checksum: null
+
+analysis:
+  authorized: false
+  status: not_requested
+  analyzed_at: null
+  source_fingerprint: null
+  budget: null
+  analyzed_candidates: 0
+  remaining_candidates: 0
+  actionable: 0
+  likely_equivalent: 0
+  unresolved: 0
+  findings: []
+
+disposition:
+  status: none
+  decided_at: null
+  references: []
+  notes: null

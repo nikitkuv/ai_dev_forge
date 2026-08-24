@@ -1,4 +1,4 @@
-# AI Development Forge v4.2 — Runbook
+# AI Development Forge v4.4 — Runbook
 
 ## Режим выполнения planner и reviewer
 
@@ -229,6 +229,32 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 - без production/external scanning.
 
 Расширение каждого ограничения требует отдельного разрешения. Пользователь решает, какие findings превратить в Bug, TASK или Epic. Отдельный security report не создаётся.
+
+## 13A. Standalone mutation testing
+
+Mutation testing не является частью Task/Epic lifecycle и может запускаться в любой момент, включая отсутствие active work:
+
+```text
+Проведи mutation testing для src/billing с тестами tests/billing.
+```
+
+Skill `forge-mutation-test` требует exact scope, fingerprint, подтверждённые baseline/backend commands и resource budget. Bare-запрос запускает только fast `mutation-runner`: ordinary baseline, затем mutation backend, normalized metrics и запись `quality/mutation-testing/runs/MUT-NNNN.yaml`. Он не устанавливает backend; отсутствие настройки даёт сохранённый `SETUP REQUIRED`.
+
+Для немедленного strong analysis укажите его явно:
+
+```text
+Проведи mutation testing для src/billing и проанализируй выжившие мутанты, максимум 20 candidates.
+```
+
+Даже после разрешения `mutation-analyzer` пропускается, если candidates нет, baseline упал, setup отсутствует, artifacts stale или budget равен нулю. Если candidates больше budget, record получает `analysis.status: partial` и remaining count.
+
+Можно сначала получить дешёвые metrics, а позже проанализировать тот же результат без повторного campaign:
+
+```text
+Проанализируй mutation run MUT-0007, максимум 20 candidates.
+```
+
+Deferred analysis требует current fingerprint и artifact checksum. Mutation run никогда не меняет Backlog, Epic/TASK status, gates или development evidence и ничего не создаёт автоматически. Если пользователь решит улучшить тесты или исправить вероятный product defect, он отдельно запускает существующий feature/bug/Replan workflow; `MUT-*` хранит только informational disposition references.
 
 ## 14. Adapter sync
 

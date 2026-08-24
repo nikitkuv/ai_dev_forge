@@ -11,8 +11,8 @@ This step generates derived platform files. It does not change canonical product
 Read:
 
 - `.ai/framework/manifest.yaml` and `.ai/framework/contracts.yaml`;
-- nine `.ai/framework/agents/*.yaml` definitions;
-- fifteen `.ai/framework/skills/*/SKILL.md` sources;
+- eleven `.ai/framework/agents/*.yaml` definitions;
+- sixteen `.ai/framework/skills/*/SKILL.md` sources;
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex and Claude adapter templates under `.ai/templates/adapters/`;
@@ -20,7 +20,7 @@ Read:
 - `.ai/custom/router-shared.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
 
-Optional `.ai/integrations/` content is project-owned state, not a render input. Do not create, read for tool discovery, invoke, or embed local definitions while generating adapters.
+Optional `.ai/integrations/` and `quality/mutation-testing/` content is project-owned state, not a render input. Do not create, read for tool discovery, invoke, or embed local definitions or mutation history while generating adapters.
 
 Stop if source counts, IDs, or framework versions disagree.
 
@@ -37,6 +37,7 @@ Require:
 - an explicit Git policy;
 - resolved model mappings for every tier, using the bundled defaults unless the project explicitly overrides them.
 - quality profiles approved in the Epic plan and reusable Task/Epic command catalogs derived only from confirmed repository, build-system, and CI evidence. Keep an unresolved list empty and report the blocker; never invent a command.
+- optional mutation-testing backend, version, baseline, mutation and result-adapter commands only when separately approved and evidenced. Preserve a null/absent configuration as valid; do not install a backend or create mutation history.
 
 Model mappings must provide:
 
@@ -83,8 +84,10 @@ AGENTS.md
 .codex/agents/epic-validator.toml
 .codex/agents/fuzzer.toml
 .codex/agents/security-auditor.toml
+.codex/agents/mutation-runner.toml
+.codex/agents/mutation-analyzer.toml
 .codex/forge/claude-role-runner.mjs
-.agents/skills/<fifteen-skill-ids>/SKILL.md
+.agents/skills/<sixteen-skill-ids>/SKILL.md
 ```
 
 Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus the shared overlay. Do not copy legacy framework sections into the overlay.
@@ -98,7 +101,7 @@ For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 - the configured `model_reasoning_effort`;
 - the neutral `codex_sandbox_mode`.
 
-Copy all fifteen portable `SKILL.md` files verbatim into `.agents/skills/`.
+Copy all sixteen portable `SKILL.md` files verbatim into `.agents/skills/`.
 Copy the Codex-side Claude launcher template verbatim to `.codex/forge/claude-role-runner.mjs`.
 
 ## Render Claude Code
@@ -116,8 +119,10 @@ CLAUDE.md
 .claude/agents/epic-validator.md
 .claude/agents/fuzzer.md
 .claude/agents/security-auditor.md
+.claude/agents/mutation-runner.md
+.claude/agents/mutation-analyzer.md
 .claude/forge/codex-role-runner.mjs
-.claude/skills/<fifteen-skill-ids>/SKILL.md
+.claude/skills/<sixteen-skill-ids>/SKILL.md
 ```
 
 Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus the same shared overlay. Do not copy legacy framework sections into the overlay.
@@ -130,9 +135,9 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 - the same English role contract used by the Codex adapter.
 - Write every `.claude/agents/*.md` file as UTF-8 **without BOM**. Byte zero must be the first `-` of the opening `---` frontmatter delimiter; never prepend `EF BB BF`.
 
-Copy all fifteen portable `SKILL.md` files verbatim into `.claude/skills/`.
+Copy all sixteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
-Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the nine generated agents on both platforms, including `epic-planner` and `reviewer`, because `native_subagents` is a first-class mode. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime while generating adapters.
+Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the eleven generated agents on both platforms, including `epic-planner`, `reviewer`, `mutation-runner`, and `mutation-analyzer`, because `native_subagents` is a first-class mode. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime or a mutation backend while generating adapters.
 
 ## Validate Before Replacement
 
@@ -150,7 +155,8 @@ Verify the staged outputs:
 - `.ai/custom/router-shared.md` appears identically in both routers;
 - `.codex/config.toml`, Claude settings, commands, hooks, and all other unlisted platform files are unchanged;
 - no hook or MCP file was generated.
-- no `.ai/integrations/` file or project-local provider/tool name was generated or embedded.
+- no `.ai/integrations/` file or project-local provider/tool name was generated or embedded;
+- no `quality/mutation-testing/` record was generated or embedded.
 
 If either platform fails, replace neither. After both pass, replace both adapter sets as one logical operation and restore the previous sets if replacement validation fails.
 
@@ -170,6 +176,8 @@ Only after successful replacement, create or update `.ai/framework.lock` with:
 The lock is project-owned state; migration must not replace it with a release template.
 
 Do not hash `.ai/integrations/` definitions or state into managed-output provenance: they do not render managed adapters. Validate their schema and references separately as project state, so changing a local board, knowledge source, dataset, or analysis service is not reported as framework drift.
+
+Do not hash `quality/mutation-testing/` registry, run records, or retained artifacts into managed-output provenance. They are independent project-owned history, do not render adapters, and must survive synchronization and migration unchanged.
 
 ## Ensure the Project README
 

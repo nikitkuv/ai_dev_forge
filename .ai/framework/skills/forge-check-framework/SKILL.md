@@ -7,7 +7,7 @@ description: Use after bootstrap, resume, adapter synchronization, framework upg
 
 ## Read authoritative inputs
 
-Read the manifest, lifecycle and integration contracts, project configuration, framework lock, custom overlays, optional project-owned integration definitions/state, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state. Never invoke a local connector during conformance checking.
+Read the manifest, lifecycle, integration and mutation-testing contracts, project configuration, framework lock, custom overlays, optional project-owned integration definitions/state, optional project-owned mutation registry/run records, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state. Never invoke a local connector or mutation backend during conformance checking.
 
 Do not repair files during this check.
 
@@ -24,6 +24,9 @@ Do not repair files during this check.
 - Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
 - Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies during generation. External prerequisites are required only when their mode is selected; `native_subagents` remains dependency-free.
 - Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
+- Verify `quality/mutation-testing/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization.
+- Verify optional `mutation_testing` configuration is absent, null, or backed by confirmed repository/build/CI evidence. A configured backend requires exact version, baseline, mutation and result-adapter commands plus explicit budgets and constraints; missing setup blocks only a requested mutation run and never bootstrap or development.
+- Verify `mutation-runner` is fast, baseline-first, fingerprinted before/during/after execution, runtime-artifacts-only, network-disabled, and prohibited from installation, tracked edits, remediation, lifecycle changes and spawning. Verify `mutation-analyzer` is strong, explicitly authorized, candidate- and budget-gated, runtime-artifacts-only, network-disabled, and prohibited from remediation, lifecycle changes and spawning. Verify both roles and `forge-mutation-test` have generated cross-platform parity.
 - Classify each integration definition/state file as current-supported, older-migratable, malformed, unsupported-future, custom-profile, or ownership collision. Preserve unknown profiles. Treat only ownership collisions and repository-safety violations as global blockers; other findings block only consuming skills.
 - Verify every invocation-capable integration has an explicit compatible consumer, operation intersection, scope, access policy, and active-platform binding. Do not require live availability for structural conformance.
 
@@ -47,6 +50,15 @@ Do not repair files during this check.
 - Check the current gate can be reconstructed without session history.
 - Check Epic Start always consumes one approved planned workspace through an atomic planned-to-active move plus Backlog transition.
 - For configured `work_source` integrations, check Backlog `Sources`, TASK `external_sources`, Epic source coverage, and `.ai/integrations/work-items.yaml` in both directions. Canonical lifecycle state remains authoritative; non-work profiles require no work-item mapping.
+
+## Validate independent mutation history
+
+- When mutation history is absent, require no directory, registry, backend, preflight, agent invocation or blocker.
+- When present, require `quality/mutation-testing/registry.yaml`, a supported `schema_version`, unique monotonically allocated `MUT-NNNN` identities, `next_id` greater than every retained identity, and one matching `runs/MUT-NNNN.yaml` path for every registry entry. Reject reused, duplicate, path-mismatched, or dangling identities.
+- For every run attempt, require timestamps, run outcome/reason, exact production/test scope and exclusions, base revision plus scoped diff/tree fingerprint and dependency inputs, backend/version/commands/constraints, finite budgets, baseline outcome, normalized result counts, artifact retention with paths/checksums when retained, analysis authorization/status/budget/counts/findings, and disposition. Counts must be non-negative and candidate/analysis totals internally consistent.
+- Permit unsuccessful, partial, cancelled, metrics-only and setup-required records. Require metrics-only records to use `analysis.authorized: false` and `analysis.status: not_requested`. Require `skipped_no_candidates` only when authorization exists and no configured candidate exists. Require completed or partial analysis to have explicit authorization, a current matching source fingerprint, a current normalized artifact checksum, positive budget, and candidate evidence; partial analysis must record a positive remaining count.
+- Reject analysis after baseline failure, setup-required, cancellation, unusable/stale artifacts, zero budget, or no candidates. Deferred analysis must update the same run identity and must not claim a repeated campaign unless the user requested a new run.
+- Verify mutation outcomes and dispositions do not appear as Epic, TASK, Bug or ADR transitions; do not satisfy quality gates; do not invalidate review/testing/validation/fuzzing evidence; and do not create or schedule development work without a separately recorded user decision through an existing workflow.
 
 ## Report
 

@@ -8,7 +8,7 @@ description: Use when a consumer repository already contains an older AI Develop
 ## Establish a recoverable baseline
 
 1. Read `.ai-next/MIGRATE.md` in full and verify that active `.ai/` and staged `.ai-next/` are distinct, complete bundles.
-2. Inspect both manifests and integration contracts, the optional old lock, project configuration, custom overlays, optional project-owned `.ai/integrations/`, project-owned consumers, Git state, root routers, local adapters, canonical documents, ADRs, and execution state.
+2. Inspect both manifests, integration and mutation-testing contracts, the optional old lock, project configuration, custom overlays, optional project-owned `.ai/integrations/`, optional project-owned `quality/mutation-testing/`, project-owned consumers, Git state, root routers, local adapters, canonical documents, ADRs, and execution state.
 3. Support a legacy installation without `.ai/framework.lock`. Use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence.
 4. Hash canonical, execution, product, and unrelated project paths before any write.
 5. Identify a recoverable rollback source. Stop if the old bundle and affected adapters cannot be restored.
@@ -16,7 +16,7 @@ description: Use when a consumer repository already contains an older AI Develop
 7. For a pre-v4 project, inspect every planned/active/paused workspace, quality configuration, Epic Verification Plans, Epic Fuzzing Plans, Task affected/risk/verification fields including fuzzing impact and Task smoke, Review Packets, and Epic Validation fingerprints. Treat missing fields, an invalid `execution/planned/` mapping, and any Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` without current validation as compatibility findings.
 8. Inspect `role_execution.mode`. If it is absent, show the old effective routing and require the user to choose one supported value. Offer `claude_with_codex` only as the compatibility-preserving suggestion for a 4.2 project; never write it without approval.
 
-Never modify canonical documents, canonical schema, ADRs, execution state, project integrations, project code, tests, data, or unrelated configuration during the framework-upgrade transaction.
+Never modify canonical documents, canonical schema, ADRs, execution state, project integrations, project mutation history, project code, tests, data, or unrelated configuration during the framework-upgrade transaction.
 
 ## Classify routers and adapters
 
@@ -26,11 +26,11 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 4. Preserve native `epic-planner` and `reviewer` agents on both platforms while adding both staged external launchers (`.claude/forge/codex-role-runner.mjs` and `.codex/forge/claude-role-runner.mjs`) and three-mode route metadata. Do not install, authenticate, preflight, or invoke Codex or Claude during migration. External-mode unavailability is a runtime blocker, not a migration fallback; `native_subagents` is the explicit dependency-free choice.
 5. Recognize legacy Forge agents and skills from the old bundle, old hashes when present, known IDs, and content comparison.
 6. Preserve unlisted agents, skills, platform configuration, settings, commands, hooks, and unknown files.
-7. Preserve project-owned integration consumer skills as unlisted entries. Treat an ambiguous obsolete path or same-ID custom entry as a collision; do not delete it by inference.
+7. Preserve project-owned integration consumer skills and `quality/mutation-testing/` history as unlisted project state. Treat an ambiguous obsolete path or same-ID custom entry as a collision; do not delete it by inference.
 
 ## Preview and authorize
 
-Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements, preserved files, collisions, protected hashes, the explicit role-execution choice, default or overridden model/configuration decisions, rollback source, and the offline integration compatibility matrix.
+Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements including `mutation-runner`, `mutation-analyzer`, and `forge-mutation-test`, preserved files and mutation history, collisions, protected hashes, the explicit role-execution choice, default or overridden model/configuration decisions, rollback source, and the offline integration compatibility matrix.
 
 Framework upgrade and project integration-schema migration are separate gates. A supported framework upgrade may proceed while an older integration remains unmigrated or a malformed/future/custom integration is preserved but unavailable to core consumers. Do not include any project-owned integration rewrite in the framework diff.
 
@@ -40,16 +40,16 @@ Report canonical schema differences only as compatibility findings outside migra
 
 After approval:
 
-1. back up active `.ai/`, root routers, every affected adapter entry, the old lock, and exact optional integration bytes;
-2. build a candidate `.ai/` from the staged release plus approved project configuration, including `role_execution.mode`, and the shared overlay while preserving `.ai/integrations/` byte-for-byte;
+1. back up active `.ai/`, root routers, every affected adapter entry, the old lock, exact optional integration bytes, and exact `quality/mutation-testing/` bytes;
+2. build a candidate `.ai/` from the staged release plus approved project configuration, including `role_execution.mode`, and the shared overlay while preserving `.ai/integrations/` and `quality/mutation-testing/` byte-for-byte; do not create history or install a mutation backend when either is absent;
 3. render byte-identical root `AGENTS.md` and `CLAUDE.md` from the current identical templates and shared overlay;
 4. invoke `forge-sync-adapters` to replace recognized Forge IDs and install the manifest-declared local set while preserving unlisted files;
 5. replace the active bundle and staged outputs as one logical operation;
-6. run `forge-check-framework`, compare all protected-path hashes, and verify integration state is unchanged and not included in managed-output lock hashes;
+6. run `forge-check-framework`, compare all protected-path hashes, and verify integration state and mutation history are unchanged and not included in managed-output lock hashes;
 7. create or update `.ai/framework.lock` only after every check passes;
 8. remove `.ai-next/` only after success and retain the backup until user acknowledgement.
 
-On any failure, restore the old bundle, project configuration including its prior role-execution representation, routers, both launchers/adapters, lock, and exact project-owned integration state, then verify protected hashes again and report the failed stage. Create no report Markdown file and require no framework CLI.
+On any failure, restore the old bundle, project configuration including its prior role-execution representation, routers, both launchers/adapters, lock, exact project-owned integration state, and exact mutation history, then verify protected hashes again and report the failed stage. Create no report Markdown file and require no framework CLI.
 
 ## Migrate an integration schema separately
 

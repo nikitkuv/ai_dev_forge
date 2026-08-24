@@ -7,10 +7,10 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 
 ## Build the render input
 
-1. Read `.ai/project.yaml`, the manifest, framework integration profile contracts, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes. Do not use project-owned `.ai/integrations/` definitions/state as render input.
+1. Read `.ai/project.yaml`, the manifest, framework integration and mutation-testing contracts, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes. Do not use project-owned `.ai/integrations/` definitions/state as render input. Do not use `quality/mutation-testing/` history as render input.
 2. Require both platforms and resolve every configured model tier from the bundled defaults or explicit project overrides. Never invent or silently change a model or effort.
 3. Require one valid project `role_execution.mode` and derive managed membership from manifest `subagents`, `skills`, `role_execution`, root `AGENTS.md`, and `CLAUDE.md`. The three modes and two external launchers supplement rather than replace native `epic-planner` and `reviewer` agents on either platform.
-4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, project-owned integration consumers, and adjacent platform files as project-owned content.
+4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, project-owned integration consumers, independent mutation history, and adjacent platform files as project-owned content.
 5. Detect manual edits and same-ID collisions in managed entries.
 
 ## Preview collisions
@@ -43,14 +43,14 @@ Stage one synchronized candidate containing:
 Write each generated `.claude/agents/*.md` file as UTF-8 without BOM. Its first bytes must be the opening YAML frontmatter delimiter `---`; do not emit the UTF-8 BOM byte sequence `EF BB BF`, because Claude Code then fails to recognize the frontmatter and does not register the subagent.
 
 Install no global agent or skill. Generate no hook, MCP configuration, platform settings, commands, or framework CLI dependency.
-Generate no `.ai/integrations/` content and embed no project-local integration IDs, provider names, scopes, bindings, or credentials. Generic profile/consumer routing comes only from framework-owned sources.
+Generate no `.ai/integrations/` or `quality/mutation-testing/` content and embed no project-local integration IDs, mutation records, provider names, scopes, bindings, or credentials. Generic profile/consumer and mutation routing comes only from framework-owned sources.
 
 ## Validate and finalize
 
 1. verify both routers are byte-identical, have no unresolved placeholder, and remain within the configured line limit;
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
 3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify all three `role_execution` modes, both launchers, active-orchestrator requirements, complete neutral prompt parity, fresh/read-only boundaries, configured model sources, and `fallback: forbidden`;
-4. verify additional project-owned agents, skills, integration consumers, and all unlisted platform files are unchanged;
+4. verify additional project-owned agents, skills, integration consumers, `quality/mutation-testing/` history, and all unlisted platform files are unchanged;
 5. verify every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 6. verify the framework lock contains only inputs that render managed outputs and that local integration changes are reported separately rather than as adapter drift;
 7. run the read-only framework conformance check.

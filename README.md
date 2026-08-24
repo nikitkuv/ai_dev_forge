@@ -1,4 +1,4 @@
-# AI Development Forge v4.2
+# AI Development Forge v4.4
 
 ## Настраиваемый planner/reviewer route
 
@@ -32,6 +32,8 @@ execution/{planned,active,paused,completed}/
 ```
 
 `SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются источниками истины. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
+
+Mutation testing доступен отдельно через `forge-mutation-test` и никогда не является lifecycle gate. Bare-запрос использует fast `mutation-runner` и возвращает metrics; strong `mutation-analyzer` запускается только по отдельному разрешению и только при наличии текущих candidates. История попыток сохраняется как project-owned `MUT-NNNN` records без изменения Backlog, Epic или TASK.
 
 ## Установка
 
@@ -110,6 +112,8 @@ Epic planner заранее создаёт Epic Fuzzing Plan и оценивае
 Kaiten — только пример `work_source`. Для такого profile Forge может хранить двусторонние ссылки `external item ↔ EPIC/BUG/TASK`; остальные типы не получают искусственных связей с Backlog. Framework upgrade работает offline, сохраняет неизвестные project-owned profiles и отделяет замену Forge от отдельно подтверждаемой миграции integration schema. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
 Feature discovery, root-cause investigation, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Внешние process skills не управляют lifecycle проекта.
+
+Mutation backend не входит в обязательные зависимости. Проект отдельно настраивает подтверждённую команду для своего языка; отсутствие backend не мешает bootstrap, adapter sync, migration или обычной разработке и даёт `SETUP REQUIRED` только при явном mutation-запросе.
 
 ## Дальнейшая работа
 

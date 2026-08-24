@@ -20,6 +20,62 @@ enums:
   epic_validation_outcomes: [PASSED, "PASSED WITH ACCEPTED EXCEPTIONS", FAILED, BLOCKED]
   task_risk_levels: [low, standard, high]
   quality_profiles: [backend, frontend, ml, data_pipeline, infrastructure, library_cli]
+  mutation_run_outcomes: [COMPLETED, PARTIAL, INCONCLUSIVE, "SETUP REQUIRED", BLOCKED, CANCELLED]
+  mutation_analysis_statuses: [not_requested, skipped_no_candidates, completed, partial, blocked, stale]
+
+mutation_testing:
+  invocation: explicit_user_request_only
+  lifecycle_coupling: forbidden
+  default_mode: metrics_only
+  optional_registry: quality/mutation-testing/
+  clean_project_requires_registry: false
+  backend_required_by_default: false
+  install_or_configuration_requires: separate_explicit_user_authorization
+  run_packet_requires:
+    - mutation_run_id
+    - repository_root
+    - source_scope
+    - test_scope
+    - exclusions
+    - base_revision
+    - scoped_fingerprint
+    - baseline_command
+    - mutation_command
+    - backend_identity_and_version
+    - execution_budget
+    - runtime_artifact_destination
+  runner:
+    model_tier: fast
+    baseline_first: true
+    fingerprint_checks: [before_baseline, before_mutation, after_mutation]
+    write_policy: runtime_artifacts_only
+    normalized_metrics: [generated, killed, survived, no_coverage, timeout, invalid_or_error, duration, backend_reported_score]
+    forbidden: [tool_installation, tracked_source_edits, tracked_test_edits, apply_mutant, lifecycle_edits, development_work_creation, agent_spawning]
+  analyzer:
+    model_tier: strong
+    explicit_authorization_required: true
+    invocation_requires: [current_run_fingerprint, current_artifact_checksums, positive_analysis_budget, analysis_candidates]
+    candidates: [survived, no_coverage, explicitly_configured]
+    skip_when: [analysis_not_requested, no_candidates, baseline_failed, setup_required, unusable_run, stale_artifacts, zero_budget]
+    supports_deferred_analysis_without_rerun: true
+    write_policy: runtime_artifacts_only
+    classifications: [actionable_test_gap, likely_equivalent, low_value, unreachable_code, wrong_test_selection, production_defect_suspected, unresolved]
+    forbidden: [tool_installation, source_edits, test_edits, remediation, lifecycle_edits, development_work_creation, agent_spawning]
+  records:
+    id_format: MUT-NNNN
+    registry: quality/mutation-testing/registry.yaml
+    run_glob: quality/mutation-testing/runs/MUT-*.yaml
+    allocate_for_every_attempt: true
+    orchestrator_owned_updates: true
+    raw_artifacts_tracked_by_default: false
+    run_required_fields: [schema_version, id, started_at, run, scope, fingerprint, tool, budget, baseline, results, artifacts, analysis, disposition]
+    analysis_updates_same_run: true
+  development_effects:
+    lifecycle_status_changes: forbidden
+    gate_satisfaction: forbidden
+    evidence_invalidation: forbidden
+    automatic_bug_task_epic_or_replan: forbidden
+    follow_up_requires: separate_user_decision_and_existing_workflow
 
 # Stable machine-friendly spellings for status values that contain spaces.
 machine_tokens:
@@ -201,6 +257,11 @@ epic_validation:
       requires: [exact_blocker, risk_statement, replan_or_user_direction]
 
 invariants:
+  - mutation_testing_is_explicit_on_demand_and_lifecycle_independent
+  - mutation_attempts_have_durable_project_owned_records
+  - mutation_runner_is_fast_baseline_first_and_runtime_artifacts_only
+  - mutation_analyzer_requires_explicit_authorization_current_candidates_and_budget
+  - mutation_findings_never_create_or_change_development_work_automatically
   - local_integrations_are_optional_project_owned_state
   - absent_integrations_never_block_clean_forge_workflows
   - integration_registration_never_grants_implicit_invocation

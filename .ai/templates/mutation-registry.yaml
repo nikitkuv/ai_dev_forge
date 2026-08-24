@@ -1,0 +1,7 @@
+schema_version: 1
+next_id: MUT-0001
+runs: []
+
+# Allocate IDs monotonically from next_id and never reuse a deleted or cancelled
+# identity. The orchestrator updates this registry atomically with the matching
+# runs/MUT-NNNN.yaml file. Mutation history is independent of Forge lifecycle.

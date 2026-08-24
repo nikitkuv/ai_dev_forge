@@ -1,5 +1,13 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.4
+
+v4.4 добавляет независимый `forge-mutation-test`, fast `mutation-runner`, strong `mutation-analyzer` и project-owned историю `quality/mutation-testing/`. Эти возможности не добавляют Epic/TASK transition или quality gate, не требуют mutation backend по умолчанию и не запускаются во время bootstrap, migration, adapter sync или обычной разработки.
+
+Migration устанавливает новые manifest-declared agent/skill adapters, но не устанавливает `mutmut` или другой backend и не создаёт mutation registry. Существующий `quality/mutation-testing/` сохраняется byte-for-byte, не входит в managed-output hashes и восстанавливается при rollback. Отсутствие каталога — clean baseline и не является blocker.
+
+Если старый проект уже имеет собственный файл или skill с ID `mutation-runner`, `mutation-analyzer` или `forge-mutation-test`, migration показывает same-ID collision и ждёт точного решения пользователя. Неизвестные mutation artifacts вне нового project-owned path остаются защищёнными как unrelated project state.
+
 ## Обновление до v4.2
 
 v4.2 добавляет необязательный универсальный registry локальных интеграций и `work_source` intake. Чистый Forge по-прежнему не имеет `.ai/integrations/`, не требует connector runtime и проходит migration по прежнему основному пути.
@@ -14,7 +22,7 @@ v4.3 заменяет неявный preferred/fallback route явным `role_e
 
 Для проекта v4.2 миграция показывает прежнее эффективное поведение и предлагает `claude_with_codex` как совместимый вариант, но записывает его только после подтверждения. Она генерирует оба launcher и сохраняет native agents, не устанавливая и не авторизуя внешние runtimes. Недоступный выбранный route блокирует роль без fallback; откат восстанавливает прежнюю конфигурацию, adapters и lock одной транзакцией.
 
-Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `.ai/integrations/`, project-owned consumers, `decisions/`, `execution/`, код и тесты проекта не изменяются framework-транзакцией.
+Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `.ai/integrations/`, `quality/mutation-testing/`, project-owned consumers, `decisions/`, `execution/`, код и тесты проекта не изменяются framework-транзакцией.
 
 ## Что получится
 
