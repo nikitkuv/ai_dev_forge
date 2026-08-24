@@ -61,7 +61,7 @@ When `role_execution.mode` is `codex_with_claude`, Forge SHALL require Codex CLI
 
 ### Requirement: Native mode uses active-platform subagents
 
-When `role_execution.mode` is `native_subagents`, Forge SHALL execute `epic-planner` and `reviewer` through the generated native subagent definitions of the active Codex or Claude orchestrator and SHALL NOT preflight or invoke the other provider.
+When `role_execution.mode` is `native_subagents`, Forge SHALL execute `epic-planner` and `reviewer` through the generated native subagent definitions of the active Codex or Claude orchestrator and SHALL NOT preflight or invoke the other provider. Every generated Claude Code native subagent SHALL use `high` reasoning effort in this mode; Codex native subagents SHALL retain their configured tier effort, and the Claude override SHALL NOT alter the configured effort used by `codex_with_claude`.
 
 #### Scenario: Native execution in Codex
 - **WHEN** Codex reaches either selected role in `native_subagents` mode
@@ -69,7 +69,7 @@ When `role_execution.mode` is `native_subagents`, Forge SHALL execute `epic-plan
 
 #### Scenario: Native execution in Claude
 - **WHEN** Claude Code reaches either selected role in `native_subagents` mode
-- **THEN** it invokes the matching generated Claude agent with the current assignment
+- **THEN** it invokes the matching generated Claude agent with the current assignment and `high` reasoning effort
 
 ### Requirement: Explicit external selection has no provider fallback
 

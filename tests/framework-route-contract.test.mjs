@@ -12,7 +12,7 @@ test("manifest declares the three role-execution modes and both external routes"
   assert.match(manifest, /fallback: forbidden/);
   assert.match(manifest, /claude_with_codex:[\s\S]*?orchestrator: claude[\s\S]*?provider: codex-plugin-cc[\s\S]*?model: gpt-5\.6-sol[\s\S]*?reasoning_effort: medium/);
   assert.match(manifest, /codex_with_claude:[\s\S]*?orchestrator: codex[\s\S]*?provider: claude-code-cli[\s\S]*?minimum_cli_version: 2\.1\.203[\s\S]*?permission_mode: plan/);
-  assert.match(manifest, /native_subagents:[\s\S]*?orchestrator: active_platform[\s\S]*?external_preflight: false/);
+  assert.match(manifest, /native_subagents:[\s\S]*?orchestrator: active_platform[\s\S]*?external_preflight: false[\s\S]*?claude_reasoning_effort: high/);
 });
 
 test("project template requires an explicit valid role mode", async () => {
@@ -23,6 +23,18 @@ test("project template requires an explicit valid role mode", async () => {
   const valid = new Set(["claude_with_codex", "codex_with_claude", "native_subagents"]);
   for (const mode of valid) assert.equal(valid.has(mode), true);
   for (const mode of [undefined, null, "auto", "claude", "reviewer:codex"]) assert.equal(valid.has(mode), false);
+});
+
+test("Claude native subagents use high effort without changing other route defaults", async () => {
+  const [agent, project, generation] = await Promise.all([
+    read(".ai/templates/adapters/claude/agent.md"),
+    read(".ai/templates/project.yaml"),
+    read(".ai/05-create-platform-adapters.md")
+  ]);
+  assert.match(agent, /'high' if role_execution\.mode == 'native_subagents' else/);
+  assert.match(project, /claude:\n    strong: \{model: opus, effort: medium\}/);
+  assert.match(generation, /`effort: high` for every generated Claude agent when `role_execution\.mode` is `native_subagents`/);
+  assert.match(generation, /native-only override does not change the managed `codex_with_claude` route/);
 });
 
 test("root routers remain byte-identical and document both provider paths", async () => {
