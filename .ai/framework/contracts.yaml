@@ -198,11 +198,19 @@ fuzzing:
         - repeated_epic_fuzzing
 
 quality_gates:
+  test_integrity:
+    oracle_sources: [acceptance_criteria, public_contracts, domain_invariants, approved_examples, independent_reference_oracle]
+    requires: [acceptance_and_risk_traceability, real_production_logic, stable_public_boundary, discriminating_assertions, applicable_normal_boundary_invalid_error_recovery_state_and_side_effect_cases]
+    mocking_policy: external_or_nondeterministic_boundaries_only
+    test_change_classifications: [behavior_contract_change, defective_test_correction, coverage_extension]
+    weakening_requires: [explicit_rationale, independent_expected_behavior_source, orchestrator_disposition]
+    forbidden: [captured_production_output_as_oracle, duplicated_production_algorithm_as_oracle, mocked_subject_under_test, private_call_structure_as_behavior_evidence, tautological_assertions, unexplained_snapshot_fixture_baseline_or_metric_update, adapting_test_to_unchanged_wrong_behavior]
   task:
     requires:
       - approved_definition_with_objective_acceptance_and_boundaries
       - affected_surface_and_risk_flags
       - focused_behavior_evidence
+      - test_integrity_evidence
       - selected_affected_checks
       - planned_fuzzing_impact_and_task_smoke
       - current_structured_review
@@ -279,6 +287,8 @@ invariants:
   - code_changes_invalidate_prior_review_test_epic_validation_and_fuzzing_results
   - full_project_suite_is_an_epic_validation_gate_not_a_task_gate
   - task_check_selection_is_justified_by_changed_and_affected_surfaces
+  - tests_are_independent_behavior_evidence_not_implementation_transcriptions
+  - unchanged_behavior_contract_requires_fixing_production_not_adapting_tests
   - task_tester_never_silently_expands_to_the_full_project_suite
   - epic_validation_precedes_epic_fuzzing
   - planned_not_applicable_skips_fuzzer_only_with_current_final_evidence
