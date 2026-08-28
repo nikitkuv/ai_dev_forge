@@ -39,7 +39,7 @@ v4.3 заменяет неявный preferred/fallback route явным `role_e
 .ai/       новая активная версия
 ```
 
-`AGENTS.md` и `CLAUDE.md` получают новые framework-инструкции, сохраняя описание, карту и правила проекта. Старые Forge agents и skills заменяются новыми локальными версиями; посторонние пользовательские файлы сохраняются.
+`AGENTS.md` получает новые framework-инструкции, сохраняя описание, карту и правила проекта; `CLAUDE.md` заменяется импортом `@AGENTS.md`. Старые Forge agents и skills заменяются новыми локальными версиями; посторонние пользовательские файлы сохраняются.
 
 При переходе на v4 добавляются `epic-planner`, `epic-validator`, lifecycle state `VALIDATING`, selective Task testing, обязательный Review Packet, quality profiles и полный Epic Validation перед fuzzing. Миграция фреймворка не переписывает существующие plan/TASK-файлы автоматически.
 
@@ -118,9 +118,9 @@ The legacy project may not have .ai/framework.lock.
 Do not modify canonical documents, decisions/, execution/, project code, or tests.
 Preserve optional .ai/integrations/ and project-owned integration consumers byte-for-byte.
 Classify integration compatibility offline and do not invoke connectors.
-Preserve project-specific content from AGENTS.md and CLAUDE.md in one shared overlay.
+Preserve project-specific content from AGENTS.md and CLAUDE.md in one shared overlay rendered into AGENTS.md.
 Reconcile it with canonical state from BACKLOG.md and report contradictions without editing BACKLOG.md.
-Render final AGENTS.md and CLAUDE.md with byte-identical content.
+Render the final AGENTS.md as the full router and CLAUDE.md as the exact `@AGENTS.md` import.
 Replace legacy Forge agents and skills with the bundled local versions.
 Show the complete migration diff before writing.
 Communicate with me in Russian.

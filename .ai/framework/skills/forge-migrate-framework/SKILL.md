@@ -30,7 +30,7 @@ Never modify canonical documents, canonical schema, ADRs, execution state, proje
 
 ## Preview and authorize
 
-Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, byte-identical final router rendering, adapter additions/replacements including `mutation-runner`, `mutation-analyzer`, and `forge-mutation-test`, preserved files and mutation history, collisions, protected hashes, the explicit role-execution choice, default or overridden model/configuration decisions, rollback source, and the offline integration compatibility matrix.
+Show one complete diff containing framework replacements, recognized obsolete Forge paths, shared-overlay extraction, final `AGENTS.md` rendering, the exact `CLAUDE.md` import, adapter additions/replacements including `mutation-runner`, `mutation-analyzer`, and `forge-mutation-test`, preserved files and mutation history, collisions, protected hashes, the explicit role-execution choice, default or overridden model/configuration decisions, rollback source, and the offline integration compatibility matrix.
 
 Framework upgrade and project integration-schema migration are separate gates. A supported framework upgrade may proceed while an older integration remains unmigrated or a malformed/future/custom integration is preserved but unavailable to core consumers. Do not include any project-owned integration rewrite in the framework diff.
 
@@ -42,7 +42,7 @@ After approval:
 
 1. back up active `.ai/`, root routers, every affected adapter entry, the old lock, exact optional integration bytes, and exact `quality/mutation-testing/` bytes;
 2. build a candidate `.ai/` from the staged release plus approved project configuration, including `role_execution.mode`, and the shared overlay while preserving `.ai/integrations/` and `quality/mutation-testing/` byte-for-byte; do not create history or install a mutation backend when either is absent;
-3. render byte-identical root `AGENTS.md` and `CLAUDE.md` from the current identical templates and shared overlay;
+3. render the full root `AGENTS.md` from its current template plus the shared overlay, and render root `CLAUDE.md` exactly as `@AGENTS.md`;
 4. invoke `forge-sync-adapters` to replace recognized Forge IDs and install the manifest-declared local set while preserving unlisted files;
 5. replace the active bundle and staged outputs as one logical operation;
 6. run `forge-check-framework`, compare all protected-path hashes, and verify integration state and mutation history are unchanged and not included in managed-output lock hashes;

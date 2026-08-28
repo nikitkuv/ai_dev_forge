@@ -90,9 +90,9 @@ AGENTS.md
 .agents/skills/<sixteen-skill-ids>/SKILL.md
 ```
 
-Render the root router from `.ai/templates/adapters/codex/AGENTS.md` plus the shared overlay. Do not copy legacy framework sections into the overlay.
+Render the single root router from `.ai/templates/adapters/codex/AGENTS.md` plus the shared overlay. Do not copy legacy framework sections into the overlay.
 
-The rendered router must include the byte-identical Common Engineering Prohibitions section from the neutral root-router templates.
+The rendered router must include the complete Common Engineering Prohibitions section from the neutral `AGENTS.md` template.
 
 For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 
@@ -125,7 +125,7 @@ CLAUDE.md
 .claude/skills/<sixteen-skill-ids>/SKILL.md
 ```
 
-Render the root router from `.ai/templates/adapters/claude/CLAUDE.md` plus the same shared overlay. Do not copy legacy framework sections into the overlay.
+Render `CLAUDE.md` exactly from `.ai/templates/adapters/claude/CLAUDE.md`. It must contain only `@AGENTS.md`; do not render the shared overlay or router instructions into it.
 
 For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
@@ -143,8 +143,9 @@ Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-ro
 
 Verify the staged outputs:
 
-- both root routers are byte-identical, contain no unresolved placeholder, and are no more than 150 lines;
-- both root routers contain the same Common Engineering Prohibitions without project-specific weakening;
+- `AGENTS.md` contains no unresolved placeholder and is no more than 150 lines;
+- `CLAUDE.md` contains exactly `@AGENTS.md`, so Claude Code imports the complete `AGENTS.md` router without duplication;
+- the imported router contains the complete Common Engineering Prohibitions without project-specific weakening;
 - each platform contains every agent and skill ID declared by the manifest;
 - `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/medium`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
@@ -152,7 +153,7 @@ Verify the staged outputs:
 - every rendered agent contains its concrete model and effort; when `role_execution.mode` is `native_subagents`, every Claude agent has `effort: high` while Codex agents retain their configured tier effort;
 - every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 - generated files contain English control text;
-- `.ai/custom/router-shared.md` appears identically in both routers;
+- `.ai/custom/router-shared.md` appears once in `AGENTS.md` and is not duplicated in `CLAUDE.md`;
 - `.codex/config.toml`, Claude settings, commands, hooks, and all other unlisted platform files are unchanged;
 - no hook or MCP file was generated.
 - no `.ai/integrations/` file or project-local provider/tool name was generated or embedded;

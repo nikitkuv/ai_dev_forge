@@ -101,7 +101,7 @@ Run no more than one code-writing Task at a time. Independent read-only research
 
 ## Platform Boundaries
 
-- `AGENTS.md` and `CLAUDE.md` must be byte-identical generated routers.
+- `AGENTS.md` is the single generated root router. `CLAUDE.md` imports it with `@AGENTS.md` and must contain no duplicated router instructions.
 - Generated adapters are derived from `.ai/framework/`, `.ai/project.yaml`, and `.ai/custom/router-shared.md`.
 - Project-specific router additions belong only in `.ai/custom/router-shared.md`; synchronize rather than editing generated files.
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.

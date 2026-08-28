@@ -86,7 +86,7 @@ Communicate with me in Russian.
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Нейтральные определения находятся в `.ai/framework/`. `AGENTS.md` и `CLAUDE.md` генерируются с byte-identical содержимым. Проектные дополнения к ним хранятся только в `.ai/custom/router-shared.md`.
+Нейтральные определения находятся в `.ai/framework/`. Полный router генерируется только в `AGENTS.md`; `CLAUDE.md` содержит `@AGENTS.md` и импортирует его в Claude Code без копирования. Проектные дополнения к router хранятся только в `.ai/custom/router-shared.md`.
 
 Framework defaults для всех субагентов: Codex `strong = gpt-5.6-sol/medium`, `balanced = gpt-5.6-terra/medium`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/medium`, `balanced = sonnet/medium`, `fast = haiku/medium`. Проект может явно переопределить их в `.ai/project.yaml`; генератор записывает resolved mapping в нативные agent-файлы обеих платформ. В режиме `native_subagents` все Claude Code agent-файлы получают режимный override `effort: high`; настройки Codex и внешнего маршрута `codex_with_claude` не меняются.
 

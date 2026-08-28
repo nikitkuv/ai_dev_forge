@@ -129,7 +129,7 @@ Framework control layer написан на английском. Канонич
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Оба root router имеют byte-identical содержимое и ограничены 150 строками. `.ai/project.yaml` хранит `role_execution.mode` и сопоставляет tiers с конкретными моделями и effort. Framework defaults:
+`AGENTS.md` — единственный полный root router и ограничен 150 строками. `CLAUDE.md` содержит только `@AGENTS.md`, поэтому Claude Code импортирует тот же router без дублирования. `.ai/project.yaml` хранит `role_execution.mode` и сопоставляет tiers с конкретными моделями и effort. Framework defaults:
 
 | Tier | Codex | Claude Code |
 | --- | --- | --- |

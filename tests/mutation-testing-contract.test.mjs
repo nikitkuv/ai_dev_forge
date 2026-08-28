@@ -138,7 +138,7 @@ test("dual-platform generation declares both mutation roles and portable skill",
     read(".ai/templates/adapters/claude/CLAUDE.md"),
     read(".ai/framework/skills/forge-sync-adapters/SKILL.md")
   ]);
-  assert.equal(codexRouter, claudeRouter);
+  assert.equal(claudeRouter.trim(), "@AGENTS.md");
   assert.ok(codexRouter.split(/\r?\n/).length <= 150);
   for (const id of ["mutation-runner", "mutation-analyzer"]) {
     assert.match(manifest, new RegExp(id));

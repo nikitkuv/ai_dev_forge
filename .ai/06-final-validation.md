@@ -64,7 +64,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 
 ## Validate Both Platform Adapters
 
-- Root `AGENTS.md` and `CLAUDE.md` both exist, are byte-identical lifecycle routers, and are each no more than 150 lines.
+- Root `AGENTS.md` and `CLAUDE.md` both exist. `AGENTS.md` is the complete lifecycle router and is no more than 150 lines; `CLAUDE.md` contains exactly `@AGENTS.md`.
 - Codex contains every manifest-declared agent under `.codex/agents/` and every manifest-declared skill under `.agents/skills/`.
 - Claude contains every manifest-declared agent under `.claude/agents/` and every manifest-declared skill under `.claude/skills/`.
 - Every Forge-managed `.claude/agents/*.md` is UTF-8 without BOM and begins at byte zero with `---`, so Claude Code can parse its YAML frontmatter.
@@ -77,9 +77,9 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - Missing selected prerequisites and all post-start failures block the stage. No route implicitly falls back or switches provider.
 - The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite, and fuzzer requires current Epic Validation evidence plus planned `applicable`, `unresolved`, or contradictory final evidence.
 - IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
-- No unresolved renderer placeholder remains; the shared project overlay appears identically in both routers.
-- Both routers state that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
-- Both routers contain byte-identical Common Engineering Prohibitions without missing or weakened entries.
+- No unresolved renderer placeholder remains; the shared project overlay appears once in `AGENTS.md` and is available to Claude through the import.
+- The imported router states that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
+- The imported router contains the complete Common Engineering Prohibitions without missing or weakened entries.
 - The framework generated no hooks, MCP configuration, or mandatory CLI dependency. Cross-provider modes use user-installed runtimes only when selected; native mode requires neither. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 - A clean project has no `.ai/integrations/` and passes without connector preflight. Supported, custom, malformed, future-version, or offline integrations remain project-owned; only their consumers are blocked unless an ownership/safety collision exists.
 - A clean project has no `quality/mutation-testing/` and passes without a mutation backend or preflight. When history exists, registry and `MUT-NNNN` records pass the independent schema, identity, fingerprint, metrics, artifact, analysis-authorization and disposition checks; their outcomes have no lifecycle or gate effect.

@@ -52,7 +52,7 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Independent mutation history under `quality/mutation-testing/` is optional project-owned state. Bootstrap and adapter synchronization do not create or overwrite it.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, and `.agents/`. Unlisted entries remain project-owned.
 
-Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` and `CLAUDE.md` are byte-identical. Do not edit them manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
+Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router; `CLAUDE.md` contains only `@AGENTS.md`. Do not edit them manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
 
 ## Project-local integrations
 
@@ -90,4 +90,4 @@ Each kind of information has one canonical owner:
 
 Do not create separate progress, report, checkpoint, user-validation, security, research, or fuzzing Markdown files. Keep document approval status separate from lifecycle status. If source documents disagree, report the inconsistency instead of silently reconciling it.
 
-Generated root `AGENTS.md` and `CLAUDE.md` contain byte-identical Common Engineering Prohibitions. Project overlays may add stricter rules but may not remove or weaken those framework prohibitions.
+Generated root `AGENTS.md` contains the Common Engineering Prohibitions once, and `CLAUDE.md` imports them through `@AGENTS.md`. Project overlays may add stricter rules but may not remove or weaken those framework prohibitions.

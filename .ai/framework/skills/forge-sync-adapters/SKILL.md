@@ -7,7 +7,7 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 
 ## Build the render input
 
-1. Read `.ai/project.yaml`, the manifest, framework integration and mutation-testing contracts, neutral agents, portable skills, both byte-identical router templates, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes. Do not use project-owned `.ai/integrations/` definitions/state as render input. Do not use `quality/mutation-testing/` history as render input.
+1. Read `.ai/project.yaml`, the manifest, framework integration and mutation-testing contracts, neutral agents, portable skills, the full `AGENTS.md` router template, the importing `CLAUDE.md` template, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes. Do not use project-owned `.ai/integrations/` definitions/state as render input. Do not use `quality/mutation-testing/` history as render input.
 2. Require both platforms and resolve every configured model tier from the bundled defaults or explicit project overrides. Never invent or silently change a model or effort.
 3. Require one valid project `role_execution.mode` and derive managed membership from manifest `subagents`, `skills`, `role_execution`, root `AGENTS.md`, and `CLAUDE.md`. The three modes and two external launchers supplement rather than replace native `epic-planner` and `reviewer` agents on either platform.
 4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, project-owned integration consumers, independent mutation history, and adjacent platform files as project-owned content.
@@ -31,7 +31,7 @@ Preserve every unlisted adapter entry in place. Do not modify canonical product 
 
 Stage one synchronized candidate containing:
 
-- byte-identical root `AGENTS.md` and `CLAUDE.md` from the identical templates plus the shared overlay;
+- full root `AGENTS.md` from its template plus the shared overlay, and root `CLAUDE.md` containing exactly `@AGENTS.md`;
 - manifest-declared Codex agents under `.codex/agents/`;
 - manifest-declared Codex skills under `.agents/skills/`;
 - manifest-declared Claude agents under `.claude/agents/`;
@@ -47,7 +47,7 @@ Generate no `.ai/integrations/` or `quality/mutation-testing/` content and embed
 
 ## Validate and finalize
 
-1. verify both routers are byte-identical, have no unresolved placeholder, and remain within the configured line limit;
+1. verify `AGENTS.md` has no unresolved placeholder and remains within the configured line limit, and verify `CLAUDE.md` is the exact `@AGENTS.md` import;
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
 3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify all three `role_execution` modes, both launchers, active-orchestrator requirements, complete neutral prompt parity, fresh/read-only boundaries, configured model sources, and `fallback: forbidden`;
 4. verify additional project-owned agents, skills, integration consumers, `quality/mutation-testing/` history, and all unlisted platform files are unchanged;

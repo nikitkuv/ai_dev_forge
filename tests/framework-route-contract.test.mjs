@@ -37,15 +37,15 @@ test("Claude native subagents use high effort without changing other route defau
   assert.match(generation, /native-only override does not change the managed `codex_with_claude` route/);
 });
 
-test("root routers remain byte-identical and document both provider paths", async () => {
+test("AGENTS.md is canonical and CLAUDE.md imports it without duplication", async () => {
   const [claude, codex] = await Promise.all([
     read(".ai/templates/adapters/claude/CLAUDE.md"),
     read(".ai/templates/adapters/codex/AGENTS.md")
   ]);
-  assert.equal(claude, codex);
-  assert.match(claude, /codex@openai-codex/);
-  assert.match(claude, /claude-code-cli|Claude Code 2\.1\.203/);
-  assert.match(claude, /There is no fallback/);
+  assert.equal(claude.trim(), "@AGENTS.md");
+  assert.match(codex, /codex@openai-codex/);
+  assert.match(codex, /claude-code-cli|Claude Code 2\.1\.203/);
+  assert.match(codex, /There is no fallback/);
 });
 
 test("workflow skills require explicit routing and prohibit fallback", async () => {

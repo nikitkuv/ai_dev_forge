@@ -265,7 +265,7 @@ Deferred analysis требует current fingerprint и artifact checksum. Mutat
 - `.ai/custom/router-shared.md`;
 - framework release.
 
-Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет byte-identical root routers, parity остальных adapters и обновляет `.ai/framework.lock`.
+Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет полный `AGENTS.md`, точный импорт `@AGENTS.md` в `CLAUDE.md`, parity остальных adapters и обновляет `.ai/framework.lock`.
 
 Project-owned `.ai/integrations/` не является render input и не попадает в managed-output hashes. Изменение board scope или другого локального definition не требует adapter sync само по себе.
 

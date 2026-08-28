@@ -20,8 +20,8 @@ Do not repair files during this check.
 - Verify `role_execution.mode` is one supported atomic value for both roles; verify both managed launchers and every route reuse the matching neutral role contract, enforce the expected orchestrator, model and permission boundary, request fresh execution, and prohibit fallback. Native mode must perform no external preflight.
 - Verify every Forge-managed `.claude/agents/*.md` file is UTF-8 without BOM and starts at byte zero with the `---` YAML frontmatter delimiter.
 - Permit additional project-owned agents and skills; verify they and other unlisted platform files are excluded from Forge ownership and remain unchanged.
-- Verify the shared router overlay renders identically without copying legacy framework instructions.
-- Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
+- Verify the shared router overlay renders once into `AGENTS.md` without copying legacy framework instructions.
+- Verify root `AGENTS.md` is the complete router and no more than 150 lines, while root `CLAUDE.md` contains exactly `@AGENTS.md`.
 - Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies during generation. External prerequisites are required only when their mode is selected; `native_subagents` remains dependency-free.
 - Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
 - Verify `quality/mutation-testing/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization.

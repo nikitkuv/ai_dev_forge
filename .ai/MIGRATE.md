@@ -76,7 +76,7 @@ Merge preserved project content from both routers and from any legacy `.ai/custo
 .ai/custom/router-shared.md
 ```
 
-If old routers or overlays contain conflicting project rules, stop for an explicit reconciliation decision. Back up legacy platform-specific overlays and remove them only as part of the exact approved migration scope after their preserved content is present in the shared overlay. Render the final routers from the staged byte-identical templates plus the shared overlay, verify that the outputs are byte-identical, and show their complete diff before replacement.
+If old routers or overlays contain conflicting project rules, stop for an explicit reconciliation decision. Back up legacy platform-specific overlays and remove them only as part of the exact approved migration scope after their preserved content is present in the shared overlay. Render the final `AGENTS.md` from its staged template plus the shared overlay, render `CLAUDE.md` as the exact `@AGENTS.md` import, and show their complete diff before replacement.
 
 ## Local Adapter Update
 
@@ -101,7 +101,7 @@ Show one complete migration preview containing:
 
 - old and new framework versions and the rollback source;
 - every framework replacement and obsolete recognized Forge path;
-- extracted shared router overlay and byte-identical final router diffs;
+- extracted shared router overlay, the final `AGENTS.md` diff, and the `CLAUDE.md` import diff;
 - adapter additions, replacements, preserved files, and collisions;
 - protected-path hashes and canonical schema findings;
 - `.ai/project.yaml` values that must be confirmed when absent;
@@ -120,7 +120,7 @@ After approval:
 2. build staged candidate outputs without changing active targets;
 3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` (including one explicit role-execution mode) and `.ai/custom/` project state while preserving optional `.ai/integrations/`, `quality/mutation-testing/`, and project-owned consumers byte-for-byte; add missing quality or mutation configuration only from explicit user decisions and confirmed repository or CI evidence, and never install a mutation backend;
 4. replace recognized Forge adapter IDs while preserving unlisted files;
-5. replace the active bundle and both byte-identical routers as one logical operation;
+5. replace the active bundle, full `AGENTS.md`, and importing `CLAUDE.md` as one logical operation;
 6. run `forge-check-framework` against the candidate result;
 7. re-hash protected paths and fail on any unauthorized difference; validate integration files structurally but do not include their contents in managed-output lock hashes;
 8. create or update `.ai/framework.lock` only after every validation passes;
