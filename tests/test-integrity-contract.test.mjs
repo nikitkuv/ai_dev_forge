@@ -47,10 +47,11 @@ test("reviewer and tester reject implementation-fitted tests", async () => {
     read(".ai/framework/agents/tester.yaml")
   ]);
 
-  assert.match(reviewer, /Audit test integrity independently/);
+  assert.match(reviewer, /Audit test integrity as supporting evidence/);
   assert.match(reviewer, /captured production output or a duplicated production algorithm/);
   assert.match(reviewer, /tautological assertions/);
-  assert.match(tester, /recorded test-integrity review/);
+  assert.match(reviewer, /non-production observations unless they demonstrate a concrete defect/i);
+  assert.match(tester, /test-integrity evidence/);
   assert.match(tester, /self-derived expectation/);
   assert.match(tester, /substitutes mocks or implementation-detail assertions for production behavior/);
 });

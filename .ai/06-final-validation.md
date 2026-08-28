@@ -25,7 +25,7 @@ If an earlier step is incomplete, return to that step and its approval gate.
 - ARCHITECTURE owns target architecture and contains no task-level execution steps.
 - BACKLOG owns Epic priority/readiness/status and defect state, with no Task list or execution summaries.
 - Each plan owns Epic strategy, Task order, requirement coverage, selected quality profiles, Epic Verification Plan, Epic Validation evidence, fuzzing and user validation, but no Task lifecycle state.
-- Each TASK owns its lifecycle, affected surface, risk flags, review focus, selected Verification Plan, and compact implementation, structured-review, testing, and user-validation evidence.
+- Each TASK owns its lifecycle, affected surface, production/supporting path classification, whole-implementation and production-surface fingerprints, risk flags, review focus, selected Verification Plan, and compact implementation, structured-review, testing, and user-validation evidence.
 - No separate framework-generated progress, checkpoint, review, testing, fuzzing, security, recovery, or validation Markdown report exists.
 
 ## Validate IDs, References, and Decisions
@@ -46,7 +46,7 @@ If an earlier step is incomplete, return to that step and its approval gate.
 - Multiple planned workspaces are allowed and ordered only by Backlog priority and row order.
 - Non-planned Backlog Epic status matches its directory under `execution/active`, `execution/paused`, or `execution/completed`.
 - The active plan's ordered Task list exactly matches its TASK files and dependencies contain no cycle.
-- Review Packet, structured review, and selected Task-testing revision/fingerprint evidence matches current implementation; code changes invalidate older evidence.
+- Review Packet path classification is complete and production-effect based. Clean structured review matches the current production-surface fingerprint; legacy review without that fingerprint is stale. Supporting-only changes preserve clean production review but invalidate affected testing, while production changes invalidate both. Selected Task-testing evidence matches the current implementation revision and whole-implementation fingerprint.
 - Task evidence contains no mandatory full project suite or unscoped project-wide check unless an explicit early-run request is recorded.
 - Epic Validation evidence is absent before `VALIDATING`, or current for the exact aggregate fingerprint and contains the full suite, project-wide checks, critical paths, requirement coverage, and applicable quality profiles.
 - Fuzzing evidence is absent before passing Epic Validation, or current for the same validated Epic fingerprint. A `NOT APPLICABLE` result without a fuzzer invocation requires an approved `not applicable` plan, all final Task fuzzing impacts `none`, matching affected surfaces, passing alternative coverage, and recorded orchestrator freshness evidence; every `applicable`, `unresolved`, or contradictory case requires fuzzer evidence.
@@ -96,7 +96,7 @@ Ignore conversation history and reconstruct:
 5. the ordered queued Epic set from `execution/planned/` reconciled with Backlog priority, readiness, dependencies and blockers;
 6. active or paused Epic strategy and Task order from `plan.md`;
 7. current TASK and pending gate from TASK statuses and Workflow State;
-8. current Review Packet, selected Task checks, Epic Verification Plan, quality profiles, Epic Validation and fuzzing evidence;
+8. current Review Packet with production/supporting classification and both fingerprints, separate production findings and non-production observations, selected Task checks, Epic Verification Plan, quality profiles, Epic Validation and fuzzing evidence;
 9. unfinished changes from Git status and diff;
 10. adapter provenance from `.ai/framework.lock`.
 11. optional integration compatibility and work-source relationships from project-owned `.ai/integrations/`, without using them as lifecycle authority;

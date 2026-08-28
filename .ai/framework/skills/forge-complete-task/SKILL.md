@@ -8,12 +8,12 @@ description: Record explicit user acceptance for a verified Forge TASK, close an
 ## Verify acceptance eligibility
 
 1. Require lifecycle `status: AWAITING USER ACCEPTANCE`.
-2. Confirm the implementation revision and fingerprint match current clean review and testing evidence.
+2. Confirm testing matches the current implementation revision and whole-implementation fingerprint, and confirm its production fingerprint matches current clean production-review evidence. A clean review may belong to an earlier implementation revision only when every intervening change was supporting-only and the production fingerprint stayed unchanged.
 3. Confirm the recorded test evidence contains exact commands, selection rationale, and current results for focused, affected-component, and scoped quality checks, or an explicitly accepted Task-level exception with its risk.
 4. Confirm Review Packet integrity, acceptance traceability and protocol coverage are current, and required manual verification was presented.
 5. Ask for explicit Task Acceptance. Verification evidence proves eligibility for acceptance; it never constitutes acceptance. Do not infer acceptance from passing checks or positive feedback that does not clearly accept the TASK.
 
-If the user requests changes, record the feedback, return the TASK to `IN PROGRESS`, and repeat the entire structured implementation-review-selected-testing loop.
+If the user requests changes, record the feedback and return the TASK to `IN PROGRESS`. Repeat strong review plus selected testing after a production change; after a supporting-only change, preserve a matching clean production review and repeat selected testing without another reviewer invocation.
 
 ## Record completion
 

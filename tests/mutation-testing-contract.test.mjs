@@ -35,7 +35,7 @@ test("manifest exposes optional mutation capability without a lifecycle route", 
     read(".ai/framework/manifest.yaml"),
     read(".ai/framework/contracts.yaml")
   ]);
-  assert.match(manifest, /version: 4\.4\.0/);
+  assert.match(manifest, /version: 4\.5\.0/);
   assert.match(manifest, /- quality\/mutation-testing\//);
   assert.match(manifest, /- forge-mutation-test/);
   assert.match(manifest, /mutation-runner, mutation-analyzer/);

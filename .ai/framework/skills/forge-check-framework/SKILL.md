@@ -41,11 +41,11 @@ Do not repair files during this check.
 - Check Task state exists only in its TASK file and Epic priority/readiness/status only in `BACKLOG.md`.
 - Check plan Task order matches existing TASK files without storing Task status.
 - Check SPEC and ARCHITECTURE contain target state, not execution tracking.
-- Check Review Packet, structured review, and selected Task-testing fingerprints match current implementation.
+- Check every Review Packet classifies production and supporting paths by shipped-behavior effect, records rationale for ambiguous paths, and carries both whole-implementation and production-surface fingerprints. Require clean structured review to match the current production fingerprint and selected Task testing to match the current implementation revision and whole-implementation fingerprint. Treat legacy review without a production fingerprint as stale.
 - Check Task verification does not require a full project suite or unscoped global command without an explicit early-run request.
 - Check the approved Epic Verification Plan, Epic Fuzzing Plan, selected quality profiles, full-suite/project-wide Epic Validation evidence, and aggregate fingerprint are current before the fuzzing gate.
 - Check every TASK records final `Fuzzing impact` and `Task fuzz smoke` evidence. A skipped fuzzer invocation is valid only for approved `not applicable` with all final impacts `none`, matching actual affected surfaces, passing alternative risk coverage, and the same aggregate fingerprint; `applicable`, `unresolved`, or contradictory evidence must show a fuzzer invocation.
-- Check code changes invalidate affected Task evidence plus aggregate Epic Validation and fuzzing evidence.
+- Check production-surface changes invalidate Task review and testing plus aggregate Epic Validation and fuzzing evidence. Check supporting-only changes preserve a matching clean production review, invalidate affected Task testing plus aggregate Epic Validation and fuzzing evidence, and never cause another strong-review invocation by themselves.
 - Check no Task commit predates explicit Task Acceptance and transition to `DONE`.
 - Check the current gate can be reconstructed without session history.
 - Check Epic Start always consumes one approved planned workspace through an atomic planned-to-active move plus Backlog transition.

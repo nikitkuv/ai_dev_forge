@@ -137,7 +137,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
 Copy all sixteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
-Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the eleven generated agents on both platforms, including `epic-planner`, `reviewer`, `mutation-runner`, and `mutation-analyzer`, because `native_subagents` is a first-class mode. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime or a mutation backend while generating adapters.
+Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the eleven generated agents on both platforms, including `epic-planner`, `reviewer`, `mutation-runner`, and `mutation-analyzer`, because `native_subagents` is a first-class mode. Render the complete neutral reviewer contract unchanged on both platforms, including its production-only blocking findings, separate advisory non-production observations, and production-fingerprint review-reuse rules. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime or a mutation backend while generating adapters.
 
 ## Validate Before Replacement
 
