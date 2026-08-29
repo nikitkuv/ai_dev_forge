@@ -1,4 +1,4 @@
-# AI Development Forge v4.4 — Runbook
+# AI Development Forge v4.6 — Runbook
 
 ## Режим выполнения planner и reviewer
 
@@ -141,17 +141,21 @@ Unsatisfied dependencies, blockers или другой active Epic не меша
 
 ## 8. Запуск и выполнение TASK
 
-Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan и review focus.
+Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus и выбранный delivery track с rationale.
 
 Skill `forge-run-task` запускает цикл:
 
 ```text
 Task Start
 → implementer
-→ strong reviewer
-→ tester
+├─ fast → orchestrator assurance
+└─ standard → strong reviewer → tester
 → AWAITING USER ACCEPTANCE
 ```
+
+Delivery track — отдельная ось от model tier и `risk level`. `fast` разрешён только для ограниченной, обратимой, однозначной TASK с детерминированной локальной проверкой. Публичный контракт, auth/security/privacy, persistence/data format/schema/migration, concurrency/shared core, dependency/build/package/deploy/runtime infrastructure, внешняя интеграция, critical path, ослабление тестов или неопределённость требуют `standard`. Legacy TASK без track также получает `standard`.
+
+Оба track используют implementer и TDD. На fast track оркестратор без reviewer и tester независимо сверяет scope и fingerprint, проверяет test integrity и повторяет approved focused checks. Успех разрешает прямой переход `IN PROGRESS → AWAITING USER ACCEPTANCE`. Провал, дрейф eligibility или сомнение повышает TASK `fast → standard`; обратный переход после Task Start запрещён. Standard track использует обычные Review Packet, strong reviewer и tester, описанные ниже.
 
 Implementer пишет production-код и focused tests. Review Packet разделяет production paths и supporting evidence и фиксирует отдельный production fingerprint. Reviewer не исправляет код и выполняет ordered adversarial review protocol для production surface. Только production findings влияют на outcome; дефекты тестов, fixtures, snapshots и dev-only artifacts идут отдельными advisory observations и совместимы с `CLEAN`. Runtime configuration, schemas, migrations, packaging, production build и deployment artifacts считаются production, если могут изменить shipped behavior. Canonical-документы остаются контекстом. Tester получает observations, не пишет тесты и запускает:
 

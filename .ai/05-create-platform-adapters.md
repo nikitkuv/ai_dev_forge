@@ -94,6 +94,8 @@ Render the single root router from `.ai/templates/adapters/codex/AGENTS.md` plus
 
 The rendered router must include the complete Common Engineering Prohibitions section from the neutral `AGENTS.md` template.
 
+It must also expose the two TASK delivery tracks without changing model mappings: fast routes implementer output to orchestrator assurance and invokes neither reviewer nor tester, while standard retains independent reviewer and tester. `CLAUDE.md` imports this same routing through `@AGENTS.md`.
+
 For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 
 - its `id`, English description, permissions, and English instructions;
@@ -150,6 +152,7 @@ Verify the staged outputs:
 - `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/medium`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, and skill bodies have cross-platform parity;
+- fast/standard delivery-track routing is identical on both platforms, fast assurance remains orchestrator-owned, standard retains reviewer/tester, and no delivery track silently changes an agent model tier;
 - every rendered agent contains its concrete model and effort; when `role_execution.mode` is `native_subagents`, every Claude agent has `effort: high` while Codex agents retain their configured tier effort;
 - every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 - generated files contain English control text;

@@ -19,7 +19,7 @@ If the user intent or repository type is ambiguous, ask. Never infer that an exi
 
 ## Preflight
 
-1. Confirm `.ai/framework/manifest.yaml`, `.ai/framework/contracts.yaml`, `.ai/CONVENTIONS.md`, numbered steps, neutral agents, portable skills, and templates belong to the same framework release.
+1. Confirm `.ai/framework/manifest.yaml`, `.ai/framework/contracts.yaml`, `.ai/CONVENTIONS.md`, numbered steps, neutral agents, portable skills, and templates belong to the same framework release and agree on the `fast` and `standard` delivery-track contract.
 2. Confirm the repository is a consumer project. If it is the framework source repository, stop without creating root canonical documents or generated adapters.
 3. Inspect root canonical files, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional project-owned `.ai/integrations/`, generated adapters, Git state, and unrelated user files.
 4. Determine with the user:
@@ -80,4 +80,4 @@ Do not:
 
 ## Completion
 
-Bootstrap is complete only when Step 06 passes. Approved queued Epics remain `PLANNED` under `execution/planned/`. If an Epic was activated, every initial TASK must still be `TODO`; end by asking for a separate Task Start authorization.
+Bootstrap is complete only when Step 06 passes. Approved queued Epics remain `PLANNED` under `execution/planned/`. Every approved TASK records exactly one delivery track; missing or uncertain fast evidence selects standard. If an Epic was activated, every initial TASK must still be `TODO`; end by asking for a separate Task Start authorization.

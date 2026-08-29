@@ -1,6 +1,6 @@
 ---
 name: forge-run-task
-description: Execute one approved Forge TASK through implementation, independent review, testing, and handoff for manual user acceptance. Use only after the user authorizes that TASK's separate Task Start gate.
+description: Execute one approved Forge TASK through its fast or standard delivery track and hand it off for manual user acceptance. Use only after the user authorizes that TASK's separate Task Start gate.
 ---
 
 # Run One TASK
@@ -8,13 +8,14 @@ description: Execute one approved Forge TASK through implementation, independent
 ## Start the TASK
 
 1. Require `definition_status: approved`, lifecycle `status: TODO`, satisfied dependencies, no unresolved blocker, and no other code-writing TASK in progress.
-2. Show the TASK goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus, constraints, and any `external_sources` with their source intent. Do not require connector access for an unlinked TASK.
-3. Obtain explicit Task Start authorization.
-4. Let only the orchestrator transition the TASK to `IN PROGRESS`, record the gate, and establish the next implementation revision.
+2. Resolve the delivery track. Treat a legacy TASK without `delivery_track` as `standard`. Require an approved track and rationale; for `fast`, revalidate bounded scope, reversibility, low risk, unambiguous expected behavior, deterministic focused verification, and absence of every disqualifier in `.ai/framework/contracts.yaml`. Missing, uncertain, stale, or contradictory evidence selects or escalates to `standard` rather than guessing.
+3. Show the TASK goal, scope, acceptance criteria, affected surface, risk flags, delivery track and rationale, Verification Plan, review focus, constraints, and any `external_sources` with their source intent. Do not require connector access for an unlinked TASK.
+4. Obtain explicit Task Start authorization.
+5. Let only the orchestrator transition the TASK to `IN PROGRESS`, record the gate, establish the next implementation revision, and record the track used at start. Standard to fast is forbidden after Task Start.
 
-## Run the implementation-review-test loop
+## Run common implementation
 
-1. Invoke `implementer` for this TASK only. Require production changes and necessary tests.
+1. Invoke `implementer` for this TASK only and pass the approved delivery track and its constraints. Require production changes and necessary tests on both tracks.
 2. For each bug fix or meaningful business behavior, require this test-driven cycle:
    - derive the expected outcome independently from acceptance criteria, public contracts, domain invariants, approved examples, or a simpler independent oracle; never use output captured from the current implementation as the expectation;
    - identify the smallest observable behavior required by an acceptance criterion;
@@ -39,6 +40,24 @@ description: Execute one approved Forge TASK through implementation, independent
    - implementation summary, acceptance/risk-to-test traceability, independent test oracles, test-change classifications, tests added or changed, RED/GREEN evidence, selected checks, and known limitations.
    - linked external source keys and the approved source intent covered by this TASK, when applicable.
    Exclude canonical documents, ADRs, Epic plans, TASK files, lifecycle metadata, and review-record edits from both path lists and diffs. They remain reference inputs for interpreting the acceptance criteria. Before invocation, the orchestrator independently validates and, within its existing authority, corrects its canonical records.
+
+## Fast track
+
+Use this branch only while `delivery_track: fast` remains eligible. Do not invoke `reviewer` or `tester` for a fast TASK.
+
+1. Reproduce the whole-implementation fingerprint and exact scoped diff; do not accept the implementer's fingerprint or command claims on assertion alone.
+2. Revalidate every positive fast criterion and every disqualifier against the actual changed and affected surfaces. Inspect all production and supporting paths, their callers and consumers as needed, and trace every acceptance criterion and affected risk to the diff and evidence.
+3. Audit test integrity independently: verify oracles, test-change classifications, discriminating assertions, and applicable normal, boundary, invalid-input, error/recovery, state-transition, and side-effect coverage.
+4. Execute or reproduce every selected focused behavior test, affected-component check, applicable scoped quality check, and bounded Task fuzz smoke. For any not-applicable item, verify its rationale against the actual surface. The orchestrator may not silently skip, weaken, substitute, or expand to the full project suite.
+5. If scope, risk, eligibility, path classification, test integrity, command selection, fingerprint, or verification is missing, stale, contradictory, unexpectedly failing, or disqualified, record the trigger, invalidate fast assurance, escalate monotonically from fast to standard, and continue through the complete Standard track. Unchanged-scope safety escalation does not require Replan; an actual scope change still does. Standard to fast after Task Start is forbidden.
+6. Otherwise record a `PASSED` Fast Assurance Summary bound to the exact whole-implementation fingerprint, including eligibility revalidation, diff inspection, acceptance/risk traceability, path classification, test integrity, commands and results, and not-applicable rationales. Fast assurance never claims independent `CLEAN` review or separate tester evidence.
+7. Transition directly from `IN PROGRESS` to `AWAITING USER ACCEPTANCE`, report the delivered behavior, assurance evidence, limitations and manual steps, then wait without timeout for user validation.
+
+Any implementation change after fast assurance invalidates the whole assurance result. User-requested in-scope fixes return the TASK to `IN PROGRESS` and require renewed fast eligibility plus the entire assurance procedure; any eligibility failure escalates to standard.
+
+## Standard track
+
+Use this branch for `delivery_track: standard`, every legacy TASK without a track, and every TASK escalated from fast. It preserves the independent reviewer and tester gates.
 10. Transition to `IN REVIEW` and determine review freshness from the production fingerprint:
    - if no prior clean review has the same production fingerprint, or legacy evidence lacks a production fingerprint, read `.ai/project.yaml`, require a valid `role_execution.mode`, and build one prompt from the complete neutral `.ai/framework/agents/reviewer.yaml` contract plus the exact Review Packet. Route it exactly as configured: `native_subagents` invokes the active platform's generated reviewer with no external preflight; `claude_with_codex` requires Claude Code and uses `.claude/forge/codex-role-runner.mjs`; `codex_with_claude` requires Codex and uses `.codex/forge/claude-role-runner.mjs` with `models.claude.strong.model` and effort. For either external route, run preflight, block on unavailability or active-orchestrator mismatch, pass the prompt through a secure temporary file, and always remove the file. All routes use the same production-only blocking boundary. There is no fallback before or after execution; a non-zero exit, timeout, permission failure, runtime mismatch, packet-integrity failure, or malformed output blocks review;
    - if a protocol-complete `CLEAN` review has the same production fingerprint and packet integrity remains complete, preserve that review, record the current implementation revision as a supporting-only continuation, and do not invoke the strong reviewer. A changed whole-implementation fingerprint alone never invalidates clean production review.
@@ -63,12 +82,12 @@ If a required selected Task check is objectively impossible, explain the exact m
 
 ## Hand off to the user
 
-After current review and testing evidence passes:
+After current track-specific assurance evidence passes:
 
-1. confirm testing matches the current implementation revision and whole-implementation fingerprint, and its production fingerprint exactly matches the new or preserved clean review; a whole-implementation mismatch invalidates testing, while a production-fingerprint mismatch invalidates both review and testing;
+1. for standard, confirm testing matches the current implementation revision and whole-implementation fingerprint and its production fingerprint exactly matches the new or preserved clean review; for fast, confirm current `PASSED` orchestrator assurance exactly matches the whole-implementation fingerprint and eligibility revalidation;
 2. transition the TASK to `AWAITING USER ACCEPTANCE`;
-3. record compact review and test summaries in the TASK, including Review Packet integrity, acceptance traceability, protocol coverage, exact selected commands, exit results, skipped checks, selection rationale, and accepted execution exceptions;
+3. record the track-appropriate compact evidence summary: Review/Test summaries for standard or Fast Assurance Summary for fast, including acceptance traceability, exact selected commands, exit results, skipped checks, selection rationale, and accepted execution exceptions;
 4. report the delivered behavior, verification evidence, limitations, and manual steps;
 5. wait without timeout for user validation.
 
-User-requested fixes return this same TASK to `IN PROGRESS` and invalidate affected evidence. Production changes repeat strong review and testing; supporting-only changes preserve a matching clean production review and repeat testing without another reviewer invocation. New scope requires Replan. Do not mark the TASK `DONE`, commit, or start the next TASK in this skill.
+User-requested fixes return this same TASK to `IN PROGRESS` and invalidate affected evidence. On standard, production changes repeat strong review and testing while supporting-only changes preserve a matching clean production review and repeat testing without another reviewer invocation. On fast, every implementation change invalidates fast assurance and requires full revalidation; any failed eligibility or verification escalates to standard. New scope requires Replan. Do not mark the TASK `DONE`, commit, or start the next TASK in this skill.

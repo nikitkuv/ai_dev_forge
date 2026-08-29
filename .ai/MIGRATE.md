@@ -38,6 +38,7 @@ For upgrades to v4 or later, also inspect:
 - whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, an Epic Fuzzing Plan, and appropriate evidence;
 - whether any existing `execution/planned/` directory maps to exactly one `PLANNED + READY` Backlog Epic and contains only approved `TODO` definitions;
 - whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans with fuzzing impact and Task smoke, Review Packets with production/supporting path classification and both whole-implementation and production-surface fingerprints, and structured review evidence; legacy clean review without a production fingerprint is not reusable and requires a fresh review;
+- whether TASK files contain an approved `delivery_track`, rationale, and the matching Fast Assurance Summary or standard review/testing evidence. Treat a missing legacy track as `standard`; never synthesize fast eligibility or assurance. Already-started legacy TASKs remain standard, while a pre-start downgrade to fast requires Replan and complete evidence;
 - whether an Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` has a current passing Epic Validation result on the same aggregate fingerprint.
 
 A legacy project may be without `.ai/framework.lock`. In that case use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence. Do not infer permission to delete an ambiguous file.
@@ -61,6 +62,8 @@ Report a canonical schema difference as a compatibility finding. Do not edit, re
 Framework migration and integration-schema migration are separate approvals and transactions. Preserve every integration definition, unknown profile, state file, and custom consumer byte-for-byte while replacing the framework bundle. Do not downgrade, normalize, or silently rewrite an unsupported or malformed file.
 
 A pre-v4 planned, active, or paused plan is not silently upgraded or moved. After the framework migration, use `forge-resume-development` and present the exact plan/TASK compatibility diff. Changes to approved Task scope, order, or composition still require Replan; adding or correcting in-scope verification evidence requires an explicit rationale and may not remove or weaken an approved check. A pre-v4 Epic in `FUZZING` or `AWAITING EPIC ACCEPTANCE` cannot continue to Epic Acceptance until current Epic Validation passes under the new contract.
+
+For every legacy planned, active, reviewed, testing, or awaiting-acceptance TASK without delivery-track data, report the compatibility finding and interpret it as standard. Framework migration may add the explicit standard default only in a separately approved canonical compatibility diff; it never fabricates fast evidence or converts current standard review/testing evidence into Fast Assurance.
 
 Migration never infers that a `PLANNED` Backlog Epic already has approved Task definitions. It does not create `execution/planned/` from Backlog rows or move active/paused/completed workspaces. Future Plan Approval creates the new planned workspace; an existing project-owned planned directory is preserved and validated as a compatibility finding.
 
@@ -107,6 +110,7 @@ Show one complete migration preview containing:
 - `.ai/project.yaml` values that must be confirmed when absent;
 - the explicit `role_execution.mode`, old effective behavior, and compatibility-preserving suggestion when applicable;
 - v4 quality-profile, verification-plan, Review-Packet, `VALIDATING`, and Epic Validation compatibility findings;
+- delivery-track compatibility findings, including standard defaults for missing legacy fields, stale fast fingerprints, and any forbidden attempt to downgrade already-started standard work;
 - exact paths that will be backed up.
 - the offline integration compatibility matrix, including the clean absent case, isolated consumer blockers, ownership collisions, and any separately available schema migrations.
 

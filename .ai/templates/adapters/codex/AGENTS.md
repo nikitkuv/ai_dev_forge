@@ -40,6 +40,8 @@ Report contradictions instead of silently reconciling them.
 
 ## Common Engineering Prohibitions
 
+TASK delivery track is independent from model tier and risk level. `fast` retains implementer plus reproducible orchestrator assurance and invokes neither reviewer nor tester. `standard` retains independent reviewer and tester. Missing or uncertain evidence is standard, fast eligibility failure escalates monotonically, and standard never downgrades to fast after Task Start. Both tracks retain explicit Task Acceptance and unchanged Epic Validation/fuzzing gates.
+
 - Do not silently expand approved scope, invent requirements, or make an unresolved architectural or product decision.
 - Do not mix unrelated refactoring, dependency upgrades, formatting churn, or user changes into assigned work or its evidence.
 - Do not delete, disable, skip, quarantine, weaken, or rewrite tests merely to obtain a passing result. Do not use rerun-until-green as evidence for a flaky check.
@@ -69,6 +71,8 @@ Explicitly invoke the matching bundled Forge skill by its exact name using the p
 Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not add lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
 
 ## Subagents
+
+The implementer serves both delivery tracks. Reviewer and tester are invoked only by the standard TASK route; the strong orchestrator performs and records fast assurance after implementer returns.
 
 Only the orchestrator invokes generated local agents. Default tier mappings are:
 

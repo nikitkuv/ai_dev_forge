@@ -25,7 +25,7 @@ Investigation before scheduling is read-only with respect to production code and
 - Record the feedback in that TASK's User Validation and Iteration History.
 - Return the TASK to `IN PROGRESS` through the orchestrator.
 - Invalidate prior review and testing evidence after code changes.
-- Repeat implementation, structured review, selected Task testing, and user acceptance. Full regression remains the Epic Validation gate.
+- Repeat implementation, the TASK's selected fast orchestrator assurance or standard independent review/testing route, and user acceptance. Full regression remains the Epic Validation gate.
 
 ### Defect in previously accepted code
 

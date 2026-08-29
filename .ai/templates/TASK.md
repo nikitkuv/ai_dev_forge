@@ -10,6 +10,7 @@ definition_approved_at:
 started_at:
 risk_level: standard
 risk_flags: []
+delivery_track: standard
 external_sources: []
 ---
 
@@ -43,6 +44,17 @@ external_sources: []
 - **Risk flags:** <Public contract, authorization, persistence, migration, concurrency, shared core, dependency/build, frontend critical path, data/ML, operations, or —.>
 - **Failure impact:** <User, data, compatibility, security, availability, cost, or model-quality impact.>
 
+## Delivery Track
+
+- **Selected track:** <fast/standard; defaults to standard and remains independent from model tier and risk level.>
+- **Track rationale:** <Why this assurance route is appropriate for the approved scope.>
+- **Fast eligibility evidence:** <For fast: criterion-by-criterion evidence for bounded scope, reversible change, low risk, unambiguous expected behavior, and deterministic focused verification; otherwise not applicable.>
+- **Disqualifier disposition:** <For fast: explicit none-with-evidence disposition for public contract, authorization, security/privacy, persistence/data format, schema/migration, concurrency/shared core, dependency/production build, packaging/deployment/runtime infrastructure, external integration, critical paths, test weakening, and unresolved surface/verification; otherwise standard rationale.>
+- **Approved through:** <Plan Approval/Replan and date.>
+- **Track escalation history:** <None, or fast -> standard trigger, timestamp, fingerprint, and whether scope changed.>
+
+Missing, uncertain, or contradictory fast evidence requires `standard`. `fast -> standard` is a monotonic safety escalation; `standard -> fast` is forbidden after Task Start.
+
 ## Acceptance Criteria
 
 - [ ] <Observable, objectively verifiable condition.>
@@ -63,7 +75,7 @@ Removing or weakening an approved check requires an explicit rationale and orche
 
 ## Review Focus
 
-- <Acceptance invariant, boundary, failure mode, compatibility concern, or risk that the independent reviewer must challenge.>
+- <Acceptance invariant, boundary, failure mode, compatibility concern, or risk that the independent reviewer challenges for standard or the orchestrator assurance challenges for fast.>
 
 ## Manual Verification
 
@@ -82,7 +94,7 @@ Removing or weakening an approved check requires an explicit rationale and orche
 
 Lifecycle values and transitions are defined only in `.ai/framework/contracts.yaml`. `status` in frontmatter is the sole lifecycle status for this Task.
 
-Set `status` to `IN REVIEW` only after implementation evidence and the Review Packet are current, to `IN TESTING` only after a protocol-complete `CLEAN` production review, and to `AWAITING USER ACCEPTANCE` only after selected Task testing passes. A production-surface change returns the Task to `IN PROGRESS` and invalidates review and testing evidence. A supporting-only change preserves a current clean production review, invalidates affected testing evidence, and returns directly to `IN TESTING` without another strong review.
+For `standard`, set `status` to `IN REVIEW` only after implementation evidence and the Review Packet are current, to `IN TESTING` only after a protocol-complete `CLEAN` production review, and to `AWAITING USER ACCEPTANCE` only after selected Task testing passes. For `fast`, transition directly from `IN PROGRESS` to `AWAITING USER ACCEPTANCE` only after current passing orchestrator assurance for the exact whole-implementation fingerprint. Any fast implementation change invalidates fast assurance. A fast eligibility failure escalates to standard before acceptance.
 
 ```yaml
 current_gate: task_start
@@ -112,11 +124,17 @@ testing:
   production_fingerprint:
   outcome:
   completed_at:
+fast_assurance:
+  revision:
+  implementation_fingerprint:
+  eligibility_revalidated:
+  outcome:
+  completed_at:
 ```
 
 Use a reproducible Git commit, tree, or scoped diff hash for the whole implementation fingerprint and a reproducible hash of `production_review_paths` for the production fingerprint. Classify by production effect, not directory name: executable code plus runtime configuration, schemas, migrations, generated runtime assets, packaging, production build and deployment files are production when they can change shipped behavior; tests, fixtures, snapshots, golden files, test-only configuration, development tooling and examples are supporting evidence when they cannot. Record a rationale for ambiguous paths. Canonical and lifecycle records remain context only and belong to neither list.
 
-Review evidence is current when its production fingerprint equals the current production fingerprint and packet integrity is complete. Testing evidence is current only for the current implementation revision and whole implementation fingerprint. Legacy review evidence without a production fingerprint is not reusable and requires a fresh review.
+Standard review evidence is current when its production fingerprint equals the current production fingerprint and packet integrity is complete. Standard testing evidence is current only for the current implementation revision and whole implementation fingerprint. Fast assurance is current only for the exact current whole implementation fingerprint and revalidated eligibility. Legacy TASKs without `delivery_track` are standard; legacy review evidence without a production fingerprint is not reusable and requires a fresh review.
 
 ## Implementation Summary
 
@@ -137,6 +155,20 @@ Review evidence is current when its production fingerprint equals the current pr
 - **Known limitations:** <None or compact list>
 
 Do not paste full agent responses or long tool logs.
+
+## Fast Assurance Summary
+
+- **Assurance fingerprint:** <Exact current whole-implementation fingerprint, or not applicable for standard>
+- **Revision assured:** <implementation revision>
+- **Outcome:** <pending/PASSED/ESCALATED/BLOCKED/not applicable>
+- **Assured at:** <YYYY-MM-DD or pending>
+- **Eligibility revalidation:** <Criterion-by-criterion result against actual changed and affected surfaces>
+- **Scoped diff inspection:** <Acceptance/risk traceability and production/supporting path classification result>
+- **Test integrity:** <Independent-oracle and test-change-classification result>
+- **Commands reproduced:** <Focused, affected, scoped quality, and Task fuzz smoke commands/results or justified not-applicable items>
+- **Escalation disposition:** <None, or trigger and standard next gate>
+
+This section is authoritative only for `delivery_track: fast`; it never claims an independent `CLEAN` review or separate tester result.
 
 ## Review Summary
 

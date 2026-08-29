@@ -1,4 +1,4 @@
-# AI Development Forge v4.4
+# AI Development Forge v4.6
 
 ## Настраиваемый planner/reviewer route
 
@@ -91,6 +91,16 @@ Communicate with me in Russian.
 Framework defaults для всех субагентов: Codex `strong = gpt-5.6-sol/medium`, `balanced = gpt-5.6-terra/medium`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/medium`, `balanced = sonnet/medium`, `fast = haiku/medium`. Проект может явно переопределить их в `.ai/project.yaml`; генератор записывает resolved mapping в нативные agent-файлы обеих платформ. В режиме `native_subagents` все Claude Code agent-файлы получают режимный override `effort: high`; настройки Codex и внешнего маршрута `codex_with_claude` не меняются.
 
 Сгенерированные adapters вручную не редактируются и применяются через синхронизацию.
+
+## Два TASK delivery track
+
+Каждая TASK получает ровно один delivery track: `fast` или `standard`. Это отдельная ось, не связанная напрямую с model tier (`fast` / `balanced` / `strong`) или `risk level`: низкий риск сам по себе не разрешает fast track.
+
+`fast` предназначен только для ограниченного, обратимого, однозначного изменения с детерминированной локальной проверкой. Он запрещён при изменении публичного контракта, security/privacy/auth, persistence или формата данных, schema/migration, concurrency/shared core, dependencies/build/package/deploy/runtime infrastructure, внешней интеграции, critical path или ослаблении тестов. Неопределённость тоже означает `standard`.
+
+Оба track используют implementer и сохраняют TDD. В `fast` reviewer и tester не вызываются: оркестратор независимо сверяет scope и fingerprint, проверяет целостность тестов и повторяет утверждённые focused checks, после чего TASK может перейти `IN PROGRESS → AWAITING USER ACCEPTANCE`. В `standard` остаётся полный путь implementer → strong reviewer → tester. Любой провал проверки, расширение surface или сомнение монотонно повышает `fast → standard`; обратный переход после Task Start запрещён. Старые TASK без поля track трактуются как `standard`.
+
+Выбор delivery track не меняет Task Acceptance, Epic Validation и fuzzing: эти gates остаются обязательными в прежнем объёме.
 
 ## Проверка качества
 

@@ -90,7 +90,7 @@ Each kind of information has one canonical owner:
 
 - Product behavior: `SPEC.md`; architecture: `ARCHITECTURE.md`.
 - Epic priority, readiness, and lifecycle status, plus bug lifecycle state: `BACKLOG.md`; Epic strategy, Task order, requirement coverage, quality profiles, Epic Verification Plan, Epic Fuzzing Plan, Epic Validation, fuzzing outcome, and Epic user-validation summaries: its `plan.md`.
-- Task scope, acceptance criteria, affected surface, risk flags, review focus, Verification Plan including fuzzing impact and Task smoke, lifecycle state, and implementation/structured-review/testing/user-validation summaries: the Task file.
+- Task scope, acceptance criteria, affected surface, risk flags, approved delivery track and rationale, review focus, Verification Plan including fuzzing impact and Task smoke, lifecycle state, and implementation/fast-assurance-or-standard-review-testing/user-validation summaries: the Task file.
 - Architectural decision content: its ADR; ADR navigation: `DECISIONS.md`.
 - File history: Git.
 - Local integration definitions and reverse source mappings: optional `.ai/integrations/`; Forge lifecycle and acceptance remain owned by Backlog, plans, and TASK files.
