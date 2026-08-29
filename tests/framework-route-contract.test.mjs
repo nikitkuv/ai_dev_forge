@@ -38,14 +38,18 @@ test("Claude native subagents use high effort without changing other route defau
 });
 
 test("AGENTS.md is canonical and CLAUDE.md imports it without duplication", async () => {
-  const [claude, codex] = await Promise.all([
+  const [claude, codex, collector] = await Promise.all([
     read(".ai/templates/adapters/claude/CLAUDE.md"),
-    read(".ai/templates/adapters/codex/AGENTS.md")
+    read(".ai/templates/adapters/codex/AGENTS.md"),
+    read(".ai/framework/agents/context-collector.yaml")
   ]);
   assert.equal(claude.trim(), "@AGENTS.md");
   assert.match(codex, /codex@openai-codex/);
   assert.match(codex, /claude-code-cli|Claude Code 2\.1\.203/);
   assert.match(codex, /There is no fallback/);
+  assert.match(collector, /`AGENTS\.md` as the single complete generated router/);
+  assert.match(collector, /`CLAUDE\.md`.*exactly `@AGENTS\.md`/);
+  assert.match(collector, /do not require or report byte-for-byte identity between the two files/i);
 });
 
 test("workflow skills require explicit routing and prohibit fallback", async () => {
