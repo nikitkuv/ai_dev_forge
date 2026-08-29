@@ -125,5 +125,5 @@ test("maintained guidance no longer claims unconditional fuzzer invocation", asy
   assert.match(combined, /not applicable/i);
   assert.match(combined, /unresolved/i);
   assert.match(combined, /without invoking the fuzzer|без вызова fuzzer|не вызывает fuzzer/i);
-  assert.equal(sources[4], sources[5]);
+  assert.equal(sources[5].trim(), "@AGENTS.md");
 });

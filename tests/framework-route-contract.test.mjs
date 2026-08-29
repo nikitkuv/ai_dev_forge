@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("manifest declares the three role-execution modes and both external routes", async () => {
   const manifest = await read(".ai/framework/manifest.yaml");
-  assert.match(manifest, /version: 4\.4\.0/);
+  assert.match(manifest, /version: 4\.5\.0/);
   assert.match(manifest, /roles: \[epic-planner, reviewer\]/);
   assert.match(manifest, /supported_modes: \[claude_with_codex, codex_with_claude, native_subagents\]/);
   assert.match(manifest, /fallback: forbidden/);
@@ -37,15 +37,15 @@ test("Claude native subagents use high effort without changing other route defau
   assert.match(generation, /native-only override does not change the managed `codex_with_claude` route/);
 });
 
-test("root routers remain byte-identical and document both provider paths", async () => {
+test("AGENTS.md is canonical and CLAUDE.md imports it without duplication", async () => {
   const [claude, codex] = await Promise.all([
     read(".ai/templates/adapters/claude/CLAUDE.md"),
     read(".ai/templates/adapters/codex/AGENTS.md")
   ]);
-  assert.equal(claude, codex);
-  assert.match(claude, /codex@openai-codex/);
-  assert.match(claude, /claude-code-cli|Claude Code 2\.1\.203/);
-  assert.match(claude, /There is no fallback/);
+  assert.equal(claude.trim(), "@AGENTS.md");
+  assert.match(codex, /codex@openai-codex/);
+  assert.match(codex, /claude-code-cli|Claude Code 2\.1\.203/);
+  assert.match(codex, /There is no fallback/);
 });
 
 test("workflow skills require explicit routing and prohibit fallback", async () => {
@@ -74,10 +74,10 @@ test("workflow contracts gate planner and reviewer results before lifecycle chan
   assert.match(planner, /malformed result blocks planning/i);
   assert.match(planner, /independently verify the proposal/i);
   assert.match(reviewer, /malformed output.*blocks review/i);
-  assert.match(reviewer, /If review finds anything actionable/i);
+  assert.match(reviewer, /If review finds any production finding/i);
 });
 
-test("task review findings are limited to code and implementation artifacts", async () => {
+test("task review findings are limited to the production surface", async () => {
   const [role, workflow, taskTemplate] = await Promise.all([
     read(".ai/framework/agents/reviewer.yaml"),
     read(".ai/framework/skills/forge-run-task/SKILL.md"),
@@ -86,9 +86,11 @@ test("task review findings are limited to code and implementation artifacts", as
 
   assert.match(role, /canonical documents.*reference inputs.*not review targets/is);
   assert.match(role, /must not become an actionable finding.*final outcome/is);
-  assert.match(role, /implementation code, tests, and code-owned artifacts/i);
-  assert.match(workflow, /code-review surface/i);
-  assert.match(workflow, /canonical-only issue.*orchestrator/is);
-  assert.match(taskTemplate, /code_review_paths: \[\]/);
-  assert.match(taskTemplate, /canonical-only issues are handled by the orchestrator/i);
+  assert.match(role, /production review paths.*executable production code/is);
+  assert.match(role, /supporting evidence, not blocking review targets/i);
+  assert.match(workflow, /production_review_paths/);
+  assert.match(workflow, /supporting_evidence_paths/);
+  assert.match(workflow, /canonical-only issue remains out of contract/i);
+  assert.match(taskTemplate, /production_review_paths: \[\]/);
+  assert.match(taskTemplate, /supporting_evidence_paths: \[\]/);
 });

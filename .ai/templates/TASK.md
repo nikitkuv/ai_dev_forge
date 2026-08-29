@@ -82,39 +82,52 @@ Removing or weakening an approved check requires an explicit rationale and orche
 
 Lifecycle values and transitions are defined only in `.ai/framework/contracts.yaml`. `status` in frontmatter is the sole lifecycle status for this Task.
 
-Set `status` to `IN REVIEW` only after implementation evidence and the Review Packet are current, to `IN TESTING` only after a protocol-complete `CLEAN` review, and to `AWAITING USER ACCEPTANCE` only after selected Task testing passes. Code changes return the Task to `IN PROGRESS` and invalidate older review and testing evidence.
+Set `status` to `IN REVIEW` only after implementation evidence and the Review Packet are current, to `IN TESTING` only after a protocol-complete `CLEAN` production review, and to `AWAITING USER ACCEPTANCE` only after selected Task testing passes. A production-surface change returns the Task to `IN PROGRESS` and invalidates review and testing evidence. A supporting-only change preserves a current clean production review, invalidates affected testing evidence, and returns directly to `IN TESTING` without another strong review.
 
 ```yaml
 current_gate: task_start
 implementation_revision: 0
 current_fingerprint:
+production_fingerprint:
 review_packet:
   base_fingerprint:
   implementation_revision:
   implementation_fingerprint:
+  production_fingerprint:
   diff_fingerprint:
   changed_paths: []
-  code_review_paths: []
+  production_review_paths: []
+  supporting_evidence_paths: []
+  ambiguous_path_classification: []
 review:
   revision:
-  fingerprint:
+  implementation_fingerprint:
+  production_fingerprint:
   outcome:
+  non_production_observations: []
   completed_at:
 testing:
   revision:
-  fingerprint:
+  implementation_fingerprint:
+  production_fingerprint:
   outcome:
   completed_at:
 ```
 
-Use a reproducible Git commit, tree, or scoped diff hash as the fingerprint. Review and testing evidence is current only when both its revision and fingerprint equal the implementation values.
+Use a reproducible Git commit, tree, or scoped diff hash for the whole implementation fingerprint and a reproducible hash of `production_review_paths` for the production fingerprint. Classify by production effect, not directory name: executable code plus runtime configuration, schemas, migrations, generated runtime assets, packaging, production build and deployment files are production when they can change shipped behavior; tests, fixtures, snapshots, golden files, test-only configuration, development tooling and examples are supporting evidence when they cannot. Record a rationale for ambiguous paths. Canonical and lifecycle records remain context only and belong to neither list.
+
+Review evidence is current when its production fingerprint equals the current production fingerprint and packet integrity is complete. Testing evidence is current only for the current implementation revision and whole implementation fingerprint. Legacy review evidence without a production fingerprint is not reusable and requires a fresh review.
 
 ## Implementation Summary
 
 - **Base revision:** <Base commit, tree, or reproducible fingerprint>
 - **Revision:** <implementation revision>
 - **Fingerprint:** <Git commit, tree, or scoped diff hash>
+- **Production fingerprint:** <Reproducible hash of the production review paths>
 - **Files changed:** <Compact list>
+- **Production review paths:** <Executable or shipped-behavior-affecting paths>
+- **Supporting evidence paths:** <Tests and other non-production paths>
+- **Ambiguous path classification:** <Path, classification, and production-effect rationale, or —>
 - **Affected-surface or risk changes:** <None, or correction to the approved plan>
 - **Behavior delivered:** <Compact summary>
 - **Tests added or changed:** <Compact summary>
@@ -128,19 +141,22 @@ Do not paste full agent responses or long tool logs.
 ## Review Summary
 
 - **Revision reviewed:** <revision>
-- **Fingerprint reviewed:** <fingerprint>
+- **Implementation fingerprint reviewed:** <whole implementation fingerprint at review time>
+- **Production fingerprint reviewed:** <production-surface fingerprint>
 - **Outcome:** <pending/CLEAN/FINDINGS/BLOCKED>
 - **Reviewed at:** <YYYY-MM-DD or pending>
 - **Packet integrity:** <pass/fail and compact mismatch summary>
 - **Acceptance traceability:** <Criterion-to-implementation/test evidence summary>
 - **Protocol coverage:** <Scope/context, adversarial, architecture, contracts/data/security, test quality, verification-selection result>
 - **Focused diagnostics:** <Commands and results, or —>
-- **Findings:** <None or compact actionable code-review summary; canonical-only issues are handled by the orchestrator and excluded>
+- **Production findings:** <None or compact outcome-affecting production-defect summary; canonical-only issues are excluded>
+- **Non-production observations:** <None or separate advisory observations about tests or other supporting evidence; these do not prevent CLEAN or require another reviewer invocation>
 
 ## Test Summary
 
 - **Revision tested:** <revision>
-- **Fingerprint tested:** <fingerprint>
+- **Implementation fingerprint tested:** <whole implementation fingerprint>
+- **Production fingerprint:** <matching reviewed production fingerprint>
 - **Outcome:** <pending/passed/failed/exception accepted>
 - **Tested at:** <YYYY-MM-DD or pending>
 - **Commands and results:** <Compact command/result list>

@@ -111,15 +111,15 @@ Fingerprint candidate: конкретный воспроизводимый Git t
 
 ### Шаг 4. Independent review
 
-Оркестратор переводит TASK `IN PROGRESS → IN REVIEW` и вызывает `reviewer` с tier `strong`.
+Оркестратор переводит TASK `IN PROGRESS → IN REVIEW`. Он вызывает `reviewer` с tier `strong`, только если нет текущего `CLEAN` review для того же production fingerprint; supporting-only revision переиспользует clean review без нового вызова.
 
 Reviewer:
 
 - работает read-only;
-- получает exact Review Packet с base/head fingerprints, changed paths, scoped diff, acceptance criteria, affected surfaces, risks, implementation и test evidence;
-- независимо трассирует каждый acceptance criterion, читает изменённые файлы с callers/callees и проверяет adversarial cases, architecture, contracts, data, security и test quality;
+- получает exact Review Packet с whole-implementation и production-surface fingerprints, `production_review_paths`, `supporting_evidence_paths`, scoped diffs, acceptance criteria, affected surfaces, risks, implementation и test evidence;
+- независимо трассирует каждый acceptance criterion, читает production paths с callers/callees и проверяет adversarial cases, architecture, contracts, data и security; test quality использует как supporting evidence;
 - не исправляет код;
-- возвращает findings только оркестратору.
+- возвращает outcome-affecting production findings и отдельные advisory non-production observations только оркестратору.
 
 #### Ветка A: review нашёл проблему
 
@@ -130,11 +130,11 @@ Reviewer:
 ```text
 implementer fixes
 → revision + 1
-→ new fingerprint
-→ reviewer checks the new revision
+→ new whole-implementation and production fingerprints
+→ reviewer checks the new production revision
 ```
 
-Нельзя считать прежний review действительным после любого изменения кода.
+Прежний review недействителен после изменения production fingerprint. Test-only и другое supporting-only исправление сохраняет `CLEAN` и не вызывает reviewer повторно.
 
 #### Ветка B: review чистый
 
@@ -142,7 +142,7 @@ implementer fixes
 
 ### Шаг 5. Tester
 
-Оркестратор вызывает `tester` с tier `fast` для exact reviewed revision.
+Оркестратор вызывает `tester` с tier `fast` для текущей implementation revision. Её whole-implementation fingerprint должен быть текущим, а production fingerprint — совпадать с новым или переиспользованным clean review.
 
 Tester не пишет тесты и не исправляет код. Он запускает по порядку:
 
@@ -153,14 +153,14 @@ Tester не пишет тесты и не исправляет код. Он за
 
 #### Ветка A: тесты упали
 
-> **Оркестратор:** Выбранные repository-component checks обнаружили regression в import старого JSON. TASK возвращается в `IN PROGRESS`. Результаты testing и review инвалидированы. Finding передан implementer.
+> **Оркестратор:** Выбранные repository-component checks обнаружили regression в import старого JSON. TASK возвращается в `IN PROGRESS`, finding передан implementer. Testing evidence инвалидирован; review инвалидируется только если исправление меняет production fingerprint.
 
 После исправления обязательны:
 
 ```text
-new implementation revision
-→ повторный strong review
-→ targeted tests
+new implementation revision and fingerprints
+→ production changed: повторный strong review → targeted tests
+→ supporting-only: preserved CLEAN → targeted tests без reviewer
 → affected tests
 → scoped configured checks
 ```
@@ -436,12 +436,14 @@ IN PROGRESS
   │ implementer + implementation evidence
   ▼
 IN REVIEW
-  │ strong reviewer
-  ├── findings ───────────────► IN PROGRESS
-  ▼ clean
+  │ strong reviewer if production fingerprint is new
+  ├── production findings ────► IN PROGRESS
+  ├── advisory observations ──► preserved CLEAN
+  ▼ new or preserved clean
 IN TESTING
   │ tester: focused + selected affected + fuzz smoke + scoped checks
-  ├── failure ────────────────► IN PROGRESS → review again
+  ├── failure + prod change ──► IN PROGRESS → review again
+  ├── failure + support fix ──► IN PROGRESS → reuse CLEAN → test again
   ▼ pass
 AWAITING USER ACCEPTANCE
   ├── fixes within scope ─────► IN PROGRESS

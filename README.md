@@ -86,7 +86,7 @@ Communicate with me in Russian.
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Нейтральные определения находятся в `.ai/framework/`. `AGENTS.md` и `CLAUDE.md` генерируются с byte-identical содержимым. Проектные дополнения к ним хранятся только в `.ai/custom/router-shared.md`.
+Нейтральные определения находятся в `.ai/framework/`. Полный router генерируется только в `AGENTS.md`; `CLAUDE.md` содержит `@AGENTS.md` и импортирует его в Claude Code без копирования. Проектные дополнения к router хранятся только в `.ai/custom/router-shared.md`.
 
 Framework defaults для всех субагентов: Codex `strong = gpt-5.6-sol/medium`, `balanced = gpt-5.6-terra/medium`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/medium`, `balanced = sonnet/medium`, `fast = haiku/medium`. Проект может явно переопределить их в `.ai/project.yaml`; генератор записывает resolved mapping в нативные agent-файлы обеих платформ. В режиме `native_subagents` все Claude Code agent-файлы получают режимный override `effort: high`; настройки Codex и внешнего маршрута `codex_with_claude` не меняются.
 
@@ -94,7 +94,7 @@ Framework defaults для всех субагентов: Codex `strong = gpt-5.6
 
 ## Проверка качества
 
-Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks, а её Verification Plan фиксирует `Fuzzing impact` и bounded `Task fuzz smoke` либо rationale неприменимости. Strong reviewer получает обязательный Review Packet, независимо трассирует каждый acceptance criterion и проверяет code-review diff, соседний код, adversarial cases, архитектуру, контракты, данные, безопасность и качество тестов. Canonical-документы служат ему только контекстом и не являются объектом review: их ошибки исправляет оркестратор и они не создают code findings. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
+Обычная TASK использует focused RED/GREEN, выбранные affected-component tests и scoped quality checks, а её Verification Plan фиксирует `Fuzzing impact` и bounded `Task fuzz smoke` либо rationale неприменимости. Review Packet разделяет `production_review_paths` и `supporting_evidence_paths` и хранит отдельный production fingerprint. Strong reviewer независимо проверяет только production surface: исполняемый код и runtime/schema/migration/build/package/deployment artifacts, способные изменить shipped behavior. Ошибки тестов, fixtures, snapshots и dev-only файлов он возвращает отдельными advisory observations; они не мешают `CLEAN` и не запускают новый strong review. Supporting-only исправление сохраняет clean review при том же production fingerprint и повторяет только tester gate. Tester по-прежнему блокирует TASK при падающих, слабых или недостаточных тестах. Canonical-документы служат только контекстом. Полный project test suite и unscoped project-wide lint/typecheck/build не являются Task gate.
 
 Epic planner заранее создаёт Epic Fuzzing Plan и оценивает applicability. После принятия последней TASK Epic переходит в `VALIDATING`; отдельный `epic-validator` запускает полный regression suite, глобальные quality checks, critical-path validation и применимые gates выбранных project profiles. Только текущий passing Epic Validation fingerprint допускается к fuzzing gate. При актуальном approved `not applicable` оркестратор записывает `NOT APPLICABLE` без вызова fuzzer; `applicable`, `unresolved` или противоречащие итоговые evidence требуют read-only fuzzer перед Epic Acceptance.
 

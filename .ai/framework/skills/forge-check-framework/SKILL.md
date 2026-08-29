@@ -20,8 +20,8 @@ Do not repair files during this check.
 - Verify `role_execution.mode` is one supported atomic value for both roles; verify both managed launchers and every route reuse the matching neutral role contract, enforce the expected orchestrator, model and permission boundary, request fresh execution, and prohibit fallback. Native mode must perform no external preflight.
 - Verify every Forge-managed `.claude/agents/*.md` file is UTF-8 without BOM and starts at byte zero with the `---` YAML frontmatter delimiter.
 - Permit additional project-owned agents and skills; verify they and other unlisted platform files are excluded from Forge ownership and remain unchanged.
-- Verify the shared router overlay renders identically without copying legacy framework instructions.
-- Verify root `AGENTS.md` and `CLAUDE.md` are byte-identical and each no more than 150 lines.
+- Verify the shared router overlay renders once into `AGENTS.md` without copying legacy framework instructions.
+- Verify root `AGENTS.md` is the complete router and no more than 150 lines, while root `CLAUDE.md` contains exactly `@AGENTS.md`.
 - Verify the framework did not create default hooks, MCP configuration, or mandatory CLI dependencies during generation. External prerequisites are required only when their mode is selected; `native_subagents` remains dependency-free.
 - Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
 - Verify `quality/mutation-testing/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization.
@@ -41,11 +41,11 @@ Do not repair files during this check.
 - Check Task state exists only in its TASK file and Epic priority/readiness/status only in `BACKLOG.md`.
 - Check plan Task order matches existing TASK files without storing Task status.
 - Check SPEC and ARCHITECTURE contain target state, not execution tracking.
-- Check Review Packet, structured review, and selected Task-testing fingerprints match current implementation.
+- Check every Review Packet classifies production and supporting paths by shipped-behavior effect, records rationale for ambiguous paths, and carries both whole-implementation and production-surface fingerprints. Require clean structured review to match the current production fingerprint and selected Task testing to match the current implementation revision and whole-implementation fingerprint. Treat legacy review without a production fingerprint as stale.
 - Check Task verification does not require a full project suite or unscoped global command without an explicit early-run request.
 - Check the approved Epic Verification Plan, Epic Fuzzing Plan, selected quality profiles, full-suite/project-wide Epic Validation evidence, and aggregate fingerprint are current before the fuzzing gate.
 - Check every TASK records final `Fuzzing impact` and `Task fuzz smoke` evidence. A skipped fuzzer invocation is valid only for approved `not applicable` with all final impacts `none`, matching actual affected surfaces, passing alternative risk coverage, and the same aggregate fingerprint; `applicable`, `unresolved`, or contradictory evidence must show a fuzzer invocation.
-- Check code changes invalidate affected Task evidence plus aggregate Epic Validation and fuzzing evidence.
+- Check production-surface changes invalidate Task review and testing plus aggregate Epic Validation and fuzzing evidence. Check supporting-only changes preserve a matching clean production review, invalidate affected Task testing plus aggregate Epic Validation and fuzzing evidence, and never cause another strong-review invocation by themselves.
 - Check no Task commit predates explicit Task Acceptance and transition to `DONE`.
 - Check the current gate can be reconstructed without session history.
 - Check Epic Start always consumes one approved planned workspace through an atomic planned-to-active move plus Backlog transition.

@@ -52,7 +52,7 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Independent mutation history under `quality/mutation-testing/` is optional project-owned state. Bootstrap and adapter synchronization do not create or overwrite it.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, and `.agents/`. Unlisted entries remain project-owned.
 
-Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` and `CLAUDE.md` are byte-identical. Do not edit them manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
+Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router; `CLAUDE.md` contains only `@AGENTS.md`. Do not edit them manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
 
 ## Project-local integrations
 
@@ -72,6 +72,14 @@ Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/co
 
 Mutation testing is invoked only by an explicit user request and is independent of Backlog, Epic, TASK, review, testing, validation, fuzzing, acceptance, and commit state. A run or finding never changes lifecycle status, satisfies a quality gate, invalidates development evidence, or creates remediation automatically. The bare workflow is metrics-only; strong analysis requires separate explicit authorization and current candidates. Tool installation or configuration is a separate repository change.
 
+## Test integrity
+
+Tests are executable evidence of approved behavior, not a description of the current implementation. Derive their oracles from acceptance criteria, public contracts, domain invariants, architecture and independently calculated expectations before using production output. Never copy current output into an expectation, reproduce the production algorithm inside the test, assert private call structure as a substitute for behavior, or weaken an assertion merely because the implementation fails it.
+
+Within the approved Task scope, cover every acceptance criterion and affected risk with the strongest practical evidence: successful behavior, boundaries, invalid input, failure and recovery paths, relevant state transitions and side effects, and regression cases. Prefer the lowest stable public boundary that executes real production code. Mock only true external or nondeterministic boundaries; do not mock the subject under test or the decision logic being verified. Assertions must discriminate correct behavior from plausible wrong implementations, not merely prove that code ran, returned a value, or matched a self-generated snapshot.
+
+A production behavior change does not automatically authorize a test change. Every changed test, fixture, snapshot, golden file, baseline or expected metric must be classified as a behavior-contract change, correction of a demonstrably defective test, or coverage extension. Record the independent source of the new expectation and obtain orchestrator disposition for any removed case, reduced assertion strength, broader tolerance, new skip, or increased mocking. When the contract has not changed, fix production code rather than adapting the test to current behavior.
+
 ## Language rules
 
 Framework control text, technical identifiers, statuses, paths, and commands are English. Canonical project documents (`README`, `SPEC`, `ARCHITECTURE`, `BACKLOG`, `DECISIONS`, ADRs, plans, and Tasks) use the user communication language recorded in `.ai/project.yaml`.
@@ -90,4 +98,4 @@ Each kind of information has one canonical owner:
 
 Do not create separate progress, report, checkpoint, user-validation, security, research, or fuzzing Markdown files. Keep document approval status separate from lifecycle status. If source documents disagree, report the inconsistency instead of silently reconciling it.
 
-Generated root `AGENTS.md` and `CLAUDE.md` contain byte-identical Common Engineering Prohibitions. Project overlays may add stricter rules but may not remove or weaken those framework prohibitions.
+Generated root `AGENTS.md` contains the Common Engineering Prohibitions once, and `CLAUDE.md` imports them through `@AGENTS.md`. Project overlays may add stricter rules but may not remove or weaken those framework prohibitions.

@@ -117,7 +117,7 @@ Bootstrap SHALL ask the user to select one supported mode and persist it in `.ai
 
 ### Requirement: Generated adapters expose every configured route safely
 
-Adapter generation SHALL retain all neutral role definitions and all native Codex and Claude agent files, generate both managed external launchers, and render byte-identical router guidance for the three-mode matrix. Generation SHALL not install, authenticate, preflight, or invoke an external provider. Validation SHALL verify role-contract parity, launcher permission boundaries, route metadata, configuration validity, and preservation of unrelated platform files.
+Adapter generation SHALL retain all neutral role definitions and all native Codex and Claude agent files, generate both managed external launchers, render the complete three-mode router guidance once in root `AGENTS.md`, and render root `CLAUDE.md` as the exact `@AGENTS.md` import. Generation SHALL not install, authenticate, preflight, or invoke an external provider. Validation SHALL verify the import, role-contract parity, launcher permission boundaries, route metadata, configuration validity, and preservation of unrelated platform files.
 
 #### Scenario: External prerequisites are absent during generation
 - **WHEN** adapters are generated without Codex plugin or Claude Code runtime availability

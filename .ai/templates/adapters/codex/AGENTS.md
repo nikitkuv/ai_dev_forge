@@ -43,6 +43,9 @@ Report contradictions instead of silently reconciling them.
 - Do not silently expand approved scope, invent requirements, or make an unresolved architectural or product decision.
 - Do not mix unrelated refactoring, dependency upgrades, formatting churn, or user changes into assigned work or its evidence.
 - Do not delete, disable, skip, quarantine, weaken, or rewrite tests merely to obtain a passing result. Do not use rerun-until-green as evidence for a flaky check.
+- Derive test expectations independently from approved behavior, public contracts and invariants. Do not copy current production output into expectations, duplicate the production algorithm in tests, mock the subject under test, or replace behavioral assertions with private implementation-detail checks.
+- Within approved scope, trace every acceptance criterion and affected risk to the strongest practical normal, boundary, invalid-input, failure/recovery, state-transition and side-effect evidence. Assertions must fail for plausible wrong implementations; passing, non-null, snapshot-only or mock-only checks are not sufficient evidence.
+- Classify and justify every changed test expectation, fixture, snapshot, golden file, baseline, tolerance or metric. When the behavior contract is unchanged, fix production code instead of adapting tests; any weaker assertion, removed case, new skip, broader tolerance or increased mocking requires orchestrator disposition.
 - Do not update snapshots, golden files, fixtures, baselines, generated artifacts, or ML expectations without verifying and explaining the intended behavior change.
 - Do not claim `passed`, `clean`, `compatible`, `secure`, or complete without current reproducible evidence tied to the exact revision or fingerprint.
 - Do not hide failures, ignore non-zero exits or material warnings, swallow errors, or introduce unbounded retries, waits, resource use, or training runs.
@@ -101,7 +104,7 @@ Run no more than one code-writing Task at a time. Independent read-only research
 
 ## Platform Boundaries
 
-- `AGENTS.md` and `CLAUDE.md` must be byte-identical generated routers.
+- `AGENTS.md` is the single generated root router. `CLAUDE.md` imports it with `@AGENTS.md` and must contain no duplicated router instructions.
 - Generated adapters are derived from `.ai/framework/`, `.ai/project.yaml`, and `.ai/custom/router-shared.md`.
 - Project-specific router additions belong only in `.ai/custom/router-shared.md`; synchronize rather than editing generated files.
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.

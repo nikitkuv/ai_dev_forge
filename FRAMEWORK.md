@@ -129,7 +129,7 @@ Framework control layer написан на английском. Канонич
 | `.codex/agents/*.toml` | `.claude/agents/*.md` |
 | `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-Оба root router имеют byte-identical содержимое и ограничены 150 строками. `.ai/project.yaml` хранит `role_execution.mode` и сопоставляет tiers с конкретными моделями и effort. Framework defaults:
+`AGENTS.md` — единственный полный root router и ограничен 150 строками. `CLAUDE.md` содержит только `@AGENTS.md`, поэтому Claude Code импортирует тот же router без дублирования. `.ai/project.yaml` хранит `role_execution.mode` и сопоставляет tiers с конкретными моделями и effort. Framework defaults:
 
 | Tier | Codex | Claude Code |
 | --- | --- | --- |
@@ -203,12 +203,12 @@ TODO
 
 1. отдельный Task Start;
 2. implementer пишет код и необходимые тесты;
-3. strong reviewer получает обязательный Review Packet и по ordered protocol проверяет acceptance traceability, code-review diff/context, adversarial cases, архитектуру, контракты, данные, безопасность и тесты; canonical-документы используются только как контекст, не проверяются reviewer-ом и исправляются оркестратором;
-4. tester запускает focused, selected affected, применимый bounded Task fuzz smoke и scoped quality checks; для fuzzing impact `none` сверяет rationale с actual surface; полный project suite и unscoped global checks остаются Epic gate;
+3. Review Packet классифицирует production и supporting paths и фиксирует whole-implementation и production-surface fingerprints; strong reviewer по ordered protocol проверяет production surface, а дефекты тестов и других non-production artifacts возвращает отдельными advisory observations, которые не блокируют `CLEAN`; canonical-документы используются только как контекст;
+4. tester получает advisory observations и запускает focused, selected affected, применимый bounded Task fuzz smoke и scoped quality checks; для fuzzing impact `none` сверяет rationale с actual surface; полный project suite и unscoped global checks остаются Epic gate;
 5. пользователь тестирует вручную;
 6. отдельный Task Acceptance переводит TASK в `DONE`.
 
-Любое изменение кода инвалидирует прежние review и test fingerprints. Commit этой TASK запрещён до явного Task Acceptance и перехода в `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit. Task Acceptance не запускает следующую TASK без отдельного разрешения.
+Изменение production surface инвалидирует прежние review и test evidence и требует нового strong review. Supporting-only изменение при неизменном production fingerprint сохраняет clean review, инвалидирует affected testing evidence и идёт сразу на повторный tester gate без вызова reviewer. Commit этой TASK запрещён до явного Task Acceptance и перехода в `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit. Task Acceptance не запускает следующую TASK без отдельного разрешения.
 
 ## Epic lifecycle, validation и fuzzing
 

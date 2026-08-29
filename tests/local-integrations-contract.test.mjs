@@ -98,14 +98,14 @@ test("upgrade is offline, isolated, staged, and reversible", async () => {
   assert.match(check, /block only consuming skills/i);
 });
 
-test("Codex and Claude routers and portable integration contract remain in parity", async () => {
+test("Claude imports the canonical router and portable integration contract remains in parity", async () => {
   const [codex, claude, manifest, generation] = await Promise.all([
     read(".ai/templates/adapters/codex/AGENTS.md"),
     read(".ai/templates/adapters/claude/CLAUDE.md"),
     read(".ai/framework/manifest.yaml"),
     read(".ai/05-create-platform-adapters.md")
   ]);
-  assert.equal(codex, claude);
+  assert.equal(claude.trim(), "@AGENTS.md");
   assert.match(manifest, /- forge-intake-external-work/);
   assert.match(generation, /sixteen portable `SKILL\.md` files/);
   assert.match(generation, /no `\.ai\/integrations\/` file or project-local provider\/tool name/i);

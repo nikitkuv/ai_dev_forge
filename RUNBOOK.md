@@ -153,14 +153,14 @@ Task Start
 → AWAITING USER ACCEPTANCE
 ```
 
-Implementer пишет production-код и focused tests. Reviewer не исправляет код, получает обязательный Review Packet, независимо трассирует acceptance criteria и выполняет ordered adversarial review protocol только для кода, тестов и code-owned artifacts. Canonical-документы остаются контекстом: reviewer не создаёт по ним findings и не меняет итог code review, а ошибки в них исправляет оркестратор. Tester не пишет тесты и запускает:
+Implementer пишет production-код и focused tests. Review Packet разделяет production paths и supporting evidence и фиксирует отдельный production fingerprint. Reviewer не исправляет код и выполняет ordered adversarial review protocol для production surface. Только production findings влияют на outcome; дефекты тестов, fixtures, snapshots и dev-only artifacts идут отдельными advisory observations и совместимы с `CLEAN`. Runtime configuration, schemas, migrations, packaging, production build и deployment artifacts считаются production, если могут изменить shipped behavior. Canonical-документы остаются контекстом. Tester получает observations, не пишет тесты и запускает:
 
 1. новые/изменённые тесты;
 2. выбранные affected-component tests;
 3. bounded `Task fuzz smoke`, если итоговый fuzzing impact затрагивает target или готовый harness; для `none` сверяет rationale с actual surface;
 4. scoped lint, typecheck, build и применимые profile-specific checks.
 
-Полный project test suite и unscoped project-wide checks не являются Task gate и по умолчанию запрещены implementer, reviewer и tester. Ранний полный прогон допустим только по явному запросу пользователя и не заменяет Epic Validation. После любого исправления structured review и selected testing выполняются заново.
+Полный project test suite и unscoped project-wide checks не являются Task gate и по умолчанию запрещены implementer, reviewer и tester. Ранний полный прогон допустим только по явному запросу пользователя и не заменяет Epic Validation. После production-исправления заново выполняются strong review и selected testing. После supporting-only исправления clean review сохраняется при совпадающем production fingerprint, а selected testing выполняется заново без вызова strong reviewer.
 
 ## 9. Ручная проверка и Task Acceptance
 
@@ -265,7 +265,7 @@ Deferred analysis требует current fingerprint и artifact checksum. Mutat
 - `.ai/custom/router-shared.md`;
 - framework release.
 
-Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет byte-identical root routers, parity остальных adapters и обновляет `.ai/framework.lock`.
+Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет полный `AGENTS.md`, точный импорт `@AGENTS.md` в `CLAUDE.md`, parity остальных adapters и обновляет `.ai/framework.lock`.
 
 Project-owned `.ai/integrations/` не является render input и не попадает в managed-output hashes. Изменение board scope или другого локального definition не требует adapter sync само по себе.
 

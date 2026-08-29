@@ -54,12 +54,12 @@ test("generation and migration retain both launchers and all native agents", asy
   assert.match(validation, /No route implicitly falls back/);
 });
 
-test("router guidance is identical and contains the complete no-fallback matrix", async () => {
+test("canonical router contains the complete no-fallback matrix and Claude imports it", async () => {
   const [codex, claude] = await Promise.all([
     read(".ai/templates/adapters/codex/AGENTS.md"),
     read(".ai/templates/adapters/claude/CLAUDE.md")
   ]);
-  assert.equal(codex, claude);
+  assert.equal(claude.trim(), "@AGENTS.md");
   for (const mode of ["claude_with_codex", "codex_with_claude", "native_subagents"]) assert.match(codex, new RegExp(mode));
   assert.match(codex, /There is no fallback/);
   assert.match(codex, /active-orchestrator mismatch/);

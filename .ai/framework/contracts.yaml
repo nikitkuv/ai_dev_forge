@@ -198,11 +198,43 @@ fuzzing:
         - repeated_epic_fuzzing
 
 quality_gates:
+  production_review:
+    production_surface:
+      includes: [executable_production_code, runtime_configuration, schemas, migrations, generated_runtime_assets, packaging, production_build, deployment_artifacts]
+      criterion: contents_can_change_shipped_behavior
+    supporting_evidence:
+      includes: [tests, fixtures, snapshots, golden_files, test_only_configuration, development_tooling, examples, other_non_production_artifacts]
+      criterion: contents_cannot_change_shipped_behavior
+    ambiguous_path_requires: orchestrator_classification_rationale
+    canonical_and_lifecycle_records: context_only
+    fingerprints: [whole_implementation_fingerprint, production_surface_fingerprint]
+    blocking_findings: production_surface_only
+    non_production_observations: advisory_only
+    clean_with_non_production_observations: permitted
+    review_reuse_requires: [prior_outcome_CLEAN, matching_production_surface_fingerprint, complete_packet_integrity]
+    supporting_only_change:
+      preserves: clean_production_review
+      invalidates: affected_task_testing_evidence
+      next_gate: task_testing
+      strong_reviewer_reinvocation: forbidden
+    production_change:
+      invalidates: [task_review_evidence, task_testing_evidence, epic_validation_evidence, fuzzing_evidence]
+      next_gate: strong_review
+    legacy_evidence_without_production_fingerprint: fresh_review_required
+    packet_or_output_integrity_failures: blocking
+  test_integrity:
+    oracle_sources: [acceptance_criteria, public_contracts, domain_invariants, approved_examples, independent_reference_oracle]
+    requires: [acceptance_and_risk_traceability, real_production_logic, stable_public_boundary, discriminating_assertions, applicable_normal_boundary_invalid_error_recovery_state_and_side_effect_cases]
+    mocking_policy: external_or_nondeterministic_boundaries_only
+    test_change_classifications: [behavior_contract_change, defective_test_correction, coverage_extension]
+    weakening_requires: [explicit_rationale, independent_expected_behavior_source, orchestrator_disposition]
+    forbidden: [captured_production_output_as_oracle, duplicated_production_algorithm_as_oracle, mocked_subject_under_test, private_call_structure_as_behavior_evidence, tautological_assertions, unexplained_snapshot_fixture_baseline_or_metric_update, adapting_test_to_unchanged_wrong_behavior]
   task:
     requires:
       - approved_definition_with_objective_acceptance_and_boundaries
       - affected_surface_and_risk_flags
       - focused_behavior_evidence
+      - test_integrity_evidence
       - selected_affected_checks
       - planned_fuzzing_impact_and_task_smoke
       - current_structured_review
@@ -276,9 +308,14 @@ invariants:
   - one_epic_has_at_most_one_execution_workspace
   - epic_start_atomically_moves_planned_workspace_to_active_and_updates_backlog
   - no_more_than_one_code_writing_task_in_progress
-  - code_changes_invalidate_prior_review_test_epic_validation_and_fuzzing_results
+  - production_changes_invalidate_prior_review_test_epic_validation_and_fuzzing_results
+  - supporting_only_changes_preserve_clean_production_review_and_invalidate_affected_testing
+  - only_production_findings_block_strong_review
+  - non_production_review_observations_are_advisory
   - full_project_suite_is_an_epic_validation_gate_not_a_task_gate
   - task_check_selection_is_justified_by_changed_and_affected_surfaces
+  - tests_are_independent_behavior_evidence_not_implementation_transcriptions
+  - unchanged_behavior_contract_requires_fixing_production_not_adapting_tests
   - task_tester_never_silently_expands_to_the_full_project_suite
   - epic_validation_precedes_epic_fuzzing
   - planned_not_applicable_skips_fuzzer_only_with_current_final_evidence
