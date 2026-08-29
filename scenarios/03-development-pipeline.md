@@ -109,7 +109,31 @@ Fingerprint candidate: конкретный воспроизводимый Git t
 
 Отдельный implementation report не создаётся.
 
-### Шаг 4. Independent review
+### Шаг 3A. Выбор delivery track
+
+Delivery track выбирается в approved plan до Task Start и независимо от model tier и `risk level`. Для `fast` оркестратор должен доказать, что изменение ограничено, обратимо, однозначно и имеет детерминированную локальную проверку. Публичный контракт, auth/security/privacy, persistence/data format/schema/migration, concurrency/shared core, dependency/build/package/deploy/runtime infrastructure, внешняя интеграция, critical path, ослабление тестов или неопределённость означают `standard`.
+
+TASK-002 меняет migration и поэтому идёт по `standard`. Простая локальная TASK, которая прошла все fast eligibility checks, после implementer получила бы другой маршрут:
+
+```text
+IN PROGRESS
+→ orchestrator assurance: fingerprint + bounded diff + test integrity + approved focused checks
+→ AWAITING USER ACCEPTANCE
+```
+
+Reviewer и tester на fast track не вызываются. Любой провал, расширение surface или сомнение повышает TASK `fast → standard`; после Task Start переход `standard → fast` запрещён. Legacy TASK без поля track считается `standard`. Это не отменяет TDD, Task Acceptance, последующую Epic Validation или fuzzing.
+
+Примеры маршрутизации:
+
+| Изменение | Track | Причина |
+| --- | --- | --- |
+| Исправить опечатку или локальную документацию с проверяемой ссылкой | `fast` | bounded, reversible, deterministic verification |
+| Исправить малую внутреннюю ветку логики с независимым focused test | `fast`, если доказаны все критерии | низкий риск сам по себе недостаточен |
+| Изменить public API contract | `standard` | public-contract disqualifier |
+| Изменить schema или migration | `standard` | data/migration disqualifier |
+| Fast check упал или обнаружен неожиданный affected surface | `fast → standard` | fail-closed escalation |
+
+### Шаг 4. Independent review (`standard`)
 
 Оркестратор переводит TASK `IN PROGRESS → IN REVIEW`. Он вызывает `reviewer` с tier `strong`, только если нет текущего `CLEAN` review для того же production fingerprint; supporting-only revision переиспользует clean review без нового вызова.
 
@@ -140,7 +164,7 @@ implementer fixes
 
 Оркестратор записывает Review Summary в TASK и переводит её `IN REVIEW → IN TESTING`.
 
-### Шаг 5. Tester
+### Шаг 5. Tester (`standard`)
 
 Оркестратор вызывает `tester` с tier `fast` для текущей implementation revision. Её whole-implementation fingerprint должен быть текущим, а production fingerprint — совпадать с новым или переиспользованным clean review.
 
@@ -320,7 +344,7 @@ FUZZING → ACTIVE
 → reproduction evidence в plan
 → Replan remediation TASK
 → Task Start
-→ implementer/reviewer/tester/user acceptance
+→ assurance выбранного delivery track/user acceptance
 → повторная Epic Validation
 → повторный FUZZING
 ```
@@ -434,17 +458,12 @@ TODO
   ▼
 IN PROGRESS
   │ implementer + implementation evidence
-  ▼
-IN REVIEW
-  │ strong reviewer if production fingerprint is new
-  ├── production findings ────► IN PROGRESS
-  ├── advisory observations ──► preserved CLEAN
-  ▼ new or preserved clean
-IN TESTING
-  │ tester: focused + selected affected + fuzz smoke + scoped checks
-  ├── failure + prod change ──► IN PROGRESS → review again
-  ├── failure + support fix ──► IN PROGRESS → reuse CLEAN → test again
-  ▼ pass
+  ├── fast → orchestrator assurance ────────────────┐
+  │          failure/uncertainty → standard         │
+  └── standard → IN REVIEW → IN TESTING ───────────┤
+               reviewer       tester               │
+               failure ───────────────► IN PROGRESS│
+                                                   ▼
 AWAITING USER ACCEPTANCE
   ├── fixes within scope ─────► IN PROGRESS
   ├── new scope ──────────────► Replan gate
@@ -521,7 +540,7 @@ AWAITING USER ACCEPTANCE
 - Пользователь владеет priority и окончательными решениями.
 - Epic Start, Task Start, Task Acceptance и Epic Acceptance — разные gates.
 - Implementer пишет production-код и тесты; tester тесты не пишет.
-- Любая Task-правка кода требует нового structured review и selected Task testing; aggregate changes также инвалидируют Epic Validation и fuzzing.
+- Любая Task-правка кода инвалидирует assurance выбранного delivery track: fast повторяет orchestrator assurance либо повышается до standard, а standard повторяет нужные review/testing gates; aggregate changes также инвалидируют Epic Validation и fuzzing.
 - Проблема в непринятой TASK остаётся в этой TASK.
 - Проблема в принятом коде получает `BUG-*` только после подтверждения.
 - После последней TASK автоматически запускается полный Epic Validation; затем обязательный fuzzing gate либо подтверждает текущий `NOT APPLICABLE` без subagent, либо вызывает read-only fuzzer для `applicable`, `unresolved` или противоречащих evidence.

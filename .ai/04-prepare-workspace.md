@@ -44,9 +44,10 @@ The orchestrator must independently check the proposal against canonical sources
 4. define Epic acceptance criteria;
 5. map requirements to planned Task and Epic-level evidence;
 6. select applicable quality profiles and risk flags;
-7. define Task-focused and affected verification without a mandatory full suite;
-8. define Epic-wide full regression, project-wide checks, critical paths, profile gates, user-validation gates, and an evidence-based Epic Fuzzing Plan with applicability `applicable`, `not applicable`, or `unresolved`; targets and invariants; harness readiness and Task ownership; Task smoke mapping; reproducible tools/seeds/budgets; failure criteria; artifact handling; constraints; rationale plus alternative risk coverage for `not applicable`; and exact missing evidence or blocker for `unresolved`;
-9. when the Epic has work-source references, map every source slice to proposed TASK coverage and identify deferred, duplicate, or unresolved scope.
+7. select exactly one delivery track per Task independently from model tier and risk level; require criterion-by-criterion positive evidence and explicit disqualifier disposition for fast, and default missing or uncertain evidence to standard;
+8. define Task-focused and affected verification without a mandatory full suite;
+9. define Epic-wide full regression, project-wide checks, critical paths, profile gates, user-validation gates, and an evidence-based Epic Fuzzing Plan with applicability `applicable`, `not applicable`, or `unresolved`; targets and invariants; harness readiness and Task ownership; Task smoke mapping; reproducible tools/seeds/budgets; failure criteria; artifact handling; constraints; rationale plus alternative risk coverage for `not applicable`; and exact missing evidence or blocker for `unresolved`;
+10. when the Epic has work-source references, map every source slice to proposed TASK coverage and identify deferred, duplicate, or unresolved scope.
 
 Use the plan template without adding Task lifecycle state or a duplicated execution-status section.
 
@@ -60,6 +61,7 @@ For every TASK:
 - define one clear outcome, context, scope, out of scope, and constraints;
 - add objectively verifiable acceptance criteria;
 - record affected components and contracts, risk level and flags, and review focus;
+- record `delivery_track: fast|standard` and its rationale; for fast, record bounded scope, reversibility, low risk, unambiguous behavior, deterministic verification, and explicit absence of all disqualifiers; low risk alone is never enough and uncertainty selects standard;
 - add required Task-specific, affected-component, and scoped quality checks;
 - record `Fuzzing impact` as `existing target affected`, `new target`, `harness required`, or `none`, plus a bounded `Task fuzz smoke` command and budget or an explicit not-applicable rationale;
 - defer the full project suite and unscoped project-wide checks to Epic Validation;
@@ -70,7 +72,7 @@ For every TASK:
 - initialize lifecycle `status: TODO`;
 - keep `definition_status: draft` until the user approves the complete plan.
 
-The planner's proposed verification selection is not self-approving. The reviewer must later challenge its coverage against the actual implementation diff, and the tester must report a stale or incomplete selection instead of silently expanding to the full suite.
+The planner's proposed track and verification selection are not self-approving. For fast, the orchestrator revalidates both at Task Start and against the actual implementation diff. For standard, the reviewer challenges coverage and the tester reports a stale or incomplete selection instead of silently expanding to the full suite.
 
 Do not run a mandatory atomicity classifier. Split or reshape work only when the user requests it or when actual planning or execution reveals a concrete need.
 
@@ -137,7 +139,7 @@ The first TASK remains TODO after workspace creation. Starting it requires the s
 
 ## Replan Gate
 
-After the plan is approved, any change to Task scope, order, composition, or external-source coverage requires the **Replan gate**, whether the workspace is planned, active, or paused:
+After the plan is approved, any change to Task scope, order, composition, external-source coverage, or a standard-to-fast downgrade before Task Start requires the **Replan gate**, whether the workspace is planned, active, or paused. Standard-to-fast is forbidden after Task Start; unchanged-scope fast-to-standard safety escalation is recorded without Replan:
 
 1. explain the reason;
 2. show the exact plan and TASK diff;

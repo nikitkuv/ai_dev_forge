@@ -66,12 +66,16 @@ Use this matrix only for configured `work_source` integrations. For an Epic with
 
 ## Ordered Task Sequence
 
+### Task Delivery Tracks
+
+Every TASK records exactly one delivery track independently from model tier and risk level. For each proposed `fast` TASK, record criterion-by-criterion evidence for bounded scope, reversibility, low risk, unambiguous expected behavior, deterministic focused verification, and the absence of every framework disqualifier. Missing, uncertain, or contradictory evidence selects `standard`. Record the selected track and rationale beside each Task in the ordered sequence or directly below its row.
+
 | Order | Task | Intended outcome | Depends on |
 | --- | --- | --- | --- |
 | 1 | TASK-NNN — <Title> | <One independently verifiable outcome> | — |
 | 2 | TASK-NNN — <Title> | <One independently verifiable outcome> | TASK-NNN |
 
-Changing Task scope, order, or composition after plan approval requires the Replan gate defined in `.ai/framework/contracts.yaml`.
+Changing Task scope, order, composition, or weakening its approved delivery track before Task Start requires the Replan gate defined in `.ai/framework/contracts.yaml`. Fast-to-standard safety escalation with unchanged scope does not.
 
 ## Epic Acceptance Criteria
 
@@ -105,7 +109,7 @@ Changing Task scope, order, or composition after plan approval requires the Repl
 
 ## Mandatory Quality Gates
 
-- [ ] Every Task completed implementation, structured independent review, selected Task verification, and explicit Task Acceptance gates.
+- [ ] Every Task completed implementation, its track-specific assurance (`fast` orchestrator assurance or `standard` independent review plus tester verification), and explicit Task Acceptance gates.
 - [ ] Requirement-to-Task and Epic-level evidence coverage is complete.
 - [ ] Epic Validation ran the full project test suite and project-wide lint, typecheck, build, integration, and end-to-end commands applicable to this project on the current fingerprint.
 - [ ] Selected quality-profile gates passed, were objectively not applicable, or have an explicitly accepted exception with recorded risk.

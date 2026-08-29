@@ -49,7 +49,7 @@ Generate no `.ai/integrations/` or `quality/mutation-testing/` content and embed
 
 1. verify `AGENTS.md` has no unresolved placeholder and remains within the configured line limit, and verify `CLAUDE.md` is the exact `@AGENTS.md` import;
 2. verify the complete manifest-declared Forge agent and skill set on both platforms;
-3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify all three `role_execution` modes, both launchers, active-orchestrator requirements, complete neutral prompt parity, fresh/read-only boundaries, configured model sources, and `fallback: forbidden`;
+3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify both delivery-track routes are present in the imported router and portable skills, fast invokes neither reviewer nor tester, standard preserves both roles, and delivery track never changes model mappings; verify all three `role_execution` modes, both launchers, active-orchestrator requirements, complete neutral prompt parity, fresh/read-only boundaries, configured model sources, and `fallback: forbidden`;
 4. verify additional project-owned agents, skills, integration consumers, `quality/mutation-testing/` history, and all unlisted platform files are unchanged;
 5. verify every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 6. verify the framework lock contains only inputs that render managed outputs and that local integration changes are reported separately rather than as adapter drift;

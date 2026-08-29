@@ -1,4 +1,4 @@
-# AI Development Forge v4.4 — Architecture
+# AI Development Forge v4.6 — Architecture
 
 ## Configurable planner/reviewer routing
 
@@ -186,29 +186,37 @@ Codex вызывает skill как `$forge-...`, Claude Code — как `/forge
 
 Feature discovery и root-cause investigation встроены в intake skills. Test-driven implementation и evidence-before-transition встроены в Task lifecycle и role-specific agent contracts. Внешние process skills не управляют gates, canonical artifacts, status transitions, agent routing или Git actions.
 
+## TASK delivery tracks
+
+Фреймворк определяет ровно два delivery track: `fast` и `standard`. Delivery track независим от model tier и `risk level`: названия model tier не выбирают процесс, а низкий риск без доказанной ограниченности не разрешает `fast`.
+
+Fast eligibility является fail-closed. TASK должна быть ограниченной, обратимой и однозначной, а её проверка — детерминированной и локальной. `fast` запрещён для публичных контрактов, auth/security/privacy, persistence и форматов данных, schema/migration, concurrency/shared core, dependency/build/package/deploy/runtime infrastructure, внешних интеграций, critical paths, ослабления тестов и любой неопределённости в surface или verification. Все остальные TASK получают `standard`; legacy TASK без поля track также считается `standard`.
+
+Оба track используют implementer и сохраняют focused RED/GREEN. `fast` не вызывает reviewer или tester: оркестратор независимо проверяет актуальный fingerprint, границы diff, test integrity и повторяет утверждённые checks. `standard` сохраняет strong reviewer и tester. Провал fast assurance, изменение eligibility или сомнение немедленно повышает TASK `fast → standard`; `standard → fast` после Task Start запрещён.
+
 ## TASK lifecycle
 
 ```text
 TODO
   → IN PROGRESS
-  → IN REVIEW
-  → IN TESTING
+  → fast: orchestrator assurance
+  → standard: IN REVIEW → IN TESTING
   → AWAITING USER ACCEPTANCE
   → DONE
 ```
 
 Также поддерживаются `PAUSED` и `CANCELLED`. Блокировка хранится отдельно в `blocked_by`.
 
-Цикл выполнения:
+Общий цикл выполнения:
 
 1. отдельный Task Start;
 2. implementer пишет код и необходимые тесты;
-3. Review Packet классифицирует production и supporting paths и фиксирует whole-implementation и production-surface fingerprints; strong reviewer по ordered protocol проверяет production surface, а дефекты тестов и других non-production artifacts возвращает отдельными advisory observations, которые не блокируют `CLEAN`; canonical-документы используются только как контекст;
-4. tester получает advisory observations и запускает focused, selected affected, применимый bounded Task fuzz smoke и scoped quality checks; для fuzzing impact `none` сверяет rationale с actual surface; полный project suite и unscoped global checks остаются Epic gate;
+3. для `fast` оркестратор выполняет fast assurance без reviewer/tester и при успехе переводит TASK прямо в `AWAITING USER ACCEPTANCE`;
+4. для `standard` Review Packet классифицирует production и supporting paths и фиксирует whole-implementation и production-surface fingerprints; strong reviewer по ordered protocol проверяет production surface, а tester запускает focused, selected affected, применимый bounded Task fuzz smoke и scoped quality checks;
 5. пользователь тестирует вручную;
 6. отдельный Task Acceptance переводит TASK в `DONE`.
 
-Изменение production surface инвалидирует прежние review и test evidence и требует нового strong review. Supporting-only изменение при неизменном production fingerprint сохраняет clean review, инвалидирует affected testing evidence и идёт сразу на повторный tester gate без вызова reviewer. Commit этой TASK запрещён до явного Task Acceptance и перехода в `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit. Task Acceptance не запускает следующую TASK без отдельного разрешения.
+В `standard` изменение production surface инвалидирует прежние review и test evidence и требует нового strong review; supporting-only изменение при неизменном production fingerprint сохраняет clean review и повторяет tester gate. В `fast` любое изменение инвалидирует fast assurance и требует его повторения, а потеря eligibility повышает TASK до `standard`. Commit запрещён до явного Task Acceptance и перехода в `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit. Task Acceptance не запускает следующую TASK без отдельного разрешения.
 
 ## Epic lifecycle, validation и fuzzing
 
@@ -229,13 +237,13 @@ PLANNED → ACTIVE → VALIDATING → FUZZING → AWAITING EPIC ACCEPTANCE → C
 - `HARNESS REQUIRED`;
 - `FINDINGS`.
 
-Harness или remediation создаются как новые TASK через Replan и собственный Task Start. После изменений повторяются structured review, selected Task testing, полный Epic Validation и fuzzing.
+Harness или remediation создаются как новые TASK через Replan и собственный Task Start. После изменений повторяется assurance выбранного delivery track, затем полный Epic Validation и fuzzing.
 
 Только отдельный Epic Acceptance завершает Epic и перемещает его каталог в `execution/completed/`. Следующий Epic автоматически не активируется.
 
 ## Quality gates и project profiles
 
-Universal Task baseline требует approved definition и boundaries, objectively verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected affected/scoped checks, current structured review, reproducible manual verification и explicit Task Acceptance.
+Universal Task baseline требует approved definition и boundaries, выбранный delivery track, objectively verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected affected/scoped checks, актуальный fast assurance либо standard review/testing, reproducible manual verification и explicit Task Acceptance.
 
 Universal Epic baseline требует `DONE` для всех planned TASK, requirement-to-evidence coverage, полный project suite, project-wide lint/typecheck/build, cross-component и critical-path validation, applicable profile gates, current documentation/operational evidence, допустимый fuzzing outcome, отсутствие непринятых blocking risks и explicit Epic Acceptance.
 

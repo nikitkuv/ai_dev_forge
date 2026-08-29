@@ -1,5 +1,11 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.6
+
+v4.6 вводит ровно два TASK delivery track: `fast` и `standard`. Migration не угадывает fast eligibility по старым risk flags и не синтезирует fast evidence. Любая legacy TASK без `delivery_track`, включая состояния `TODO`, `IN PROGRESS`, `IN REVIEW`, `IN TESTING` и `AWAITING USER ACCEPTANCE`, трактуется как `standard`; уже начатая standard TASK не понижается до fast.
+
+После обновления новые планы и TASK definitions явно фиксируют track, rationale и verification. Fast TASK использует implementer и orchestrator assurance без reviewer/tester; при неопределённости или провале она повышается до standard. Model tier mapping, Task Acceptance, Epic Validation и fuzzing этой миграцией не меняются.
+
 ## Обновление до v4.4
 
 v4.4 добавляет независимый `forge-mutation-test`, fast `mutation-runner`, strong `mutation-analyzer` и project-owned историю `quality/mutation-testing/`. Эти возможности не добавляют Epic/TASK transition или quality gate, не требуют mutation backend по умолчанию и не запускаются во время bootstrap, migration, adapter sync или обычной разработки.

@@ -7,7 +7,7 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 
 ## Enter Epic Validation
 
-1. Verify every planned TASK is `DONE`; every accepted implementation has current structured review and selected Task-testing evidence; requirement coverage is complete; any work-source coverage matrix has no unexplained gaps or contradictory reverse mappings; the approved Epic Verification Plan contains evidenced commands or explicit blockers; and the approved Epic Fuzzing Plan contains a valid applicability assessment and required evidence.
+1. Verify every planned TASK is `DONE`; every accepted implementation has current track-specific evidence (fast orchestrator assurance or standard structured review plus selected Task testing); requirement coverage is complete; any work-source coverage matrix has no unexplained gaps or contradictory reverse mappings; the approved Epic Verification Plan contains evidenced commands or explicit blockers; and the approved Epic Fuzzing Plan contains a valid applicability assessment and required evidence.
 2. Establish one reproducible aggregate commit, tree, or scoped-diff fingerprint covering the Epic implementation and accepted Task evidence.
 3. Transition the Epic from `ACTIVE` to `VALIDATING` in `BACKLOG.md`.
 4. Invoke `epic-validator` automatically for the exact fingerprint. No extra confirmation is required because the role makes no source changes.
@@ -21,7 +21,7 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 - `FAILED`: preserve commands and failure evidence, transition back to `ACTIVE`, show a Replan diff for remediation work, obtain Replan approval and a separate Task Start authorization, run the full Task lifecycle, then repeat Epic Validation.
 - `BLOCKED`: record the exact missing capability, configuration, service, dataset, environment or authorization and its risk; transition back to `ACTIVE` and obtain Replan or user direction. Never reinterpret a blocker as a passing result.
 
-Any implementation change invalidates prior Task review/testing evidence where affected, the entire Epic Validation result, and prior fuzzing evidence. The Epic cannot enter `FUZZING` without current passing Epic Validation evidence.
+Any implementation change invalidates prior track-specific Task assurance evidence where affected, the entire Epic Validation result, and prior fuzzing evidence. The Epic cannot enter `FUZZING` without current passing Epic Validation evidence.
 
 ## Enter fuzzing
 
@@ -36,7 +36,7 @@ Any implementation change invalidates prior Task review/testing evidence where a
 - `PASSED`: transition to `AWAITING EPIC ACCEPTANCE`.
 - `NOT APPLICABLE`: require both a rationale for no suitable target and passing alternative risk coverage on the current fingerprint. The outcome may be recorded by the orchestrator under the skip conditions above or returned by an invoked fuzzer; then transition to `AWAITING EPIC ACCEPTANCE`.
 - `HARNESS REQUIRED`: transition back to `ACTIVE`; show a Replan diff for a new harness TASK, obtain Replan approval and a separate Task Start authorization, run its full lifecycle, then repeat Epic Validation before re-entering `FUZZING`.
-- `FINDINGS`: preserve reproduction evidence, transition back to `ACTIVE`, show remediation TASK changes through Replan, require separate Task Start, full implementation, review, selected Task testing, and Task Acceptance, then repeat Epic Validation and fuzzing.
+- `FINDINGS`: preserve reproduction evidence, transition back to `ACTIVE`, show remediation TASK changes through Replan, require separate Task Start, full implementation, the remediation TASK's selected fast or standard assurance route, and Task Acceptance, then repeat Epic Validation and fuzzing.
 
 Any code change invalidates the prior Epic Validation and fuzzing results. Repeat both after every harness or remediation change.
 

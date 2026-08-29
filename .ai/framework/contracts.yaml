@@ -16,6 +16,7 @@ enums:
   bug_status: [OPEN, SCHEDULED, RESOLVED, REJECTED, DUPLICATE, WONT_FIX]
   adr_status: [PROPOSED, ACCEPTED, REJECTED, SUPERSEDED, DEPRECATED]
   model_tiers: [strong, balanced, fast]
+  delivery_tracks: [fast, standard]
   fuzzing_outcomes: [PASSED, "HARNESS REQUIRED", FINDINGS, "NOT APPLICABLE"]
   epic_validation_outcomes: [PASSED, "PASSED WITH ACCEPTED EXCEPTIONS", FAILED, BLOCKED]
   task_risk_levels: [low, standard, high]
@@ -82,6 +83,35 @@ machine_tokens:
   AWAITING_EPIC_ACCEPTANCE: "AWAITING EPIC ACCEPTANCE"
   AWAITING_USER_ACCEPTANCE: "AWAITING USER ACCEPTANCE"
 
+delivery_tracks:
+  default: standard
+  legacy_missing_delivery_track: standard
+  independent_from: [model_tier, task_risk_level, quality_profile, lifecycle_status]
+  selection:
+    approval_source: [epic_plan_approval, replan]
+    revalidate_at: [task_start, post_implementation_assurance]
+    uncertainty_policy: standard
+  fast:
+    requires: [bounded_scope, reversible_change, risk_level_low, unambiguous_expected_behavior, deterministic_focused_verification, no_disqualifier]
+    disqualifiers: [public_contract, authorization, security, privacy, persistence, data_format, schema, migration, concurrency, shared_core, dependency, production_build, packaging, deployment, runtime_infrastructure, external_integration, critical_user_or_system_path, test_weakening, unresolved_affected_surface, unresolved_verification]
+    implementation_agent: implementer
+    assurance_owner: orchestrator
+    forbidden_agents: [reviewer, tester]
+    evidence: [current_whole_implementation_fingerprint, exact_scoped_diff, current_fast_eligibility, acceptance_and_risk_traceability, production_and_supporting_path_classification, test_integrity, reproduced_selected_checks, fast_assurance_outcome_PASSED]
+  standard:
+    implementation_agent: implementer
+    assurance_agents: [reviewer, tester]
+    requires: [current_structured_review, current_task_test_evidence]
+  escalation:
+    fast_to_standard:
+      disposition: allowed_and_required_on_eligibility_failure
+      invalidates: fast_assurance
+      unchanged_scope_requires_replan: false
+    standard_to_fast_after_task_start:
+      disposition: forbidden
+    standard_to_fast_before_task_start:
+      requires: [plan_approval_or_replan, complete_fast_eligibility_evidence]
+
 transitions:
   epic_readiness:
     OUTLINE: [READY]
@@ -94,7 +124,7 @@ transitions:
     PAUSED: [PLANNED, ACTIVE, VALIDATING, FUZZING, "AWAITING EPIC ACCEPTANCE", CANCELLED]
   task_status:
     TODO: ["IN PROGRESS", PAUSED, CANCELLED]
-    "IN PROGRESS": ["IN REVIEW", PAUSED, CANCELLED]
+    "IN PROGRESS": ["IN REVIEW", "AWAITING USER ACCEPTANCE", PAUSED, CANCELLED]
     "IN REVIEW": ["IN TESTING", "IN PROGRESS", PAUSED, CANCELLED]
     "IN TESTING": ["AWAITING USER ACCEPTANCE", "IN PROGRESS", PAUSED, CANCELLED]
     "AWAITING USER ACCEPTANCE": [DONE, "IN PROGRESS", PAUSED, CANCELLED]
@@ -109,13 +139,17 @@ transitions:
 gates:
   task_start:
     transition: "TODO -> IN PROGRESS"
-    requires: [explicit_user_authorization]
+    requires: [explicit_user_authorization, approved_delivery_track, current_track_eligibility]
+  fast_direct_acceptance:
+    transition: "IN PROGRESS -> AWAITING USER ACCEPTANCE"
+    requires: [delivery_track_fast, current_fast_assurance, matching_whole_implementation_fingerprint]
+    forbidden_for: [delivery_track_standard, missing_or_stale_fast_assurance]
   task_acceptance:
     transition: "AWAITING USER ACCEPTANCE -> DONE"
     requires: [explicit_user_acceptance]
   task_commit:
     allowed_after: task_acceptance
-    requires: [task_status_DONE, explicit_user_acceptance, current_review_and_testing_evidence, scoped_changes_only]
+    requires: [task_status_DONE, explicit_user_acceptance, current_track_specific_assurance_evidence, scoped_changes_only]
     manual_policy_additionally_requires: [separate_explicit_user_commit_authorization]
     forbidden_before: task_acceptance
   next_task_start:
@@ -139,9 +173,9 @@ gates:
     transition: "AWAITING EPIC ACCEPTANCE -> COMPLETED"
     requires: [fuzzing_acceptance_satisfied, explicit_user_acceptance]
   replan:
-    required_for: [task_scope_change, task_order_change, task_composition_change]
+    required_for: [task_scope_change, task_order_change, task_composition_change, delivery_track_downgrade_before_task_start]
     requires: [reason, plan_diff, explicit_user_confirmation]
-    not_required_for: [typo_correction, link_correction]
+    not_required_for: [typo_correction, link_correction, unchanged_scope_fast_to_standard_escalation]
     applies_to_workspaces: [planned, active, paused]
   adr_approval:
     transition: "PROPOSED -> ACCEPTED"
@@ -199,6 +233,7 @@ fuzzing:
 
 quality_gates:
   production_review:
+    mandatory_for_delivery_track: standard
     production_surface:
       includes: [executable_production_code, runtime_configuration, schemas, migrations, generated_runtime_assets, packaging, production_build, deployment_artifacts]
       criterion: contents_can_change_shipped_behavior
@@ -220,6 +255,9 @@ quality_gates:
     production_change:
       invalidates: [task_review_evidence, task_testing_evidence, epic_validation_evidence, fuzzing_evidence]
       next_gate: strong_review
+    fast_change:
+      invalidates: [fast_assurance, epic_validation_evidence, fuzzing_evidence]
+      next_gate: orchestrator_fast_assurance_or_standard_escalation
     legacy_evidence_without_production_fingerprint: fresh_review_required
     packet_or_output_integrity_failures: blocking
   test_integrity:
@@ -233,14 +271,17 @@ quality_gates:
     requires:
       - approved_definition_with_objective_acceptance_and_boundaries
       - affected_surface_and_risk_flags
+      - approved_delivery_track_and_rationale
       - focused_behavior_evidence
       - test_integrity_evidence
       - selected_affected_checks
       - planned_fuzzing_impact_and_task_smoke
-      - current_structured_review
-      - current_task_test_evidence
+      - current_track_specific_assurance_evidence
       - reproducible_manual_verification
       - explicit_task_acceptance
+    by_delivery_track:
+      fast: [current_fast_eligibility, current_fast_assurance, matching_whole_implementation_fingerprint, orchestrator_reproduced_selected_checks]
+      standard: [current_structured_review, current_task_test_evidence]
     full_project_suite: deferred_to_epic_validation
     early_full_project_suite_requires: explicit_user_request
     global_unscoped_checks: deferred_to_epic_validation
@@ -308,6 +349,14 @@ invariants:
   - one_epic_has_at_most_one_execution_workspace
   - epic_start_atomically_moves_planned_workspace_to_active_and_updates_backlog
   - no_more_than_one_code_writing_task_in_progress
+  - every_approved_task_has_exactly_one_delivery_track
+  - delivery_track_is_independent_from_model_tier_and_risk_level
+  - missing_or_uncertain_delivery_track_evidence_defaults_to_standard
+  - fast_requires_complete_positive_eligibility_and_no_disqualifier
+  - fast_never_invokes_reviewer_or_tester
+  - fast_assurance_is_bound_to_the_current_whole_implementation_fingerprint
+  - fast_eligibility_failure_escalates_monotonically_to_standard
+  - standard_never_downgrades_to_fast_after_task_start
   - production_changes_invalidate_prior_review_test_epic_validation_and_fuzzing_results
   - supporting_only_changes_preserve_clean_production_review_and_invalidate_affected_testing
   - only_production_findings_block_strong_review

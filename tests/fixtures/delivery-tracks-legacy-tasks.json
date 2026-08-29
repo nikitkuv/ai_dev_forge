@@ -1,0 +1,10 @@
+{
+  "description": "Pre-v4.6 TASK records omit delivery_track and must fail closed to standard without synthesized fast evidence.",
+  "cases": [
+    { "workspace": "planned", "status": "TODO", "delivery_track": null, "expected_track": "standard" },
+    { "workspace": "active", "status": "IN PROGRESS", "delivery_track": null, "expected_track": "standard" },
+    { "workspace": "active", "status": "IN REVIEW", "delivery_track": null, "expected_track": "standard" },
+    { "workspace": "active", "status": "IN TESTING", "delivery_track": null, "expected_track": "standard" },
+    { "workspace": "active", "status": "AWAITING USER ACCEPTANCE", "delivery_track": null, "expected_track": "standard" }
+  ]
+}
