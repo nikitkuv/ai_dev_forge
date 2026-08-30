@@ -36,7 +36,8 @@ project/
 |- quality/mutation-testing/         # optional, project-owned, created on first requested run
 |- .codex/
 |- .claude/
-`- .agents/
+|- .agents/
+`- .opencode/agents/
 ```
 
 `execution/planned/EPIC-*` stores approved detailed plans and `TODO` TASK definitions for `PLANNED + READY` Epics that have not passed Epic Start. Multiple planned workspaces may coexist; their directory order has no priority meaning because Backlog row order remains authoritative.
@@ -50,9 +51,9 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Framework-owned: bootstrap control documents, `CONVENTIONS.md`, `.ai/templates/`, and `.ai/framework/`.
 - Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, canonical documents, decisions, execution state, and project-specific hooks, MCP, APIs, or CLIs.
 - Independent mutation history under `quality/mutation-testing/` is optional project-owned state. Bootstrap and adapter synchronization do not create or overwrite it.
-- Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, and `.agents/`. Unlisted entries remain project-owned.
+- Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, `.agents/`, and `.opencode/agents/`. Unlisted entries remain project-owned; `opencode.json` and `.opencode/commands/`, `plugins/`, and `skills/` are never generated.
 
-Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router; `CLAUDE.md` contains only `@AGENTS.md`. Do not edit them manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
+Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router shared by Codex and OpenCode; `CLAUDE.md` contains only `@AGENTS.md`. OpenCode discovers Forge skills from `.agents/skills/`, so Forge creates no duplicate `.opencode/skills/`. Do not edit managed outputs manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
 
 ## Project-local integrations
 

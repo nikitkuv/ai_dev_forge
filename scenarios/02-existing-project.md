@@ -1,6 +1,6 @@
 ## Сценарий 2. Инициализация существующего проекта
 
-> Bootstrap существующего проекта сохраняет native agents обеих платформ и требует явный `role_execution.mode`. Cross-provider runtime используется только в выбранном режиме и не имеет fallback.
+> Bootstrap существующего проекта сохраняет native agents Codex, Claude и enabled OpenCode и требует явный `role_execution.mode`. OpenCode предлагает существующий `native_subagents` при отсутствии выбора; новых режимов и fallback нет.
 
 ### Исходное состояние
 
@@ -32,7 +32,7 @@ taskflow/
 >
 > Read .ai/BOOTSTRAP.md and initialize this existing repository.  
 > Analyze the current code and documentation before starting the interview.  
-> Create both Codex and Claude Code adapters.  
+> Create Codex, Claude Code, and OpenCode adapters.
 > Communicate with me in Russian.
 
 **Внутреннее действие**
@@ -187,15 +187,15 @@ taskflow/
 
 В проекте уже может быть `AGENTS.md`, `CLAUDE.md` или platform-specific agent configuration.
 
-> **Оркестратор:** Существующий `CLAUDE.md` не был сгенерирован Forge и содержит проектные команды. Я не буду перезаписывать его молча. Предлагаю перенести уникальные project instructions в `.ai/custom/`, показать итоговый diff и затем сгенерировать оба router. Подтверждаете этот collision resolution?
+> **Оркестратор:** Существующий `CLAUDE.md` не был сгенерирован Forge и содержит проектные команды. Я не буду перезаписывать его молча. Предлагаю перенести уникальные project instructions в `.ai/custom/`, показать итоговый diff и затем сгенерировать shared `AGENTS.md`, Claude import и native agent sets. `opencode.json` и unlisted `.opencode/` останутся project-owned. Подтверждаете этот collision resolution?
 
 > **Пользователь:** Да, но сохрани команды запуска без изменений.
 
 **Внутреннее действие**
 
 - Пользовательские инструкции переносятся только после подтверждения.
-- Оба adapters генерируются одной логической операцией.
-- При ошибке одного adapter второй тоже не заменяется.
+- Все enabled adapters генерируются одной логической операцией.
+- При ошибке одного adapter ни один enabled set не заменяется.
 - `.ai/framework.lock` записывается только после parity validation.
 
 ### Шаг 8. Прерывание и восстановление bootstrap
@@ -232,7 +232,7 @@ Existing TaskFlow adopted
 ├── current/target architecture differences explicit
 ├── only approved candidates added to Backlog
 ├── unrelated Git changes preserved
-├── both adapters generated after collision approval
+├── all enabled adapters generated after collision approval
 └── next gate recovered from files, not conversation history
 ```
 

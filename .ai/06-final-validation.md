@@ -8,14 +8,14 @@ Do not redesign, implement, silently repair canonical state, or create a validat
 
 ## Required Inputs
 
-Read the framework manifest and lifecycle/integration/mutation-testing contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, both generated adapter sets, custom overlays, optional project-owned integration definitions/state, optional project-owned mutation history, and Git state. Do not invoke local connectors or mutation backends.
+Read the framework manifest and lifecycle/integration/mutation-testing contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, all enabled generated adapter sets, custom overlays, optional project-owned integration definitions/state, optional project-owned mutation history, and Git state. Do not invoke local connectors, OpenCode providers, or mutation backends.
 
 If an earlier step is incomplete, return to that step and its approval gate.
 
 ## Validate Canonical Documents
 
 - Required root files exist for the completed bootstrap stage.
-- Root `README.md` contains confirmed setup/run/test orientation and links to canonical documents plus both platform routers, without becoming a source of product, architecture, or execution truth.
+- Root `README.md` contains confirmed setup/run/test orientation and links to canonical documents plus the shared Codex/OpenCode router and Claude import, without becoming a source of product, architecture, or execution truth.
 - SPEC, ARCHITECTURE, BACKLOG, and plan frontmatter has valid `document_status`, language, dates, and approval metadata.
 - TASK frontmatter separates `definition_status` from lifecycle `status`.
 - ADR status uses the decision lifecycle and `DECISIONS.md` exactly reflects ADR frontmatter.
@@ -63,28 +63,29 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - Generated adapter hashes match current outputs or the collision is explicitly reported.
 - Obsolete framework-owned files, including the former Step 05, are absent.
 
-## Validate Both Platform Adapters
+## Validate Platform Adapters
 
 - Root `AGENTS.md` and `CLAUDE.md` both exist. `AGENTS.md` is the complete lifecycle router and is no more than 150 lines; `CLAUDE.md` contains exactly `@AGENTS.md`.
 - Codex contains every manifest-declared agent under `.codex/agents/` and every manifest-declared skill under `.agents/skills/`.
 - Claude contains every manifest-declared agent under `.claude/agents/` and every manifest-declared skill under `.claude/skills/`.
-- Every Forge-managed `.claude/agents/*.md` is UTF-8 without BOM and begins at byte zero with `---`, so Claude Code can parse its YAML frontmatter.
+- Enabled OpenCode contains every manifest-declared agent under `.opencode/agents/`, uses root `AGENTS.md`, and discovers every manifest-declared skill under `.agents/skills/`; Forge generated no duplicate `.opencode/skills/`.
+- Every Forge-managed `.claude/agents/*.md` and `.opencode/agents/*.md` is UTF-8 without BOM and begins at byte zero with `---`, so the platform can parse its YAML frontmatter.
 - Additional project-owned agents and skills are allowed, excluded from Forge parity counts, and unchanged.
-- Unlisted platform configuration, settings, commands, and hooks are preserved and remain outside Forge ownership.
-- All rendered agents contain concrete tier mappings and effort.
+- Unlisted platform configuration, settings, commands, hooks, `opencode.json`, OpenCode plugins/skills, and unlisted OpenCode agents are preserved and remain outside Forge ownership.
+- All rendered agents contain concrete tier mappings; Codex and Claude also contain applicable effort. Enabled OpenCode tiers are non-empty provider-qualified `provider/model-id` values.
 - `.ai/project.yaml` contains exactly one supported `role_execution.mode` applying to both roles; active-orchestrator requirements agree with cross-provider modes.
 - Claude contains `.claude/forge/codex-role-runner.mjs`; Codex contains `.codex/forge/claude-role-runner.mjs`; both launchers match their templates, preserve complete neutral prompts, and expose fresh/read-only runtime metadata.
-- The Claude-to-Codex route pins `gpt-5.6-sol/medium`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode performs no external preflight.
+- The Claude-to-Codex route pins `gpt-5.6-sol/medium`; the Codex-to-Claude route uses the configured Claude strong mapping, plan mode, restricted tools, no session persistence, and no nested agents; native mode supports Codex, Claude Code, and OpenCode and performs no external preflight. OpenCode-led setup proposes this existing mode by default only when no approved route exists and records it only after approval.
 - Missing selected prerequisites and all post-start failures block the stage. No route implicitly falls back or switches provider.
 - The generated set contains `epic-planner` and `epic-validator`; Task `tester` does not require the full project suite, and fuzzer requires current Epic Validation evidence plus planned `applicable`, `unresolved`, or contradictory final evidence.
-- IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity.
+- IDs, descriptions, tiers, role instructions, permission boundaries, and portable skill bodies have cross-platform parity. Only OpenCode implementer permits edits; command/research access follows neutral capability, and every OpenCode subagent denies external-directory and nested task access.
 - No unresolved renderer placeholder remains; the shared project overlay appears once in `AGENTS.md` and is available to Claude through the import.
 - The imported router states that Forge lifecycle behavior comes only from bundled Forge skills, canonical contracts, and generated agent definitions; external process skills cannot add lifecycle gates, artifacts, transitions, agent routing, or Git actions.
 - The imported router contains the complete Common Engineering Prohibitions without missing or weakened entries.
 - The framework generated no hooks, MCP configuration, or mandatory CLI dependency. Cross-provider modes use user-installed runtimes only when selected; native mode requires neither. Preserve separately recorded project-owned hooks or MCP without treating them as framework output.
 - A clean project has no `.ai/integrations/` and passes without connector preflight. Supported, custom, malformed, future-version, or offline integrations remain project-owned; only their consumers are blocked unless an ownership/safety collision exists.
 - A clean project has no `quality/mutation-testing/` and passes without a mutation backend or preflight. When history exists, registry and `MUT-NNNN` records pass the independent schema, identity, fingerprint, metrics, artifact, analysis-authorization and disposition checks; their outcomes have no lifecycle or gate effect.
-- The generated set contains fast `mutation-runner`, strong `mutation-analyzer`, and `forge-mutation-test` on both platforms. Metrics-only is the default, strong analysis requires explicit authorization plus current candidates and budget, and neither role may install tools, edit tracked files, remediate, change lifecycle state, or spawn agents.
+- The generated set contains fast `mutation-runner`, strong `mutation-analyzer`, and discoverable `forge-mutation-test` on every enabled platform. Metrics-only is the default, strong analysis requires explicit authorization plus current candidates and budget, and neither role may install tools, edit tracked files, remediate, change lifecycle state, or spawn agents.
 
 ## Simulate Recovery
 

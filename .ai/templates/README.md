@@ -37,7 +37,7 @@
 - [Architecture](ARCHITECTURE.md) — target system architecture.
 - [Backlog](BACKLOG.md) — Epic priority, readiness, lifecycle, and defects.
 - [Decision index](DECISIONS.md) — navigation to authoritative ADR files.
-- [Codex instructions](AGENTS.md) — Codex CLI project workflow.
+- [Codex and OpenCode instructions](AGENTS.md) — shared project workflow.
 - [Claude Code instructions](CLAUDE.md) — Claude Code project workflow.
 
 When this project deliberately configures local capabilities, document the project-owned `.ai/integrations/` definitions and external connector setup here without copying credentials. Omit this guidance for a clean project with no integrations.

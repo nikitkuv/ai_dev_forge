@@ -1,5 +1,13 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.7
+
+v4.7 добавляет OpenCode как третий native adapter. Корневой `AGENTS.md` остаётся единым router для Codex и OpenCode, `.agents/skills/` переиспользуется обеими платформами, а одиннадцать OpenCode subagents генерируются под `.opencode/agents/`. `.opencode/skills/` и отдельный OpenCode router не создаются.
+
+Enum `role_execution.mode` не меняется. Для OpenCode-led migration без утверждённого route предлагается существующий `native_subagents`; значение записывается только после явного approval. Уже утверждённый режим сохраняется, а несовпадение активного оркестратора блокирует planner/reviewer без fallback.
+
+Включённый OpenCode требует три явно подтверждённых model ID в формате `provider/model-id`; provider-independent defaults нет. Migration не устанавливает и не авторизует OpenCode или provider. `opencode.json`, commands, plugins, skills и unlisted agents остаются project-owned. Все enabled adapters заменяются и откатываются атомарно; удалить можно только OpenCode-файлы, чья Forge ownership доказана старым lock.
+
 ## Обновление до v4.6
 
 v4.6 вводит ровно два TASK delivery track: `fast` и `standard`. Migration не угадывает fast eligibility по старым risk flags и не синтезирует fast evidence. Любая legacy TASK без `delivery_track`, включая состояния `TODO`, `IN PROGRESS`, `IN REVIEW`, `IN TESTING` и `AWAITING USER ACCEPTANCE`, трактуется как `standard`; уже начатая standard TASK не понижается до fast.

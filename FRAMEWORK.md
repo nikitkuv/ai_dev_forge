@@ -1,8 +1,8 @@
-# AI Development Forge v4.6 — Architecture
+# AI Development Forge v4.7 — Architecture
 
 ## Configurable planner/reviewer routing
 
-`epic-planner` and `reviewer` keep neutral definitions and native agents on both platforms. One required `.ai/project.yaml` value selects both roles: `claude_with_codex` means Claude Code orchestration plus the managed `codex-plugin-cc` route; `codex_with_claude` means Codex orchestration plus managed headless Claude Code; `native_subagents` uses the active platform's internal agents. Cross-provider preflight or runtime failure never switches provider implicitly.
+`epic-planner` and `reviewer` keep neutral definitions and native agents on Codex, Claude Code, and enabled OpenCode. One required `.ai/project.yaml` value selects both roles: `claude_with_codex` means Claude Code orchestration plus the managed `codex-plugin-cc` route; `codex_with_claude` means Codex orchestration plus managed headless Claude Code; `native_subagents` uses the active platform's internal agents. OpenCode-led setup proposes the existing `native_subagents` value by default when no approved route exists; it adds no new mode and still requires explicit approval. Cross-provider preflight or runtime failure never switches provider implicitly.
 
 Этот документ описывает реализованную архитектуру фреймворка и её обязательные lifecycle-контракты.
 
@@ -13,7 +13,7 @@ AI Development Forge превращает репозиторий в долгов
 - продуктовые и архитектурные цели утверждаются пользователем;
 - execution-состояние восстанавливается из файлов, а не из истории чата;
 - сильная основная модель оркестрирует специализированных субагентов;
-- Codex CLI и Claude Code CLI получают нативные adapters из одного нейтрального источника;
+- Codex CLI, Claude Code CLI и OpenCode получают нативные adapters из одного нейтрального источника;
 - каждый lifecycle-переход имеет явный gate.
 
 ## Структура проекта-потребителя
@@ -45,7 +45,8 @@ project/
 ├── .codex/agents/
 ├── .agents/skills/
 ├── .claude/agents/
-└── .claude/skills/
+├── .claude/skills/
+└── .opencode/agents/
 ```
 
 Эта структура относится к целевому проекту. Репозиторий исходников Forge не проходит собственный bootstrap.
@@ -295,7 +296,7 @@ Severity описывает последствия, а priority задаётся
 
 ## Синхронизация адаптеров
 
-Adapter sync пересоздаёт обе платформы как одну операцию, проверяет parity и обновляет lock только после успеха.
+Adapter sync пересоздаёт все enabled platform adapters как одну операцию, проверяет parity и обновляет lock только после успеха. Codex и OpenCode совместно используют `AGENTS.md` и `.agents/skills/`; OpenCode agents рендерятся в `.opencode/agents/` с provider-qualified models и neutral-policy permissions. `opencode.json`, commands, plugins, skills и unlisted agents остаются project-owned.
 
 ## Внешние интеграции
 

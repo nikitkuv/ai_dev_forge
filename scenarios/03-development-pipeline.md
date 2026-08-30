@@ -1,6 +1,6 @@
 ## Сценарий 3. Полный pipeline разработки
 
-> На стадиях Epic planning и review оркестратор следует `role_execution.mode`: Claude→Codex, Codex→Claude или native subagents. Несовпадение платформы и недоступный выбранный runtime блокируют стадию; fallback отсутствует.
+> На стадиях Epic planning и review оркестратор следует неизменному `role_execution.mode`: Claude→Codex, Codex→Claude или native subagents. OpenCode использует существующий `native_subagents` как default proposal при первичной настройке. Несовпадение платформы и недоступный выбранный runtime блокируют стадию; fallback отсутствует.
 
 ### Исходное состояние
 
@@ -12,7 +12,7 @@ TASK-002 — TODO
 TASK-003 — TODO
 ```
 
-Пользователь открывает новую сессию Codex CLI или Claude Code CLI.
+Пользователь открывает новую сессию Codex CLI, Claude Code CLI или OpenCode.
 
 ### Шаг 1. Resume и сбор контекста
 

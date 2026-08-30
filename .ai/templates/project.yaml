@@ -1,17 +1,21 @@
 schema_version: 2
 framework:
   name: ai-dev-forge
-  version: 4.6.0
+  version: 4.7.0
 
 platforms:
   codex:
     enabled: true
   claude:
     enabled: true
+  opencode:
+    enabled: true
 
 # Required before Epic planning or Task review. Bootstrap or migration must
 # replace null with one explicitly approved value: claude_with_codex,
-# codex_with_claude, or native_subagents.
+# codex_with_claude, or native_subagents. For an OpenCode-led setup with no
+# prior approved route, propose native_subagents by default; still require
+# explicit approval and preserve an existing approved value during migration.
 role_execution:
   mode: null
 
@@ -24,6 +28,13 @@ models:
     strong: {model: opus, effort: medium}
     balanced: {model: sonnet, effort: medium}
     fast: {model: haiku, effort: medium}
+  # OpenCode has no provider-independent model default. When the platform is
+  # enabled, resolve every null from explicit user input or evidenced local
+  # `opencode models` output. Values must use provider/model-id form.
+  opencode:
+    strong: {model: null}
+    balanced: {model: null}
+    fast: {model: null}
 
 documentation_language: null
 framework_language: en

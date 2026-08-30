@@ -16,7 +16,7 @@ definition:
   access_modes: [read_only, write_with_explicit_authorization]
   required_operation_fields: [semantic_name, access]
   required_binding_fields: [connector, operations]
-  platforms: [codex, claude]
+  platforms: [codex, claude, opencode]
   secret_field_names_forbidden: [token, password, secret, api_key, private_key, credentials]
   invocation_requires:
     - enabled_definition

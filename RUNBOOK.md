@@ -1,8 +1,8 @@
-# AI Development Forge v4.6 — Runbook
+# AI Development Forge v4.7 — Runbook
 
 ## Режим выполнения planner и reviewer
 
-Перед Epic planning и независимым review оркестратор читает `.ai/project.yaml`: `claude_with_codex` требует работу из Claude Code и готовый `codex-plugin-cc` 1.0.6+; `codex_with_claude` требует работу из Codex и установленный/авторизованный Claude Code CLI 2.1.203+; `native_subagents` запускает одноимённые внутренние агенты активной платформы без внешней проверки. Обе роли всегда получают полный neutral contract и тот же Epic assignment или Review Packet.
+Перед Epic planning и независимым review оркестратор читает `.ai/project.yaml`: `claude_with_codex` требует работу из Claude Code и готовый `codex-plugin-cc` 1.0.6+; `codex_with_claude` требует работу из Codex и установленный/авторизованный Claude Code CLI 2.1.203+; `native_subagents` запускает одноимённые внутренние агенты Codex, Claude Code или OpenCode без внешней проверки. Для OpenCode-led setup при отсутствии утверждённого route предлагается существующий `native_subagents`, но записывается только после approval; новых режимов и fallback нет. Обе роли всегда получают полный neutral contract и тот же Epic assignment или Review Packet.
 
 Выбранный внешний route не имеет fallback: недоступный preflight, несовпадение оркестратора, permission failure, timeout, malformed result или ошибка после старта блокирует стадию. Для переключения измените `role_execution.mode` с явным подтверждением и выполните adapter sync.
 
@@ -24,7 +24,7 @@
 
 ```text
 Read .ai/BOOTSTRAP.md and initialize this repository as a new project.
-Create both Codex and Claude Code adapters.
+Create Codex, Claude Code, and OpenCode adapters.
 Communicate with me in Russian and start the product interview.
 ```
 
@@ -40,7 +40,7 @@ Skill: `forge-bootstrap-new`.
 ```text
 Read .ai/BOOTSTRAP.md and initialize this existing repository.
 Analyze the current code and documentation before starting the interview.
-Create both Codex and Claude Code adapters.
+Create Codex, Claude Code, and OpenCode adapters.
 Communicate with me in Russian.
 ```
 
@@ -269,7 +269,7 @@ Deferred analysis требует current fingerprint и artifact checksum. Mutat
 - `.ai/custom/router-shared.md`;
 - framework release.
 
-Skill показывает collision diff, затем атомарно пересоздаёт Codex и Claude adapters, проверяет полный `AGENTS.md`, точный импорт `@AGENTS.md` в `CLAUDE.md`, parity остальных adapters и обновляет `.ai/framework.lock`.
+Skill показывает collision diff, затем атомарно пересоздаёт Codex, Claude и enabled OpenCode adapters, проверяет полный shared `AGENTS.md`, точный импорт `@AGENTS.md` в `CLAUDE.md`, OpenCode agents в `.opencode/agents/`, shared skill discovery из `.agents/skills/`, parity и обновляет `.ai/framework.lock`. Он не создаёт `opencode.json` или `.opencode/skills/` и сохраняет project-owned OpenCode commands, plugins и unlisted agents.
 
 Project-owned `.ai/integrations/` не является render input и не попадает в managed-output hashes. Изменение board scope или другого локального definition не требует adapter sync само по себе.
 
@@ -284,6 +284,7 @@ Older-migratable schema изменяется только отдельным dif
 `.ai/project.yaml` поддерживает:
 
 - `role_execution.mode` — один из `claude_with_codex`, `codex_with_claude`, `native_subagents` для обеих read-only ролей;
+- `platforms.opencode.enabled` и, когда он `true`, три явных OpenCode model ID формата `provider/model-id`; provider и credentials Forge не настраивает;
 - `manual` — после Task Acceptance и перехода TASK в `DONE` оркестратор предлагает commit, но ждёт отдельного явного разрешения;
 - `auto_commit_after_acceptance` — commit разрешён только после clean review, testing, Task Acceptance и перехода TASK в `DONE`.
 

@@ -24,11 +24,12 @@ Before writing:
 1. read both manifests, contracts, workflows, templates, neutral agents, and portable skills;
 2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, project-owned `.ai/integrations/`, and project-owned `quality/mutation-testing/`; read old and staged integration and mutation-testing contracts when present;
 3. inspect Git status and identify a recoverable baseline;
-4. inspect `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, and `.claude/`;
+4. inspect `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, `.claude/`, `opencode.json`, and `.opencode/`;
 5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
 6. hash every protected project path before proposing changes;
 7. without invoking MCP, API, CLI, or other connectors, classify each integration definition/state file as `absent`, `current_supported`, `older_migratable`, `malformed`, `unsupported_future`, `custom_profile`, or `ownership_collision`.
-8. inspect `role_execution.mode`; when absent, show the old effective provider behavior and require an explicit selection. For a 4.2 project, offer `claude_with_codex` only as the compatibility-preserving suggestion, never as an implicit write.
+8. inspect `role_execution.mode`; when absent, show the old effective provider behavior and require an explicit selection. For a 4.2 project, offer `claude_with_codex` only as the compatibility-preserving suggestion; for an OpenCode-led project with no approved route, offer the existing `native_subagents` value by default. Never write either suggestion without approval, add a new mode, or silently replace an approved value.
+9. inspect `platforms.opencode.enabled` and `models.opencode`. Preserve an explicit disabled choice. When enabled, require user-supplied or locally evidenced non-empty `provider/model-id` mappings for all three tiers; never invent, install, authenticate, or configure an OpenCode provider.
 
 Absence of `.ai/integrations/` and `quality/mutation-testing/` is the clean Forge baseline. Neither absence adds a migration step, preflight, file, or blocker. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself. Existing mutation history is preserved byte-for-byte and never used as managed render input.
 
@@ -69,7 +70,7 @@ Migration never infers that a `PLANNED` Backlog Epic already has approved Task d
 
 ## Root Router Merge
 
-Treat `AGENTS.md` and `CLAUDE.md` as mixed-ownership files.
+Treat `AGENTS.md` and `CLAUDE.md` as mixed-ownership files. OpenCode shares root `AGENTS.md`; do not create or merge an OpenCode-only router.
 
 Preserve project title, overview, project map, confirmed commands, domain constraints, protected directories, and applicable platform guidance. Check preserved statements against canonical state, especially `BACKLOG.md`, and report contradictions without modifying canonical files. Do not preserve legacy Forge lifecycle rules, routing, agent lists, skill lists, or generic process instructions.
 
@@ -92,11 +93,12 @@ Install no global agent or skill. Manage only IDs declared by the staged manifes
 .claude/agents/
 .claude/skills/
 .claude/forge/codex-role-runner.mjs
+.opencode/agents/
 ```
 
-Keep all eleven generated agents on both platforms, including the fast `mutation-runner` and strong `mutation-analyzer`. Copy both managed launchers and the three-mode metadata, but do not install, authenticate, preflight, or invoke either external provider or a mutation backend during migration. An unavailable explicitly selected external route blocks its role stage and never falls back; `native_subagents` is the explicit mode for internal agents. Roll back configuration, both launchers, route metadata, adapters, and lock as one unit while retaining project-owned state.
+Keep all eleven generated agents on Codex and Claude and, when enabled, OpenCode, including the fast `mutation-runner` and strong `mutation-analyzer`. OpenCode reuses root `AGENTS.md` and `.agents/skills/`; do not generate `.opencode/skills/`. Copy both managed launchers and the unchanged three-mode metadata, but do not install, authenticate, preflight, or invoke any external provider or a mutation backend during migration. An unavailable explicitly selected external route blocks its role stage and never falls back; `native_subagents` is the explicit dependency-free mode and the default proposal for an OpenCode-led project with no approved route. Roll back configuration, both launchers, route metadata, all adapters, and lock as one unit while retaining project-owned state.
 
-Remove or replace recognized legacy Forge entries, install the complete staged Forge set, and preserve unlisted project-owned entries. Preserve `.codex/config.toml`, Claude settings, commands, hooks, and other adjacent platform configuration. Stop on a same-ID collision until the user chooses the exact replacement.
+Remove or replace recognized legacy Forge entries, install the complete staged Forge set, and preserve unlisted project-owned entries. Preserve `.codex/config.toml`, Claude settings, `opencode.json`, OpenCode commands/plugins/skills/unlisted agents, commands, hooks, and other adjacent platform configuration. Stop on a same-ID collision until the user chooses the exact replacement.
 
 ## Preview and Approval
 
@@ -123,14 +125,14 @@ After approval:
 1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, existing lock, project-owned mutation history, and any project-owned integration paths that the staged operation references;
 2. build staged candidate outputs without changing active targets;
 3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` (including one explicit role-execution mode) and `.ai/custom/` project state while preserving optional `.ai/integrations/`, `quality/mutation-testing/`, and project-owned consumers byte-for-byte; add missing quality or mutation configuration only from explicit user decisions and confirmed repository or CI evidence, and never install a mutation backend;
-4. replace recognized Forge adapter IDs while preserving unlisted files;
+4. replace recognized Forge adapter IDs on every enabled platform while preserving unlisted files;
 5. replace the active bundle, full `AGENTS.md`, and importing `CLAUDE.md` as one logical operation;
 6. run `forge-check-framework` against the candidate result;
 7. re-hash protected paths and fail on any unauthorized difference; validate integration files structurally but do not include their contents in managed-output lock hashes;
 8. create or update `.ai/framework.lock` only after every validation passes;
 9. remove `.ai-next/` only after success and keep the backup until the user acknowledges the result.
 
-On any framework-migration failure, perform rollback: restore the old `.ai/`, prior project role configuration, routers, both launchers/adapters, lock, and exact integration bytes; verify protected hashes again; report the failed stage. Create no migration report Markdown file and require no framework CLI.
+On any framework-migration failure, perform rollback: restore the old `.ai/`, prior project role and OpenCode model configuration, routers, all adapter sets, both launchers, lock, and exact integration bytes; verify protected hashes again; report the failed stage. Remove only OpenCode files proven by the prior lock to be Forge-managed. Create no migration report Markdown file and require no framework CLI.
 
 ## Optional Integration-Schema Migration
 

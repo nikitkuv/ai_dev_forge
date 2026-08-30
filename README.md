@@ -1,14 +1,14 @@
-# AI Development Forge v4.6
+# AI Development Forge v4.7
 
 ## Настраиваемый planner/reviewer route
 
-`.ai/project.yaml` хранит один явный `role_execution.mode` для `epic-planner` и `reviewer`: `claude_with_codex` запускает Forge в Claude Code и делегирует обе роли через `openai/codex-plugin-cc` 1.0.6+ в fresh read-only `gpt-5.6-sol/medium`; `codex_with_claude` запускает Forge в Codex и вызывает установленный Claude Code CLI 2.1.203+ через fresh `claude -p`, JSON output, plan mode и ограниченные read-only tools; `native_subagents` использует внутренних агентов активной платформы без внешнего preflight.
+`.ai/project.yaml` хранит один явный `role_execution.mode` для `epic-planner` и `reviewer`: `claude_with_codex` запускает Forge в Claude Code и делегирует обе роли через `openai/codex-plugin-cc` 1.0.6+ в fresh read-only `gpt-5.6-sol/medium`; `codex_with_claude` запускает Forge в Codex и вызывает установленный Claude Code CLI 2.1.203+ через fresh `claude -p`, JSON output, plan mode и ограниченные read-only tools; `native_subagents` использует внутренних агентов активной платформы — Codex, Claude Code или OpenCode — без внешнего preflight. Для OpenCode-led bootstrap при отсутствии утверждённого route предлагается существующий `native_subagents`, но он всё равно записывается только после явного подтверждения; новых режимов нет.
 
 Bootstrap и migration требуют явного выбора. Недоступность выбранного внешнего runtime, несовпадение активного оркестратора и любая ошибка после старта блокируют planning/review без fallback. Forge не устанавливает и не авторизует внешние CLI автоматически.
 
-AI Development Forge — documentation-first фреймворк для совместной разработки с кодовыми агентами, прежде всего Codex CLI и Claude Code CLI.
+AI Development Forge — documentation-first фреймворк для совместной разработки с кодовыми агентами Codex CLI, Claude Code CLI и OpenCode.
 
-Фреймворк хранит продуктовый и execution-контекст в репозитории, использует сильную основную модель как оркестратор и генерирует нативных субагентов и skills для обеих платформ.
+Фреймворк хранит продуктовый и execution-контекст в репозитории, использует сильную основную модель как оркестратор и генерирует нативных субагентов и portable skills для поддерживаемых платформ.
 
 ## Что создаётся
 
@@ -29,6 +29,7 @@ execution/{planned,active,paused,completed}/
 .agents/skills/
 .claude/agents/
 .claude/skills/
+.opencode/agents/
 ```
 
 `SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются источниками истины. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
@@ -38,7 +39,7 @@ Mutation testing доступен отдельно через `forge-mutation-te
 ## Установка
 
 1. Скопируйте папку `.ai/` из этого репозитория в корень целевого проекта.
-2. Откройте проект в Codex CLI или Claude Code CLI.
+2. Откройте проект в Codex CLI, Claude Code CLI или OpenCode.
 3. Отправьте один из bootstrap-промптов ниже.
 4. Отвечайте на вопросы и подтверждайте каждый из шести этапов отдельно.
 
@@ -50,7 +51,7 @@ Mutation testing доступен отдельно через `forge-mutation-te
 
 ```text
 Read .ai/BOOTSTRAP.md and initialize this repository as a new project.
-Create both Codex and Claude Code adapters.
+Create Codex, Claude Code, and OpenCode adapters.
 Communicate with me in Russian and start the product interview.
 ```
 
@@ -61,7 +62,7 @@ Communicate with me in Russian and start the product interview.
 ```text
 Read .ai/BOOTSTRAP.md and initialize this existing repository.
 Analyze the current code and documentation before starting the interview.
-Create both Codex and Claude Code adapters.
+Create Codex, Claude Code, and OpenCode adapters.
 Communicate with me in Russian.
 ```
 
@@ -73,22 +74,24 @@ Communicate with me in Russian.
 2. System Design → `ARCHITECTURE.md`, ADR и генерируемый `DECISIONS.md`.
 3. Release Planning → `BACKLOG.md` с Epic Roadmap и Defect Queue.
 4. Prepare Workspace → strong `epic-planner`, approved queued workspace under `execution/planned/`, затем optional отдельный Epic Start с атомарным move в `execution/active/`.
-5. Create Platform Adapters → оба native adapter-набора и `.ai/framework.lock`.
+5. Create Platform Adapters → все enabled native adapter-наборы и `.ai/framework.lock`.
 6. Final Validation → проверка структуры, lifecycle, ownership, parity и восстановления без истории сессии.
 
 Первая TASK после bootstrap остаётся `TODO` и требует отдельного Task Start.
 
 ## Нативные адаптеры
 
-| Codex CLI | Claude Code CLI |
-| --- | --- |
-| `AGENTS.md` | `CLAUDE.md` |
-| `.codex/agents/*.toml` | `.claude/agents/*.md` |
-| `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
+| Codex CLI | Claude Code CLI | OpenCode |
+| --- | --- | --- |
+| `AGENTS.md` | `CLAUDE.md` → `@AGENTS.md` | `AGENTS.md` |
+| `.codex/agents/*.toml` | `.claude/agents/*.md` | `.opencode/agents/*.md` |
+| `.agents/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` | `.agents/skills/*/SKILL.md` |
 
-Нейтральные определения находятся в `.ai/framework/`. Полный router генерируется только в `AGENTS.md`; `CLAUDE.md` содержит `@AGENTS.md` и импортирует его в Claude Code без копирования. Проектные дополнения к router хранятся только в `.ai/custom/router-shared.md`.
+Нейтральные определения находятся в `.ai/framework/`. Полный router генерируется только в `AGENTS.md` и нативно используется Codex и OpenCode; `CLAUDE.md` содержит `@AGENTS.md` и импортирует его в Claude Code без копирования. OpenCode обнаруживает portable skills прямо в `.agents/skills/`, поэтому `.opencode/skills/` не генерируется. Проектные дополнения к router хранятся только в `.ai/custom/router-shared.md`.
 
-Framework defaults для всех субагентов: Codex `strong = gpt-5.6-sol/medium`, `balanced = gpt-5.6-terra/medium`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/medium`, `balanced = sonnet/medium`, `fast = haiku/medium`. Проект может явно переопределить их в `.ai/project.yaml`; генератор записывает resolved mapping в нативные agent-файлы обеих платформ. В режиме `native_subagents` все Claude Code agent-файлы получают режимный override `effort: high`; настройки Codex и внешнего маршрута `codex_with_claude` не меняются.
+Framework defaults для субагентов: Codex `strong = gpt-5.6-sol/medium`, `balanced = gpt-5.6-terra/medium`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/medium`, `balanced = sonnet/medium`, `fast = haiku/medium`. Для OpenCode универсальных defaults нет: включённый adapter требует три явно подтверждённых значения `provider/model-id`, полученных от пользователя или из локального `opencode models`. Forge не устанавливает OpenCode, не настраивает provider и не хранит credentials. В режиме `native_subagents` все Claude Code agent-файлы получают override `effort: high`; настройки Codex, OpenCode и внешнего маршрута `codex_with_claude` не меняются.
+
+Forge управляет только manifest-declared `.opencode/agents/*.md`. `opencode.json`, commands, plugins, skills и пользовательские агенты сохраняются как project-owned файлы.
 
 Сгенерированные adapters вручную не редактируются и применяются через синхронизацию.
 

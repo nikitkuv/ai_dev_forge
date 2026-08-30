@@ -11,8 +11,8 @@ test("contracts define exactly two delivery tracks independently from model tier
     read(".ai/templates/project.yaml")
   ]);
 
-  assert.match(manifest, /version: 4\.6\.0/);
-  assert.match(project, /version: 4\.6\.0/);
+  assert.match(manifest, /version: 4\.7\.0/);
+  assert.match(project, /version: 4\.7\.0/);
   assert.doesNotMatch(`${manifest}\n${project}`, /version: 4\.5\.0/);
   assert.match(contracts, /delivery_tracks: \[fast, standard\]/);
   assert.match(contracts, /model_tiers: \[strong, balanced, fast\]/);
