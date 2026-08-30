@@ -4,6 +4,8 @@ AI Development Forge does not require local integrations. A clean project has no
 
 An integration definition is project-owned. Forge never creates the connector, installs software, authenticates, stores credentials, or copies local bindings into generated adapters. Definitions follow `.ai/templates/integration.yaml`; the normative contract is `.ai/framework/integrations/contracts.yaml`.
 
+Bindings may target `codex`, `claude`, or `opencode`. Adding OpenCode platform support does not synthesize a binding: a definition remains inert on OpenCode until the project supplies an explicit compatible local connector mapping.
+
 ## Capability and consumer model
 
 An integration declares a provider-neutral profile, semantic operations, resource scope, access/data policy, allowed consumers, and platform-local bindings. A definition is inert until the orchestrator selects a compatible framework-owned or project-owned skill. Effective authority is the intersection of the integration allowlist, consumer contract, active-platform binding, scope, and current user authorization.
@@ -27,6 +29,9 @@ operations:
   - {semantic_name: get_document, access: read_only}
 bindings:
   codex:
+    connector: project-knowledge
+    operations: {search: search_docs, get_document: read_doc}
+  opencode:
     connector: project-knowledge
     operations: {search: search_docs, get_document: read_doc}
 profile_config: {}
@@ -84,6 +89,12 @@ bindings:
       get_item: get_card
       get_relationships: get_card_links
   claude:
+    connector: project-kaiten
+    operations:
+      list_candidates: list_cards
+      get_item: get_card
+      get_relationships: get_card_links
+  opencode:
     connector: project-kaiten
     operations:
       list_candidates: list_cards

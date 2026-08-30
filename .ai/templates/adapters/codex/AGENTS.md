@@ -76,11 +76,11 @@ The implementer serves both delivery tracks. Reviewer and tester are invoked onl
 
 Only the orchestrator invokes generated local agents. Default tier mappings are:
 
-| Tier | Codex | Claude Code |
-| --- | --- | --- |
-| `strong` | `gpt-5.6-sol`, effort `medium` | `opus`, effort `medium` |
-| `balanced` | `gpt-5.6-terra`, effort `medium` | `sonnet`, effort `medium` |
-| `fast` | `gpt-5.6-luna`, effort `medium` | `haiku`, effort `medium` |
+| Tier | Codex | Claude Code | OpenCode |
+| --- | --- | --- | --- |
+| `strong` | `gpt-5.6-sol`, effort `medium` | `opus`, effort `medium` | project-approved `provider/model-id` |
+| `balanced` | `gpt-5.6-terra`, effort `medium` | `sonnet`, effort `medium` | project-approved `provider/model-id` |
+| `fast` | `gpt-5.6-luna`, effort `medium` | `haiku`, effort `medium` | project-approved `provider/model-id` |
 
 Project configuration may explicitly override these defaults in `.ai/project.yaml`; adapter synchronization applies one resolved mapping consistently to every agent of the tier.
 
@@ -100,7 +100,7 @@ Epic planner, reviewer, tester, Epic validator, fuzzer, security auditor, mutati
 
 ## Planner and reviewer execution mode
 
-Before invoking `epic-planner` or `reviewer`, read `.ai/project.yaml` and require one valid `role_execution.mode`. `claude_with_codex` requires Claude Code as orchestrator and runs `.claude/forge/codex-role-runner.mjs` with `codex@openai-codex` 1.0.6+, fresh read-only `gpt-5.6-sol/medium`, and the complete neutral contract plus exact assignment. `codex_with_claude` requires Codex as orchestrator and runs `.codex/forge/claude-role-runner.mjs` with Claude Code 2.1.203+, the configured Claude strong model/effort, plan mode, restricted read-only tools, and no persisted session or nested agents. `native_subagents` invokes the active platform's matching generated agent and performs no external preflight; every generated Claude native agent uses `high` effort in this mode.
+Before invoking `epic-planner` or `reviewer`, read `.ai/project.yaml` and require one valid `role_execution.mode`. `claude_with_codex` requires Claude Code as orchestrator and runs `.claude/forge/codex-role-runner.mjs` through a fresh ephemeral read-only `codex exec` process pinned to `gpt-5.6-sol/medium`, with the complete neutral contract plus exact assignment passed through stdin. Run the launcher's `--preflight` once; never copy wrappers into user directories, create `BASH_ENV`, reuse plugin broker state, or manipulate Codex app-server pipes. `codex_with_claude` requires Codex as orchestrator and runs `.codex/forge/claude-role-runner.mjs` with Claude Code 2.1.203+, the configured Claude strong model/effort, plan mode, restricted read-only tools, and no persisted session or nested agents. `native_subagents` invokes the active Codex, Claude Code, or OpenCode platform's matching generated agent and performs no external preflight; every generated Claude native agent uses `high` effort in this mode. For an OpenCode-led setup with no prior approved route, bootstrap or migration proposes this existing mode by default but records it only after explicit approval and never rewrites an existing approved route silently.
 
 Missing or invalid configuration, active-orchestrator mismatch, or unavailable selected prerequisites blocks only the selected stage. There is no fallback: after either external task starts, any error, timeout, permission failure, malformed result, or runtime-setting mismatch also blocks the stage. The orchestrator alone validates results and owns lifecycle transitions, approvals, and remediation routing.
 
@@ -108,7 +108,8 @@ Run no more than one code-writing Task at a time. Independent read-only research
 
 ## Platform Boundaries
 
-- `AGENTS.md` is the single generated root router. `CLAUDE.md` imports it with `@AGENTS.md` and must contain no duplicated router instructions.
+- `AGENTS.md` is the single generated root router shared by Codex and OpenCode. `CLAUDE.md` imports it with `@AGENTS.md` and must contain no duplicated router instructions.
+- OpenCode agents live under `.opencode/agents/` and discover the portable Forge skills through `.agents/skills/`; Forge does not duplicate them into `.opencode/skills/` or generate `opencode.json`.
 - Generated adapters are derived from `.ai/framework/`, `.ai/project.yaml`, and `.ai/custom/router-shared.md`.
 - Project-specific router additions belong only in `.ai/custom/router-shared.md`; synchronize rather than editing generated files.
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.

@@ -1,9 +1,9 @@
 framework:
   name: ai-dev-forge
-  version: 4.6.0
+  version: 4.7.1
   schema_version: 2
 
-adapters: [codex, claude]
+adapters: [codex, claude, opencode]
 
 ownership:
   framework_owned_paths:
@@ -39,12 +39,13 @@ ownership:
     - .codex/
     - .claude/
     - .agents/
+    - .opencode/agents/
   generated_adapter_policy:
     regeneration: adapter sync and framework migration regenerate these outputs from framework sources and project configuration.
     manual_edit_collision: detect manual edits, show the regeneration diff, and require explicit confirmation before overwriting them.
     managed_membership: only root routers and entries whose IDs are declared in subagents or skills are Forge-managed.
     unlisted_membership: preserve unlisted agents, skills, and adjacent platform files as project-owned content.
-    protected_platform_files: never generate or replace .codex/config.toml, Claude settings, commands, or hooks.
+    protected_platform_files: never generate or replace .codex/config.toml, Claude settings, commands, hooks, opencode.json, or .opencode commands, plugins, skills, and unlisted agents.
 
 skills:
   - forge-bootstrap-new
@@ -74,14 +75,14 @@ role_execution:
   routes:
     claude_with_codex:
       orchestrator: claude
-      provider: codex-plugin-cc
-      plugin_id: codex@openai-codex
-      minimum_plugin_version: 1.0.6
+      provider: codex-cli
+      transport: exec
       launcher: .claude/forge/codex-role-runner.mjs
       model: gpt-5.6-sol
       reasoning_effort: medium
       permission_mode: read_only
       fresh: true
+      session_persistence: false
     codex_with_claude:
       orchestrator: codex
       provider: claude-code-cli
@@ -98,6 +99,7 @@ role_execution:
       provider: native
       external_preflight: false
       claude_reasoning_effort: high
+      opencode_default_when_primary: true
 
 optional_capabilities:
   hooks: false

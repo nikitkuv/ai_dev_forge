@@ -1,6 +1,6 @@
 ## Сценарий 1. Инициализация нового проекта с нуля
 
-> Bootstrap требует один явный `role_execution.mode` для `epic-planner` и `reviewer`: Claude→Codex, Codex→Claude или native subagents. Внешний route не имеет fallback.
+> Bootstrap требует один явный `role_execution.mode` для `epic-planner` и `reviewer`: Claude→Codex, Codex→Claude или native subagents. Для OpenCode существующий native route предлагается по умолчанию, новых режимов нет. Внешний route не имеет fallback.
 
 ### Исходное состояние
 
@@ -20,7 +20,7 @@ Bootstrap не запускается автоматически после ко
 > **Пользователь:**
 >
 > Read .ai/BOOTSTRAP.md and initialize this repository as a new project.  
-> Create both Codex and Claude Code adapters.  
+> Create Codex, Claude Code, and OpenCode adapters.
 > Communicate with me in Russian and start the product interview.
 
 **Внутреннее действие**
@@ -38,10 +38,10 @@ Bootstrap не запускается автоматически после ко
 > **Оркестратор:** Прежде чем формировать продуктовые документы, нужно согласовать настройки проекта:
 >
 > - язык canonical документов — русский;
-> - генерируем обе платформы — Codex CLI и Claude Code CLI;
+> - генерируем Codex CLI, Claude Code CLI и OpenCode;
 > - выбираем один режим обеих read-only ролей: `claude_with_codex`, `codex_with_claude` или `native_subagents`;
 > - Git policy — `manual`;
-> - для каждой платформы нужны выбранные вами model mappings для tiers `strong`, `balanced` и `fast`; для Codex также нужен reasoning effort.
+> - Codex и Claude используют подтверждённые defaults или overrides; OpenCode требует явные model mappings `provider/model-id` для tiers `strong`, `balanced` и `fast`.
 >
 > Подтверждаете эти настройки и выбранные model IDs?
 
@@ -60,6 +60,7 @@ Bootstrap не запускается автоматически после ко
   documentation_language: ru
   platforms.codex.enabled: true
   platforms.claude.enabled: true
+  platforms.opencode.enabled: true
   role_execution.mode: явно подтверждённое значение
   models: конкретные mappings, подтверждённые пользователем
   git.policy: manual
@@ -247,28 +248,28 @@ execution/planned/EPIC-001-core/
 
 Позже Epic Start повторно проверит dependencies, `Blocked by` и отсутствие другого active-work Epic, затем атомарно переместит каталог `execution/planned/ → execution/active/` вместе с переходом Backlog `PLANNED → ACTIVE`. Epic Start не является Task Start.
 
-### Шаг 6. Создание Codex и Claude Code adapters
+### Шаг 6. Создание Codex, Claude Code и OpenCode adapters
 
 Оркестратор читает `.ai/05-create-platform-adapters.md`.
 
 **Внутреннее действие**
 
 1. Повторно проверяет model mappings в `.ai/project.yaml`.
-2. Проверяет существующие `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.claude/`, `.agents/` на collision.
+2. Проверяет существующие `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.claude/`, `.agents/`, `opencode.json` и `.opencode/` на collision.
 3. Показывает diff до перезаписи любых generated outputs.
-4. Рендерит оба adapter-набора из одних neutral sources.
+4. Рендерит все enabled adapter-наборы из одних neutral sources; OpenCode переиспользует `AGENTS.md` и `.agents/skills/`.
 5. Проверяет parity: 7 агентов и 14 skills на каждой платформе.
 6. Проверяет лимит root-router в 150 строк.
 7. Создаёт `.ai/framework.lock` с hashes источников и outputs.
 8. Создаёт или минимально дополняет project `README.md` после отдельного collision confirmation.
 
-> **Оркестратор:** Collision не найден. Будут созданы оба router, 14 Codex skills, 14 Claude skills и по 7 agent-файлов. Подтверждаете генерацию?
+> **Оркестратор:** Collision не найден. Будут созданы shared `AGENTS.md`, importing `CLAUDE.md`, 16 portable skills для Codex/OpenCode, 16 Claude skills и по 11 agent-файлов для Codex, Claude и OpenCode. `opencode.json` и project-owned `.opencode/` останутся без изменений. Подтверждаете генерацию?
 
 > **Пользователь:** Да.
 
 После генерации оркестратор показывает созданные пути, model mappings, router line counts, parity checks и hashes lock-файла.
 
-> **Оркестратор:** Оба adapter-набора сгенерированы и прошли parity validation. Подтверждаете результат Step 05 и переход к Final Validation?
+> **Оркестратор:** Все enabled adapter-наборы сгенерированы и прошли parity validation. Подтверждаете результат Step 05 и переход к Final Validation?
 
 > **Пользователь:** Да, Step 05 принимаю.
 
@@ -281,6 +282,7 @@ CLAUDE.md
 .agents/skills/*/SKILL.md
 .claude/agents/*.md
 .claude/skills/*/SKILL.md
+.opencode/agents/*.md
 .ai/framework.lock
 ```
 
@@ -297,7 +299,7 @@ Generated adapters вручную не редактируются. Проект�
 - ссылки между requirements, architecture, ADR, Epic, plan и TASK;
 - согласованность `BACKLOG.md` с ordered `execution/planned/` queue и `execution/active/`;
 - отсутствие циклов TASK dependencies;
-- parity двух adapters;
+- parity всех enabled adapters;
 - отсутствие hooks, MCP, CLI dependency и report Markdown;
 - восстановление текущего gate без истории чата.
 
@@ -319,6 +321,7 @@ TaskFlow initialized
 ├── TASK-001: TODO
 ├── Codex adapter: generated
 ├── Claude Code adapter: generated
+├── OpenCode adapter: generated
 └── current gate: task_start
 ```
 

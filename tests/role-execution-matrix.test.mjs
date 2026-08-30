@@ -5,19 +5,22 @@ import { readFile } from "node:fs/promises";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 function route(mode, active) {
-  if (mode === "native_subagents" && ["codex", "claude"].includes(active)) return { provider: "native", blocked: false };
-  if (mode === "claude_with_codex") return active === "claude" ? { provider: "codex-plugin-cc", blocked: false } : { blocked: true, reason: "active-orchestrator mismatch" };
+  if (mode === "native_subagents" && ["codex", "claude", "opencode"].includes(active)) return { provider: "native", blocked: false };
+  if (mode === "claude_with_codex") return active === "claude" ? { provider: "codex-cli", blocked: false } : { blocked: true, reason: "active-orchestrator mismatch" };
   if (mode === "codex_with_claude") return active === "codex" ? { provider: "claude-code-cli", blocked: false } : { blocked: true, reason: "active-orchestrator mismatch" };
   return { blocked: true, reason: "invalid role_execution.mode" };
 }
 
 test("route matrix covers all supported mode and orchestrator combinations", () => {
-  assert.deepEqual(route("claude_with_codex", "claude"), { provider: "codex-plugin-cc", blocked: false });
+  assert.deepEqual(route("claude_with_codex", "claude"), { provider: "codex-cli", blocked: false });
   assert.equal(route("claude_with_codex", "codex").blocked, true);
   assert.deepEqual(route("codex_with_claude", "codex"), { provider: "claude-code-cli", blocked: false });
   assert.equal(route("codex_with_claude", "claude").blocked, true);
   assert.deepEqual(route("native_subagents", "codex"), { provider: "native", blocked: false });
   assert.deepEqual(route("native_subagents", "claude"), { provider: "native", blocked: false });
+  assert.deepEqual(route("native_subagents", "opencode"), { provider: "native", blocked: false });
+  assert.equal(route("claude_with_codex", "opencode").blocked, true);
+  assert.equal(route("codex_with_claude", "opencode").blocked, true);
   assert.equal(route(undefined, "codex").blocked, true);
   assert.equal(route("auto", "claude").blocked, true);
 });
@@ -50,8 +53,10 @@ test("generation and migration retain both launchers and all native agents", asy
     assert.match(source, /native/i);
   }
   assert.match(migration, /compatibility-preserving suggestion/);
-  assert.match(migration, /never write it without approval/);
+  assert.match(migration, /Never write (?:it|a suggestion) without approval/i);
   assert.match(validation, /No route implicitly falls back/);
+  assert.match(migration, /OpenCode-led project[\s\S]*?existing `native_subagents` value by default/i);
+  assert.match(migration, /add a new mode|adds no mode/i);
 });
 
 test("canonical router contains the complete no-fallback matrix and Claude imports it", async () => {

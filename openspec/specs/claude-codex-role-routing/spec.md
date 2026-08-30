@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines deterministic, read-only routing from Claude Code orchestration to Codex for Epic planning and independent Task review, with the existing native Claude role subagents retained as a preflight fallback.
+Defines deterministic, read-only routing from Claude Code orchestration to Codex for Epic planning and independent Task review, with native role subagents retained as a separately selected execution mode rather than an implicit fallback.
 
 
 ## Requirements
@@ -13,7 +13,7 @@ Forge SHALL require one project-owned `role_execution.mode` value applying toget
 
 #### Scenario: New project selects Claude with Codex
 - **WHEN** bootstrap records the user's `claude_with_codex` choice
-- **THEN** both selected roles are configured for Claude orchestration with Codex plugin execution
+- **THEN** both selected roles are configured for Claude orchestration with stable Codex CLI execution
 
 #### Scenario: New project selects Codex with Claude
 - **WHEN** bootstrap records the user's `codex_with_claude` choice
@@ -27,9 +27,9 @@ Forge SHALL require one project-owned `role_execution.mode` value applying toget
 - **WHEN** either selected role is required and `role_execution.mode` is absent or invalid
 - **THEN** Forge identifies the configuration problem and does not infer a provider
 
-### Requirement: Claude-to-Codex mode uses the managed plugin route
+### Requirement: Claude-to-Codex mode uses the managed Codex CLI route
 
-When `role_execution.mode` is `claude_with_codex`, Forge SHALL require Claude Code as the active orchestrator and SHALL execute both selected roles through the managed `openai/codex-plugin-cc` runtime using a fresh foreground read-only Codex task pinned to `gpt-5.6-sol` with `medium` reasoning.
+When `role_execution.mode` is `claude_with_codex`, Forge SHALL require Claude Code as the active orchestrator and SHALL execute both selected roles through the managed launcher using stable non-interactive `codex exec`, an ephemeral foreground read-only Codex task pinned to `gpt-5.6-sol` with `medium` reasoning, and prompt input over stdin. The launcher SHALL resolve and validate a local authenticated Codex CLI without using plugin broker state, app-server pipes, `BASH_ENV`, or persistent user-directory wrappers.
 
 #### Scenario: Claude plans an Epic
 - **WHEN** Claude Code reaches Epic planning in `claude_with_codex` mode and preflight succeeds
@@ -73,7 +73,7 @@ When `role_execution.mode` is `native_subagents`, Forge SHALL execute `epic-plan
 
 ### Requirement: Explicit external selection has no provider fallback
 
-Before an external role starts, the active orchestrator SHALL verify the prerequisites required by the selected mode. Missing plugin/runtime, executable, supported version, or authentication SHALL block that stage with actionable diagnostics. After external execution starts, a non-zero exit, timeout, malformed output, permission failure, or runtime/model/mode mismatch SHALL also block the stage. Forge SHALL NOT invoke a native subagent or the other external provider for the same attempt.
+Before an external role starts, the active orchestrator SHALL verify the prerequisites required by the selected mode. Missing runtime, executable, supported command surface, or authentication SHALL block that stage with actionable diagnostics. After external execution starts, a non-zero exit, timeout, malformed output, permission failure, or runtime/model/mode mismatch SHALL also block the stage. Forge SHALL NOT invoke a native subagent or the other external provider for the same attempt.
 
 #### Scenario: Selected Codex route is unavailable
 - **WHEN** `claude_with_codex` preflight cannot establish every prerequisite
@@ -120,7 +120,7 @@ Bootstrap SHALL ask the user to select one supported mode and persist it in `.ai
 Adapter generation SHALL retain all neutral role definitions and all native Codex and Claude agent files, generate both managed external launchers, render the complete three-mode router guidance once in root `AGENTS.md`, and render root `CLAUDE.md` as the exact `@AGENTS.md` import. Generation SHALL not install, authenticate, preflight, or invoke an external provider. Validation SHALL verify the import, role-contract parity, launcher permission boundaries, route metadata, configuration validity, and preservation of unrelated platform files.
 
 #### Scenario: External prerequisites are absent during generation
-- **WHEN** adapters are generated without Codex plugin or Claude Code runtime availability
+- **WHEN** adapters are generated without Codex CLI or Claude Code runtime availability
 - **THEN** generation succeeds with both launchers and every native agent because runtime availability is checked only when the selected role executes
 
 #### Scenario: Route configuration changes

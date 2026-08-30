@@ -1,6 +1,6 @@
 ---
 name: forge-sync-adapters
-description: Use after bootstrap, framework upgrade, model mapping changes, custom overlay changes, or detected drift in local Codex and Claude adapters.
+description: Use after bootstrap, framework upgrade, model mapping changes, custom overlay changes, or detected drift in local Codex, Claude, or OpenCode adapters.
 ---
 
 # Synchronize Platform Adapters
@@ -8,9 +8,9 @@ description: Use after bootstrap, framework upgrade, model mapping changes, cust
 ## Build the render input
 
 1. Read `.ai/project.yaml`, the manifest, framework integration and mutation-testing contracts, neutral agents, portable skills, the full `AGENTS.md` router template, the importing `CLAUDE.md` template, `.ai/custom/router-shared.md`, existing local adapters, and lock hashes. Do not use project-owned `.ai/integrations/` definitions/state as render input. Do not use `quality/mutation-testing/` history as render input.
-2. Require both platforms and resolve every configured model tier from the bundled defaults or explicit project overrides. Never invent or silently change a model or effort.
-3. Require one valid project `role_execution.mode` and derive managed membership from manifest `subagents`, `skills`, `role_execution`, root `AGENTS.md`, and `CLAUDE.md`. The three modes and two external launchers supplement rather than replace native `epic-planner` and `reviewer` agents on either platform.
-4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, commands, hooks, project-owned integration consumers, independent mutation history, and adjacent platform files as project-owned content.
+2. Require Codex and Claude plus one explicit OpenCode enabled flag. Resolve Codex and Claude tiers from bundled defaults or explicit overrides. When OpenCode is enabled, require every tier to be an explicit non-empty `provider/model-id` from user input or evidenced local `opencode models` output; never invent, install, authenticate, or silently change a provider, model, or effort.
+3. Require one valid project `role_execution.mode` and derive managed membership from manifest `subagents`, `skills`, `role_execution`, root `AGENTS.md`, `CLAUDE.md`, and enabled OpenCode agents. The unchanged three modes and two external launchers supplement rather than replace native `epic-planner` and `reviewer` agents. For an OpenCode-led setup with no prior approved route, propose existing `native_subagents` by default, require approval before recording it, and preserve an existing approved route.
+4. Inventory unlisted agents, skills, `.codex/config.toml`, Claude settings, `opencode.json`, `.opencode/commands/`, `.opencode/plugins/`, `.opencode/skills/`, unlisted `.opencode/agents/`, hooks, project-owned integration consumers, independent mutation history, and adjacent platform files as project-owned content.
 5. Detect manual edits and same-ID collisions in managed entries.
 
 ## Preview collisions
@@ -36,11 +36,12 @@ Stage one synchronized candidate containing:
 - manifest-declared Codex skills under `.agents/skills/`;
 - manifest-declared Claude agents under `.claude/agents/`;
 - manifest-declared Claude skills under `.claude/skills/`;
+- when enabled, manifest-declared OpenCode agents under `.opencode/agents/`, reusing root `AGENTS.md` and `.agents/skills/` rather than duplicating either;
 - `.claude/forge/codex-role-runner.mjs` copied verbatim from the Claude adapter template;
 - `.codex/forge/claude-role-runner.mjs` copied verbatim from the Codex adapter template;
 - all preserved unlisted project-owned entries.
 
-Write each generated `.claude/agents/*.md` file as UTF-8 without BOM. Its first bytes must be the opening YAML frontmatter delimiter `---`; do not emit the UTF-8 BOM byte sequence `EF BB BF`, because Claude Code then fails to recognize the frontmatter and does not register the subagent.
+Write each generated `.claude/agents/*.md` and `.opencode/agents/*.md` file as UTF-8 without BOM. Its first bytes must be the opening YAML frontmatter delimiter `---`; do not emit the UTF-8 BOM byte sequence `EF BB BF`, because the platform then fails to recognize the frontmatter and does not register the subagent.
 
 Install no global agent or skill. Generate no hook, MCP configuration, platform settings, commands, or framework CLI dependency.
 Generate no `.ai/integrations/` or `quality/mutation-testing/` content and embed no project-local integration IDs, mutation records, provider names, scopes, bindings, or credentials. Generic profile/consumer and mutation routing comes only from framework-owned sources.
@@ -48,11 +49,11 @@ Generate no `.ai/integrations/` or `quality/mutation-testing/` content and embed
 ## Validate and finalize
 
 1. verify `AGENTS.md` has no unresolved placeholder and remains within the configured line limit, and verify `CLAUDE.md` is the exact `@AGENTS.md` import;
-2. verify the complete manifest-declared Forge agent and skill set on both platforms;
-3. verify managed IDs, tiers, permissions, descriptions, instructions, models, effort, and skill bodies have cross-platform parity; verify both delivery-track routes are present in the imported router and portable skills, fast invokes neither reviewer nor tester, standard preserves both roles, and delivery track never changes model mappings; verify all three `role_execution` modes, both launchers, active-orchestrator requirements, complete neutral prompt parity, fresh/read-only boundaries, configured model sources, and `fallback: forbidden`;
+2. verify the complete manifest-declared Forge agent and skill set on Codex and Claude, plus every agent on enabled OpenCode and shared OpenCode skill discovery from `.agents/skills/`;
+3. verify managed IDs, tiers, effective permissions, descriptions, instructions, models, applicable effort, and skill bodies have cross-platform parity; verify OpenCode allows edits only for implementer, grants command/research access only where neutral policy permits, and denies external-directory and nested task access for every subagent; verify both delivery-track routes are present in the shared router and portable skills, fast invokes neither reviewer nor tester, standard preserves both roles, and delivery track never changes model mappings; verify all three unchanged `role_execution` modes, both launchers, OpenCode's default proposal of existing `native_subagents`, active-orchestrator requirements, complete neutral prompt parity, fresh/read-only boundaries, configured model sources, and `fallback: forbidden`;
 4. verify additional project-owned agents, skills, integration consumers, `quality/mutation-testing/` history, and all unlisted platform files are unchanged;
-5. verify every generated `.claude/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
+5. verify every generated `.claude/agents/*.md` and `.opencode/agents/*.md` file is UTF-8 without BOM and begins at byte zero with `---`;
 6. verify the framework lock contains only inputs that render managed outputs and that local integration changes are reported separately rather than as adapter drift;
 7. run the read-only framework conformance check.
 
-If either platform fails, replace neither. Back up every affected managed path before replacement and restore both adapter sets on failure. Update managed source/output hashes and preserved-path ownership in `.ai/framework.lock` only after success. Create no sync report file.
+If any enabled platform fails, replace none. Back up every affected managed path before replacement and restore all adapter sets on failure. Update managed source/output hashes and preserved-path ownership in `.ai/framework.lock` only after success, including only manifest-declared OpenCode agent entries. Create no sync report file.

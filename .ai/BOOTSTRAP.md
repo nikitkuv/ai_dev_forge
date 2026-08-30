@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Initialize a consumer product repository for coordinated development with Codex CLI and Claude Code CLI. Bootstrap creates approved canonical documents, one gated execution workspace, both native adapter sets, and recoverable project configuration.
+Initialize a consumer product repository for coordinated development with Codex CLI, Claude Code CLI, and OpenCode. Bootstrap creates approved canonical documents, one gated execution workspace, enabled native adapter sets, and recoverable project configuration.
 
 Bootstrap does not implement product features or initialize the AI Development Forge source repository itself.
 
@@ -25,11 +25,12 @@ If the user intent or repository type is ambiguous, ask. Never infer that an exi
 4. Determine with the user:
    - bootstrap mode;
    - documentation language;
-   - both enabled platforms: Codex and Claude;
+   - enabled platforms: Codex, Claude Code, and OpenCode;
    - one role-execution mode for both `epic-planner` and `reviewer`: `claude_with_codex`, `codex_with_claude`, or `native_subagents`;
-   - whether the project accepts the bundled default `strong`, `balanced`, and `fast` model mappings or explicitly overrides them;
+   - when OpenCode is the selected operating platform and no approved route exists, propose existing `native_subagents` by default without adding a mode; still require explicit approval, and preserve an already approved route during migration;
+   - whether the project accepts the bundled Codex and Claude `strong`, `balanced`, and `fast` model mappings or explicitly overrides them; for enabled OpenCode, require explicit provider-qualified `provider/model-id` values from user input or evidenced local `opencode models` output because no provider-independent defaults exist;
    - Git policy: `manual` or `auto_commit_after_acceptance`.
-5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, both platforms, the explicit `role_execution.mode`, the accepted defaults or explicit model overrides, and Git policy so interrupted bootstrap can recover without conversation history. Never install, authenticate, preflight, or invoke either external runtime while recording this choice. Step 05 revalidates this configuration before rendering.
+5. After these settings are approved, create or update `.ai/project.yaml` from `.ai/templates/project.yaml` immediately. Persist the documentation language, enabled platforms, the explicit `role_execution.mode`, the accepted defaults or explicit model mappings, and Git policy so interrupted bootstrap can recover without conversation history. Never install, authenticate, preflight, invoke, or configure Codex, Claude Code, OpenCode, or an OpenCode model provider while recording this choice. Step 05 revalidates this configuration before rendering.
 6. Detect collisions with existing canonical files, project configuration, custom overlays, or generated adapters. Show the exact affected paths and request confirmation before overwriting project work.
 7. Create no framework hooks, MCP configuration, CLI dependency, `.ai/integrations/` registry, mutation backend, or `quality/mutation-testing/` history. A clean project has no local integrations or mutation records. Preserve existing project-owned integrations, mutation history, and connector infrastructure outside framework ownership; do not invoke connectors during bootstrap.
 
@@ -55,7 +56,7 @@ Run these files in order and read each one in full before acting:
 2. [System Design](02-system-design.md) — create approved `ARCHITECTURE.md`, ADRs, and generated `DECISIONS.md`.
 3. [Release Planning](03-release-planning.md) — create approved Epic Roadmap and Defect Queue in `BACKLOG.md`.
 4. [Prepare Workspace](04-prepare-workspace.md) — use the strong read-only Epic planner, approve one queued workspace under `execution/planned/`, and optionally use the separate Epic Start gate to move it to active state.
-5. [Create Platform Adapters](05-create-platform-adapters.md) — write project configuration and generate both native adapter sets.
+5. [Create Platform Adapters](05-create-platform-adapters.md) — write project configuration and generate every enabled native adapter set.
 6. [Final Validation](06-final-validation.md) — verify canonical state, lifecycle, ownership, adapters, and recovery.
 
 Each step has its own explicit user approval. Report its proposed outputs and wait before entering the next step. Approval of one step never implies Task Start or another later gate.

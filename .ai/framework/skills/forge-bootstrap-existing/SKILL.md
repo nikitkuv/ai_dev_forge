@@ -1,6 +1,6 @@
 ---
 name: forge-bootstrap-existing
-description: Adopt AI Development Forge in an existing codebase by collecting repository evidence before the product interview, reconciling code/document/user conflicts, and then creating approved canonical documents plus both platform adapters.
+description: Adopt AI Development Forge in an existing codebase by collecting repository evidence before the product interview, reconciling code/document/user conflicts, and then creating approved canonical documents plus enabled platform adapters.
 ---
 
 # Bootstrap an Existing Project
@@ -12,7 +12,7 @@ description: Adopt AI Development Forge in an existing codebase by collecting re
 3. Ask the `context-collector` for a local read-only inventory of code, tests, documentation, configuration, deployment material, issue artifacts, Git state, any existing product or architecture records, and optional project-owned integration definitions without invoking their connectors.
 4. Summarize apparent behavior, protected compatibility constraints, missing tests, defects, technical debt, dependency risks, architecture violations, and contradictions.
 5. Label each statement as code evidence, test evidence, documentation claim, user-confirmed intent, or inference.
-6. Ask the user to choose exactly one `role_execution.mode` for both `epic-planner` and `reviewer`: `claude_with_codex`, `codex_with_claude`, or `native_subagents`; persist it without probing or installing external runtimes.
+6. Ask the user to choose enabled platforms and exactly one `role_execution.mode` for both `epic-planner` and `reviewer`: `claude_with_codex`, `codex_with_claude`, or `native_subagents`. For an OpenCode-led setup with no approved route, propose the existing `native_subagents` value by default but persist it only after approval and add no mode. Preserve an already approved route. Enabled OpenCode requires explicit non-empty `provider/model-id` mappings for all three tiers from user input or evidenced local `opencode models` output; do not invent a provider or install, authenticate, configure, preflight, or invoke external runtimes.
 
 Current behavior is evidence, not product truth. Present conflicts and ask the user which target behavior is authoritative. Do not silently copy accidental implementation behavior into canonical documents.
 
@@ -24,7 +24,7 @@ Follow all six numbered workflows:
 2. Use `.ai/02-system-design.md` to compare current and target architecture, approve significant ADRs, and create `ARCHITECTURE.md` plus generated `DECISIONS.md`.
 3. Use `.ai/03-release-planning.md` to present discovered feature, defect, debt, and risk candidates; add only user-approved items to `BACKLOG.md`.
 4. Use `.ai/04-prepare-workspace.md` when the user selects a `PLANNED + READY` Epic for detailed planning. Plan Approval creates a queued `execution/planned/` workspace even when dependencies, blockers, or another active Epic defer the separate Epic Start.
-5. Use `.ai/05-create-platform-adapters.md` to confirm default or overridden model mappings and generate both Codex and Claude adapters.
+5. Use `.ai/05-create-platform-adapters.md` to confirm every enabled model mapping and generate Codex, Claude, and enabled OpenCode adapters.
 6. Use `.ai/06-final-validation.md` to validate the adopted repository without changing product code.
 
 Require explicit user approval at every numbered step and every document, ADR, Plan Approval, Replan, Epic Start, and collision gate. Never advance automatically.

@@ -21,6 +21,10 @@ bindings:
     connector: <existing-project-owned-connector-id>
     operations:
       <profile-operation>: <platform-local-tool-name>
+  opencode:
+    connector: <existing-project-owned-connector-id>
+    operations:
+      <profile-operation>: <platform-local-tool-name>
 
 # Profile-specific configuration is optional and validated by the selected
 # consumer. Never store credentials or raw MCP/API/CLI configuration here.

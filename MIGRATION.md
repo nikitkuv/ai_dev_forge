@@ -1,5 +1,13 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.7
+
+v4.7 добавляет OpenCode как третий native adapter. Корневой `AGENTS.md` остаётся единым router для Codex и OpenCode, `.agents/skills/` переиспользуется обеими платформами, а одиннадцать OpenCode subagents генерируются под `.opencode/agents/`. `.opencode/skills/` и отдельный OpenCode router не создаются.
+
+Enum `role_execution.mode` не меняется. Для OpenCode-led migration без утверждённого route предлагается существующий `native_subagents`; значение записывается только после явного approval. Уже утверждённый режим сохраняется, а несовпадение активного оркестратора блокирует planner/reviewer без fallback.
+
+Включённый OpenCode требует три явно подтверждённых model ID в формате `provider/model-id`; provider-independent defaults нет. Migration не устанавливает и не авторизует OpenCode или provider. `opencode.json`, commands, plugins, skills и unlisted agents остаются project-owned. Все enabled adapters заменяются и откатываются атомарно; удалить можно только OpenCode-файлы, чья Forge ownership доказана старым lock.
+
 ## Обновление до v4.6
 
 v4.6 вводит ровно два TASK delivery track: `fast` и `standard`. Migration не угадывает fast eligibility по старым risk flags и не синтезирует fast evidence. Любая legacy TASK без `delivery_track`, включая состояния `TODO`, `IN PROGRESS`, `IN REVIEW`, `IN TESTING` и `AWAITING USER ACCEPTANCE`, трактуется как `standard`; уже начатая standard TASK не понижается до fast.
@@ -24,7 +32,7 @@ Project-owned definitions/state не включаются в managed-output hash
 
 ## Совместимость v4.1
 
-v4.3 заменяет неявный preferred/fallback route явным `role_execution.mode` для обеих ролей. Доступны `claude_with_codex` (Claude Code + `openai/codex-plugin-cc` 1.0.6+), `codex_with_claude` (Codex + Claude Code CLI 2.1.203+ в headless plan mode) и `native_subagents` (внутренние агенты активной платформы).
+v4.3 заменяет неявный preferred/fallback route явным `role_execution.mode` для обеих ролей. В актуальном launcher доступны `claude_with_codex` (Claude Code + локально установленный и авторизованный Codex CLI через stable `codex exec`), `codex_with_claude` (Codex + Claude Code CLI 2.1.203+ в headless plan mode) и `native_subagents` (внутренние агенты активной платформы). Начиная с v4.7.1, Claude-to-Codex route не зависит от `codex-plugin-cc`, App Server, shared broker или pipe.
 
 Для проекта v4.2 миграция показывает прежнее эффективное поведение и предлагает `claude_with_codex` как совместимый вариант, но записывает его только после подтверждения. Она генерирует оба launcher и сохраняет native agents, не устанавливая и не авторизуя внешние runtimes. Недоступный выбранный route блокирует роль без fallback; откат восстанавливает прежнюю конфигурацию, adapters и lock одной транзакцией.
 
