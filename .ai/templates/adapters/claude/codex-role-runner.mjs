@@ -1,15 +1,14 @@
 #!/usr/bin/env node
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { constants, existsSync, readFileSync, accessSync } from "node:fs";
+import { delimiter, dirname, extname, isAbsolute, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const REQUIRED_NODE = [18, 18, 0];
-const REQUIRED_PLUGIN = [1, 0, 6];
 const REQUIRED_MODEL = "gpt-5.6-sol";
 const REQUIRED_EFFORT = "medium";
 const REQUIRED_ROLES = new Set(["epic-planner", "reviewer"]);
+const WINDOWS_EXTENSIONS = [".exe", ".cmd", ".bat", ""];
 
 function json(value) {
   process.stdout.write(`${JSON.stringify(value)}\n`);
@@ -24,56 +23,137 @@ function versionAtLeast(actual, minimum) {
   return true;
 }
 
-function pluginCacheRoot(env = process.env) {
-  return join(env.CLAUDE_CODE_PLUGIN_CACHE_DIR || join(homedir(), ".claude", "plugins"), "cache");
+function pathValue(env) {
+  const key = Object.keys(env).find((candidate) => candidate.toLowerCase() === "path");
+  return key ? env[key] ?? "" : "";
 }
 
-function readPluginManifest(root) {
-  const manifestPath = join(root, ".claude-plugin", "plugin.json");
-  if (!existsSync(manifestPath)) return null;
-  try { return JSON.parse(readFileSync(manifestPath, "utf8")); } catch { return null; }
+function uniquePaths(paths, platform) {
+  const seen = new Set();
+  const result = [];
+  for (const value of paths) {
+    if (!value) continue;
+    const absolute = resolve(value);
+    const key = platform === "win32" ? normalize(absolute).toLowerCase() : normalize(absolute);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(absolute);
+  }
+  return result;
 }
 
-export function findPluginRoots(env = process.env) {
-  if (env.FORGE_CODEX_PLUGIN_ROOT) return [resolve(env.FORGE_CODEX_PLUGIN_ROOT)];
-  const cache = pluginCacheRoot(env);
-  if (!existsSync(cache)) return [];
-  const matches = [];
-  for (const marketplace of readdirSync(cache, { withFileTypes: true })) {
-    if (!marketplace.isDirectory()) continue;
-    const pluginRoot = join(cache, marketplace.name, "codex");
-    if (!existsSync(pluginRoot)) continue;
-    for (const version of readdirSync(pluginRoot, { withFileTypes: true })) {
-      if (!version.isDirectory()) continue;
-      const candidate = join(pluginRoot, version.name);
-      const manifest = readPluginManifest(candidate);
-      if (manifest?.name === "codex" && existsSync(join(candidate, "scripts", "codex-companion.mjs"))) matches.push(candidate);
+export function buildRuntimeEnv(env = process.env, platform = process.platform, execPath = process.execPath) {
+  const runtimeEnv = { ...env };
+  for (const key of ["BASH_ENV", "CLAUDE_PLUGIN_DATA", "CODEX_COMPANION_APP_SERVER_ENDPOINT", "CODEX_COMPANION_SESSION_ID"]) {
+    delete runtimeEnv[key];
+  }
+
+  const preferred = [dirname(execPath)];
+  if (platform === "win32" && env.APPDATA) preferred.unshift(join(env.APPDATA, "npm"));
+  const merged = uniquePaths([...preferred, ...pathValue(env).split(delimiter)], platform).join(delimiter);
+  const existingPathKey = Object.keys(runtimeEnv).find((candidate) => candidate.toLowerCase() === "path");
+  runtimeEnv[existingPathKey ?? (platform === "win32" ? "Path" : "PATH")] = merged;
+  return runtimeEnv;
+}
+
+function isUsableFile(path, platform) {
+  try {
+    accessSync(path, platform === "win32" ? constants.F_OK : constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function findCodexCandidates(env = process.env, platform = process.platform, execPath = process.execPath) {
+  const explicit = env.FORGE_CODEX_BIN;
+  if (explicit) {
+    const candidate = isAbsolute(explicit) ? normalize(explicit) : resolve(explicit);
+    return isUsableFile(candidate, platform) ? [candidate] : [];
+  }
+
+  const preferredDirs = [];
+  if (platform === "win32" && env.APPDATA) preferredDirs.push(join(env.APPDATA, "npm"));
+  preferredDirs.push(dirname(execPath));
+  const searchDirs = uniquePaths([...preferredDirs, ...pathValue(env).split(delimiter)], platform);
+  const extensions = platform === "win32" ? WINDOWS_EXTENSIONS : [""];
+  const candidates = [];
+  for (const directory of searchDirs) {
+    for (const extension of extensions) {
+      const candidate = join(directory, `codex${extension}`);
+      if (isUsableFile(candidate, platform)) candidates.push(candidate);
     }
   }
-  return matches.sort();
+  return uniquePaths(candidates, platform);
 }
 
 function run(command, args, options = {}) {
-  return spawnSync(command, args, { encoding: "utf8", ...options });
+  const env = options.env ?? process.env;
+  const common = {
+    cwd: options.cwd,
+    env,
+    encoding: "utf8",
+    input: options.input,
+    maxBuffer: 16 * 1024 * 1024,
+    windowsHide: true
+  };
+  if (process.platform === "win32" && [".cmd", ".bat"].includes(extname(command).toLowerCase())) {
+    const npmEntrypoint = join(dirname(command), "node_modules", "@openai", "codex", "bin", "codex.js");
+    if (!existsSync(npmEntrypoint)) {
+      return {
+        status: null,
+        signal: null,
+        stdout: "",
+        stderr: "",
+        error: new Error(`Rejected non-standard or broken Codex wrapper: ${command}`)
+      };
+    }
+    return spawnSync(process.execPath, [npmEntrypoint, ...args], common);
+  }
+  return spawnSync(command, args, common);
+}
+
+function resultDetail(result) {
+  return result.error?.message || result.stderr?.trim() || result.stdout?.trim() || `exit ${result.status ?? 1}`;
 }
 
 export function preflight(env = process.env, cwd = process.cwd(), nodeVersion = process.version) {
   if (!versionAtLeast(nodeVersion, REQUIRED_NODE)) return { available: false, reason: `Node.js ${REQUIRED_NODE.join(".")}+ is required.` };
-  const roots = findPluginRoots(env);
-  if (roots.length !== 1) return { available: false, reason: roots.length ? "Multiple usable codex-plugin-cc installations were found." : "codex-plugin-cc is not installed or enabled." };
-  const root = roots[0];
-  const manifest = readPluginManifest(root);
-  if (!versionAtLeast(manifest?.version, REQUIRED_PLUGIN)) return { available: false, reason: `codex-plugin-cc ${REQUIRED_PLUGIN.join(".")}+ is required.`, pluginRoot: root };
-  const companion = join(root, "scripts", "codex-companion.mjs");
-  const setup = run(process.execPath, [companion, "setup", "--json", "--cwd", cwd], { cwd, env });
-  if (setup.status !== 0) return { available: false, reason: setup.stderr.trim() || "codex-plugin-cc setup failed.", pluginRoot: root };
-  try {
-    const report = JSON.parse(setup.stdout);
-    if (!report.ready) return { available: false, reason: "Codex CLI is unavailable or not authenticated.", pluginRoot: root, setup: report };
-    return { available: true, pluginRoot: root, setup: report };
-  } catch {
-    return { available: false, reason: "codex-plugin-cc returned invalid setup JSON.", pluginRoot: root };
+  const runtimeEnv = buildRuntimeEnv(env);
+  const candidates = findCodexCandidates(runtimeEnv);
+  if (candidates.length === 0) {
+    return {
+      available: false,
+      reason: "Codex CLI was not found. Install @openai/codex globally, restart Claude Code, or set FORGE_CODEX_BIN to the absolute codex executable path."
+    };
   }
+
+  const failures = [];
+  for (const codexPath of candidates) {
+    const version = run(codexPath, ["--version"], { cwd, env: runtimeEnv });
+    if (version.error || version.status !== 0) {
+      failures.push(`${codexPath}: ${resultDetail(version)}`);
+      continue;
+    }
+    const execHelp = run(codexPath, ["exec", "--help"], { cwd, env: runtimeEnv });
+    if (execHelp.error || execHelp.status !== 0) {
+      failures.push(`${codexPath}: codex exec unavailable: ${resultDetail(execHelp)}`);
+      continue;
+    }
+    const auth = run(codexPath, ["login", "status"], { cwd, env: runtimeEnv });
+    if (auth.error || auth.status !== 0) {
+      failures.push(`${codexPath}: not authenticated: ${resultDetail(auth)}`);
+      continue;
+    }
+    return {
+      available: true,
+      codexPath,
+      version: version.stdout.trim() || version.stderr.trim(),
+      authentication: auth.stdout.trim() || auth.stderr.trim() || "authenticated"
+    };
+  }
+
+  return { available: false, reason: "No usable authenticated Codex CLI was found.", diagnostics: failures };
 }
 
 function parseArgs(argv) {
@@ -94,15 +174,36 @@ function parseArgs(argv) {
 export function main(argv = process.argv.slice(2), env = process.env, cwd = process.cwd()) {
   const options = parseArgs(argv);
   const check = preflight(env, cwd);
-  if (options.preflight) { json({ provider: "codex-plugin-cc", ...check }); return check.available ? 0 : 2; }
+  if (options.preflight) { json({ provider: "codex-cli", transport: "exec", ...check }); return check.available ? 0 : 2; }
   if (!REQUIRED_ROLES.has(options.role)) throw new Error("--role must be epic-planner or reviewer.");
   if (!options["prompt-file"]) throw new Error("--prompt-file is required.");
-  if (!check.available) { json({ provider: "codex-plugin-cc", fallback: "forbidden", ...check }); return 2; }
+  if (!check.available) { json({ provider: "codex-cli", transport: "exec", fallback: "forbidden", ...check }); return 2; }
   const promptFile = resolve(cwd, options["prompt-file"]);
   if (!existsSync(promptFile)) throw new Error(`Prompt file does not exist: ${promptFile}`);
-  const result = run(process.execPath, [join(check.pluginRoot, "scripts", "codex-companion.mjs"), "task", "--fresh", "--model", REQUIRED_MODEL, "--effort", REQUIRED_EFFORT, "--prompt-file", promptFile, "--cwd", cwd], { cwd, env });
-  json({ provider: "codex-plugin-cc", role: options.role, model: REQUIRED_MODEL, reasoning_effort: REQUIRED_EFFORT, fresh: true, read_only: true, started: true, exit_code: result.status ?? 1, stdout: result.stdout, stderr: result.stderr, pluginRoot: check.pluginRoot });
-  return result.status ?? 1;
+  const prompt = readFileSync(promptFile, "utf8");
+  const runtimeEnv = buildRuntimeEnv(env);
+  const result = run(
+    check.codexPath,
+    ["exec", "--ephemeral", "--sandbox", "read-only", "--model", REQUIRED_MODEL, "--config", `model_reasoning_effort='${REQUIRED_EFFORT}'`, "--color", "never", "-"],
+    { cwd, env: runtimeEnv, input: prompt }
+  );
+  const exitCode = result.error ? 1 : result.status ?? 1;
+  json({
+    provider: "codex-cli",
+    transport: "exec",
+    role: options.role,
+    model: REQUIRED_MODEL,
+    reasoning_effort: REQUIRED_EFFORT,
+    fresh: true,
+    ephemeral: true,
+    read_only: true,
+    started: !result.error,
+    exit_code: exitCode,
+    stdout: result.stdout ?? "",
+    stderr: result.error?.message || result.stderr || "",
+    codexPath: check.codexPath
+  });
+  return exitCode;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

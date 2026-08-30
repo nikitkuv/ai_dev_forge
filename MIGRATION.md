@@ -32,7 +32,7 @@ Project-owned definitions/state не включаются в managed-output hash
 
 ## Совместимость v4.1
 
-v4.3 заменяет неявный preferred/fallback route явным `role_execution.mode` для обеих ролей. Доступны `claude_with_codex` (Claude Code + `openai/codex-plugin-cc` 1.0.6+), `codex_with_claude` (Codex + Claude Code CLI 2.1.203+ в headless plan mode) и `native_subagents` (внутренние агенты активной платформы).
+v4.3 заменяет неявный preferred/fallback route явным `role_execution.mode` для обеих ролей. В актуальном launcher доступны `claude_with_codex` (Claude Code + локально установленный и авторизованный Codex CLI через stable `codex exec`), `codex_with_claude` (Codex + Claude Code CLI 2.1.203+ в headless plan mode) и `native_subagents` (внутренние агенты активной платформы). Начиная с v4.7.1, Claude-to-Codex route не зависит от `codex-plugin-cc`, App Server, shared broker или pipe.
 
 Для проекта v4.2 миграция показывает прежнее эффективное поведение и предлагает `claude_with_codex` как совместимый вариант, но записывает его только после подтверждения. Она генерирует оба launcher и сохраняет native agents, не устанавливая и не авторизуя внешние runtimes. Недоступный выбранный route блокирует роль без fallback; откат восстанавливает прежнюю конфигурацию, adapters и lock одной транзакцией.
 

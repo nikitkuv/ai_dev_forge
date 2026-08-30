@@ -2,7 +2,7 @@
 
 ## Configurable planner/reviewer routing
 
-`epic-planner` and `reviewer` keep neutral definitions and native agents on Codex, Claude Code, and enabled OpenCode. One required `.ai/project.yaml` value selects both roles: `claude_with_codex` means Claude Code orchestration plus the managed `codex-plugin-cc` route; `codex_with_claude` means Codex orchestration plus managed headless Claude Code; `native_subagents` uses the active platform's internal agents. OpenCode-led setup proposes the existing `native_subagents` value by default when no approved route exists; it adds no new mode and still requires explicit approval. Cross-provider preflight or runtime failure never switches provider implicitly.
+`epic-planner` and `reviewer` keep neutral definitions and native agents on Codex, Claude Code, and enabled OpenCode. One required `.ai/project.yaml` value selects both roles: `claude_with_codex` means Claude Code orchestration plus the managed stable `codex exec` route; `codex_with_claude` means Codex orchestration plus managed headless Claude Code; `native_subagents` uses the active platform's internal agents. OpenCode-led setup proposes the existing `native_subagents` value by default when no approved route exists; it adds no new mode and still requires explicit approval. Cross-provider preflight or runtime failure never switches provider implicitly.
 
 Этот документ описывает реализованную архитектуру фреймворка и её обязательные lifecycle-контракты.
 

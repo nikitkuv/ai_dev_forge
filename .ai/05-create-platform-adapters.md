@@ -16,7 +16,7 @@ Read:
 - `.ai/templates/project.yaml`;
 - `.ai/templates/README.md`;
 - Codex, Claude, and OpenCode adapter templates under `.ai/templates/adapters/`;
-- the Claude-side Codex launcher `.ai/templates/adapters/claude/codex-role-runner.mjs` and Codex-side Claude launcher `.ai/templates/adapters/codex/claude-role-runner.mjs`;
+- the Claude-side `codex exec` launcher `.ai/templates/adapters/claude/codex-role-runner.mjs` and Codex-side Claude launcher `.ai/templates/adapters/codex/claude-role-runner.mjs`;
 - `.ai/custom/router-shared.md` when present;
 - existing `.ai/project.yaml`, `.ai/framework.lock`, and generated adapters when present.
 
@@ -144,7 +144,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 
 Copy all sixteen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
-Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. Preserve every one of the eleven generated agents on Codex and Claude, including `epic-planner`, `reviewer`, `mutation-runner`, and `mutation-analyzer`, because `native_subagents` is a first-class mode. Render the complete neutral reviewer contract unchanged, including its production-only blocking findings, separate advisory non-production observations, and production-fingerprint review-reuse rules. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime or a mutation backend while generating adapters.
+Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. The launcher must resolve an explicit `FORGE_CODEX_BIN` or a real installed Codex CLI, prioritize the Windows npm-global directory and the running Node directory before inherited PATH entries, validate `codex exec` and `codex login status`, remove inherited plugin broker and `BASH_ENV` variables from the child environment, and pass the prompt to fresh ephemeral read-only `codex exec` through stdin. It must never install Codex, create a user-level wrapper, write `BASH_ENV`, inspect or modify `CLAUDE_PLUGIN_DATA`, or connect to an app-server broker. Preserve every one of the eleven generated agents on Codex and Claude, including `epic-planner`, `reviewer`, `mutation-runner`, and `mutation-analyzer`, because `native_subagents` is a first-class mode. Render the complete neutral reviewer contract unchanged, including its production-only blocking findings, separate advisory non-production observations, and production-fingerprint review-reuse rules. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime or a mutation backend while generating adapters.
 
 ## Render OpenCode
 
@@ -178,7 +178,7 @@ Verify the staged outputs:
 - `CLAUDE.md` contains exactly `@AGENTS.md`, so Claude Code imports the complete `AGENTS.md` router without duplication;
 - the imported router contains the complete Common Engineering Prohibitions without project-specific weakening;
 - Codex and Claude contain every declared agent and skill ID; enabled OpenCode contains every declared agent ID and discovers every declared skill through the shared `.agents/skills/` set;
-- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Codex route pins fresh read-only `gpt-5.6-sol/medium`, the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
+- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Claude-to-Codex route uses stable `codex exec` with stdin prompt transport, pins fresh ephemeral read-only `gpt-5.6-sol/medium`, and contains no plugin/app-server/broker dependency; the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, effective permissions, and skill bodies have cross-platform parity;
 - fast/standard delivery-track routing is identical on all enabled platforms, fast assurance remains orchestrator-owned, standard retains reviewer/tester, and no delivery track silently changes an agent model tier;

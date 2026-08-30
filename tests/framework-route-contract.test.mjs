@@ -6,11 +6,11 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("manifest declares the three role-execution modes and both external routes", async () => {
   const manifest = await read(".ai/framework/manifest.yaml");
-  assert.match(manifest, /version: 4\.7\.0/);
+  assert.match(manifest, /version: 4\.7\.1/);
   assert.match(manifest, /roles: \[epic-planner, reviewer\]/);
   assert.match(manifest, /supported_modes: \[claude_with_codex, codex_with_claude, native_subagents\]/);
   assert.match(manifest, /fallback: forbidden/);
-  assert.match(manifest, /claude_with_codex:[\s\S]*?orchestrator: claude[\s\S]*?provider: codex-plugin-cc[\s\S]*?model: gpt-5\.6-sol[\s\S]*?reasoning_effort: medium/);
+  assert.match(manifest, /claude_with_codex:[\s\S]*?orchestrator: claude[\s\S]*?provider: codex-cli[\s\S]*?transport: exec[\s\S]*?model: gpt-5\.6-sol[\s\S]*?reasoning_effort: medium/);
   assert.match(manifest, /codex_with_claude:[\s\S]*?orchestrator: codex[\s\S]*?provider: claude-code-cli[\s\S]*?minimum_cli_version: 2\.1\.203[\s\S]*?permission_mode: plan/);
   assert.match(manifest, /native_subagents:[\s\S]*?orchestrator: active_platform[\s\S]*?external_preflight: false[\s\S]*?claude_reasoning_effort: high/);
   assert.match(manifest, /opencode_default_when_primary: true/);
@@ -45,7 +45,8 @@ test("AGENTS.md is canonical and CLAUDE.md imports it without duplication", asyn
     read(".ai/framework/agents/context-collector.yaml")
   ]);
   assert.equal(claude.trim(), "@AGENTS.md");
-  assert.match(codex, /codex@openai-codex/);
+  assert.match(codex, /codex exec/);
+  assert.match(codex, /never copy wrappers into user directories/);
   assert.match(codex, /claude-code-cli|Claude Code 2\.1\.203/);
   assert.match(codex, /There is no fallback/);
   assert.match(codex, /Codex, Claude Code, or OpenCode platform's matching generated agent/);

@@ -6,13 +6,13 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 function route(mode, active) {
   if (mode === "native_subagents" && ["codex", "claude", "opencode"].includes(active)) return { provider: "native", blocked: false };
-  if (mode === "claude_with_codex") return active === "claude" ? { provider: "codex-plugin-cc", blocked: false } : { blocked: true, reason: "active-orchestrator mismatch" };
+  if (mode === "claude_with_codex") return active === "claude" ? { provider: "codex-cli", blocked: false } : { blocked: true, reason: "active-orchestrator mismatch" };
   if (mode === "codex_with_claude") return active === "codex" ? { provider: "claude-code-cli", blocked: false } : { blocked: true, reason: "active-orchestrator mismatch" };
   return { blocked: true, reason: "invalid role_execution.mode" };
 }
 
 test("route matrix covers all supported mode and orchestrator combinations", () => {
-  assert.deepEqual(route("claude_with_codex", "claude"), { provider: "codex-plugin-cc", blocked: false });
+  assert.deepEqual(route("claude_with_codex", "claude"), { provider: "codex-cli", blocked: false });
   assert.equal(route("claude_with_codex", "codex").blocked, true);
   assert.deepEqual(route("codex_with_claude", "codex"), { provider: "claude-code-cli", blocked: false });
   assert.equal(route("codex_with_claude", "claude").blocked, true);
