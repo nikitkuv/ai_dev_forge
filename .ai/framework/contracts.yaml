@@ -23,6 +23,51 @@ enums:
   quality_profiles: [backend, frontend, ml, data_pipeline, infrastructure, library_cli]
   mutation_run_outcomes: [COMPLETED, PARTIAL, INCONCLUSIVE, "SETUP REQUIRED", BLOCKED, CANCELLED]
   mutation_analysis_statuses: [not_requested, skipped_no_candidates, completed, partial, blocked, stale]
+  investigation_outcomes: [no_action, promoted, fixed_directly, unresolved]
+
+ad_hoc_investigations:
+  invocation: explicit_user_request
+  execution_owner: orchestrator
+  subagent_invocation: forbidden
+  lifecycle_coupling: forbidden
+  record:
+    id_format: INV-NNNN
+    path_glob: investigations/INV-*.md
+    allocate_from_prior_maximum: true
+    create_for_material_investigation: true
+    required_frontmatter: [document_type, id, subject, area, outcome, created_at, updated_at, baseline_revision, relevant_paths, research_refs]
+    required_sections: [Question, Scope, Investigation, Evidence, Causes, Conclusion, Next Action, Linked Work, Outcome History]
+    facts_and_inferences_separated: true
+  outcomes:
+    no_action:
+      requires: [reason, future_recommendation_or_not_applicable]
+    promoted:
+      requires: [approved_bug_epic_replan_or_task_reference, reciprocal_research_ref]
+    fixed_directly:
+      requires: [explicit_fix_authorization, complete_change_ledger, proportionate_verification, final_revision_commit_or_scoped_diff]
+    unresolved:
+      requires: [remaining_hypotheses, blockers, next_experiments]
+  direct_fix:
+    task_start_required: false
+    generated_subagents: forbidden
+    scope: user_authorized_investigated_problem
+    requires: [preserved_unrelated_changes, resolved_product_and_architecture_decisions, proportionate_verification]
+    change_ledger_requires: [added_paths, modified_paths, removed_paths, per_path_what_and_why, material_effects, verification_commands_and_results, remaining_risks, final_revision_commit_or_scoped_diff]
+    complete_diff_duplication: not_required
+  planning_reuse:
+    explicit_reference_field: research_refs
+    discover_by: [subject, area, relevant_paths]
+    uncertain_match_requires: user_confirmation
+    applicability_check: [baseline_revision, relevant_path_changes, material_assumptions]
+    reuse: [evidence, causes, risks, suggested_fix, suggested_verification]
+    approved_work_requires_reciprocal_reference: true
+  development_effects:
+    automatic_bug_epic_task_or_replan: forbidden
+    lifecycle_status_changes: forbidden
+    gate_satisfaction: forbidden
+    user_acceptance_inference: forbidden
+    commit_authorization_inference: forbidden
+    stale_existing_evidence: report_through_existing_resume_and_validation
 
 mutation_testing:
   invocation: explicit_user_request_only
@@ -330,6 +375,12 @@ epic_validation:
       requires: [exact_blocker, risk_statement, replan_or_user_direction]
 
 invariants:
+  - material_ad_hoc_investigations_have_durable_INV_records
+  - investigations_are_orchestrator_only_and_invoke_no_subagents
+  - investigation_outcome_is_no_action_promoted_fixed_directly_or_unresolved
+  - direct_investigation_fixes_require_explicit_authorization_and_a_verified_change_ledger
+  - investigation_results_never_change_development_lifecycle_automatically
+  - planned_work_reusing_investigation_results_has_reciprocal_research_refs
   - mutation_testing_is_explicit_on_demand_and_lifecycle_independent
   - mutation_attempts_have_durable_project_owned_records
   - mutation_runner_is_fast_baseline_first_and_runtime_artifacts_only

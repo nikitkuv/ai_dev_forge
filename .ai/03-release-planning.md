@@ -15,7 +15,7 @@ Required:
 - resolved ADRs relevant to planning;
 - the Backlog template and framework contracts.
 
-Optional evidence includes existing roadmaps, issue trackers, TODO material, code findings, test gaps, and user-provided features or defects. Existing-project findings remain candidates until the user confirms whether to retain them.
+Optional evidence includes existing roadmaps, issue trackers, TODO material, code findings, test gaps, user-provided features or defects, and relevant `investigations/INV-*.md`. Read explicit INV references first, then obvious matches by subject, area, and relevant paths; confirm uncertain matches with the user and check baseline applicability before reuse. Existing-project and investigation findings remain candidates until the user confirms whether to retain them.
 
 ## Build the Candidate Roadmap
 
@@ -34,7 +34,7 @@ Do not decompose Epics into Tasks or estimate implementation effort.
 ## Build the Defect Queue
 
 1. Present candidate defects found in code, tests, documents, issues, or user reports.
-2. Add a defect only after the user confirms it should be tracked.
+2. Add a defect only after the user confirms it should be tracked. When it comes from an INV, retain a compact reciprocal Research reference.
 3. Allocate the next global `BUG-NNN`.
 4. Record impact severity separately from user repair priority.
 5. Use the lifecycle defined in `.ai/framework/contracts.yaml`.

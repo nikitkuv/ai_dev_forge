@@ -1,4 +1,4 @@
-# AI Development Forge v4.7 — Architecture
+# AI Development Forge v4.8 — Architecture
 
 ## Configurable planner/reviewer routing
 
@@ -29,6 +29,8 @@ project/
 ├── DECISIONS.md
 ├── decisions/
 │   └── ADR-NNN-<name>.md
+├── investigations/                # optional, создаётся первым forge-investigate
+│   └── INV-NNNN-<name>.md
 ├── execution/
 │   ├── active/EPIC-NNN-<name>/
 │   │   ├── plan.md
@@ -62,6 +64,7 @@ project/
 | Навигация по решениям | генерируемый `DECISIONS.md` |
 | Стратегия Epic, порядок TASK, verification и fuzzing plans, Epic Validation, fuzzing outcome и user validation | `plan.md` |
 | TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
+| История ad hoc исследования и прямого исправления | соответствующий `investigations/INV-NNNN-*.md` |
 | Независимая история mutation testing | `quality/mutation-testing/` |
 | История файлов | Git |
 
@@ -74,15 +77,15 @@ project/
 - `BOOTSTRAP.md` и шесть numbered workflows;
 - `CONVENTIONS.md`;
 - `framework/manifest.yaml` с release, ownership, agent и skill IDs;
-- `framework/contracts.yaml` с lifecycle, transitions, gates, fuzzing и независимыми mutation-testing contracts;
+- `framework/contracts.yaml` с lifecycle, transitions, gates, ad hoc investigation, fuzzing и независимыми mutation-testing contracts;
 - одиннадцать нейтральных agent definitions;
-- шестнадцать portable skills;
+- семнадцать portable skills;
 - canonical и adapter templates.
 
 Ownership разделён на три категории:
 
 - framework-owned release files поставляются текущей версией Forge;
-- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
+- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
 - generated adapters пересоздаются после collision preview.
 
 ## Канонические документы
@@ -113,6 +116,7 @@ EPIC-001
 TASK-001
 BUG-001
 ADR-001
+INV-0001
 MUT-0001
 ```
 
@@ -172,7 +176,7 @@ Framework control layer написан на английском. Канонич
 
 ## Skills
 
-Шестнадцать skills сгруппированы по назначению:
+Семнадцать skills сгруппированы по назначению:
 
 - bootstrap нового и существующего проекта;
 - feature/bug/external-work intake и reprioritization;
@@ -180,12 +184,13 @@ Framework control layer написан на английском. Канонич
 - Task execution/completion и Epic completion;
 - security audit;
 - standalone mutation testing;
+- ad hoc investigation без субагентов;
 - framework conformance check;
 - adapter synchronization.
 
 Codex вызывает skill как `$forge-...`, Claude Code — как `/forge-...`. Mandatory lifecycle использует явный skill routing, а не только implicit matching.
 
-Feature discovery и root-cause investigation встроены в intake skills. Test-driven implementation и evidence-before-transition встроены в Task lifecycle и role-specific agent contracts. Внешние process skills не управляют gates, canonical artifacts, status transitions, agent routing или Git actions.
+Feature discovery встроен в intake skills. Root-cause work может выполняться либо в intake, либо отдельно через `forge-investigate`. Test-driven implementation и evidence-before-transition встроены в Task lifecycle и role-specific agent contracts. Внешние process skills не управляют gates, canonical artifacts, status transitions, agent routing или Git actions.
 
 ## TASK delivery tracks
 
@@ -293,6 +298,21 @@ Severity описывает последствия, а priority задаётся
 По умолчанию запуск metrics-only и strong model не используется. `mutation-analyzer` вызывается только после отдельного разрешения и только если текущий результат содержит candidates и положительный analysis budget. Все mutants killed — analyzer пропускается. Deferred analysis использует сохранённый `MUT-NNNN` без повторения campaign; stale fingerprint или artifact checksum блокирует анализ. Большие candidate sets анализируются bounded batches с явным `partial` и remaining count.
 
 Каждая попытка получает независимый `MUT-NNNN` и сохраняется в project-owned `quality/mutation-testing/`. Findings не создают Bug, TASK, Epic или Replan автоматически. Любое remediation начинается только отдельным решением пользователя через существующий lifecycle; mutation record может хранить лишь информационные ссылки на уже утверждённую работу.
+
+## Ad hoc investigations
+
+`forge-investigate` — lifecycle-independent workflow основного оркестратора. Он не вызывает generated subagents и не требует Bug, Epic, TASK, Task Start, review или tester. Основной агент сам выбирает методы исследования в рамках пользовательского scope и обычных permission boundaries.
+
+Каждое материальное исследование получает `INV-NNNN` и хранится одним project-owned canonical evidence файлом `investigations/INV-NNNN-<short-name>.md`. Запись содержит вопрос, scope, baseline, использованные методы, evidence, подтверждённые или предполагаемые причины, вывод, ограничения и дальнейшее действие. Outcome принимает одно из четырёх значений:
+
+- `no_action` — ничего не изменено, причина решения записана;
+- `promoted` — результат передан в утверждённый Bug/Epic/Replan/TASK;
+- `fixed_directly` — основной агент сам внёс и проверил исправление;
+- `unresolved` — причина не доказана, сохранены гипотезы и следующие эксперименты.
+
+Для `fixed_directly` INV содержит path-level ledger добавленных, изменённых и удалённых файлов, объяснение what/why, material effects, точные проверки и результаты, оставшиеся риски и commit/revision или scoped-diff fingerprint. Git хранит точный line diff. Прямое исправление требует явного запроса «исследуй и исправь» либо последующего разрешения, но не проходит TASK lifecycle и не означает acceptance или commit permission.
+
+Backlog, plan и TASK могут хранить компактные `research_refs`. Intake и Epic planning сначала читают явные ссылки, затем могут предложить очевидные совпадения по subject, area и relevant paths. Перед reuse проверяются baseline и релевантные изменения; применимые выводы не исследуются заново. INV остаётся evidence, а не источником product intent или lifecycle state.
 
 ## Синхронизация адаптеров
 

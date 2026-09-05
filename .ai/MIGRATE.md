@@ -22,7 +22,7 @@ Stop if the directories resolve to the same path, the staged manifest is incompl
 Before writing:
 
 1. read both manifests, contracts, workflows, templates, neutral agents, and portable skills;
-2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, project-owned `.ai/integrations/`, and project-owned `quality/mutation-testing/`; read old and staged integration and mutation-testing contracts when present;
+2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, project-owned `investigations/`, `.ai/integrations/`, and `quality/mutation-testing/`; read old and staged investigation, integration and mutation-testing contracts when present;
 3. inspect Git status and identify a recoverable baseline;
 4. inspect `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, `.claude/`, `opencode.json`, and `.opencode/`;
 5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
@@ -31,7 +31,7 @@ Before writing:
 8. inspect `role_execution.mode`; when absent, show the old effective provider behavior and require an explicit selection. For a 4.2 project, offer `claude_with_codex` only as the compatibility-preserving suggestion; for an OpenCode-led project with no approved route, offer the existing `native_subagents` value by default. Never write either suggestion without approval, add a new mode, or silently replace an approved value.
 9. inspect `platforms.opencode.enabled` and `models.opencode`. Preserve an explicit disabled choice. When enabled, require user-supplied or locally evidenced non-empty `provider/model-id` mappings for all three tiers; never invent, install, authenticate, or configure an OpenCode provider.
 
-Absence of `.ai/integrations/` and `quality/mutation-testing/` is the clean Forge baseline. Neither absence adds a migration step, preflight, file, or blocker. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself. Existing mutation history is preserved byte-for-byte and never used as managed render input.
+Absence of `investigations/`, `.ai/integrations/`, and `quality/mutation-testing/` is the clean Forge baseline. None of those absences adds a migration step, preflight, file, or blocker. Preserve existing investigation and mutation history byte-for-byte and never use it as managed render input. Report an incompatible existing `investigations/` layout as a project-owned collision instead of overwriting it. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself.
 
 For upgrades to v4 or later, also inspect:
 
@@ -57,6 +57,7 @@ Treat all paths outside the approved framework and adapter allowlist as read-onl
 - project source code, tests, data, and unrelated configuration.
 - `.ai/integrations/`, project-owned integration consumers, and connector configuration.
 - `quality/mutation-testing/` registry, runs, retained artifacts, and dispositions.
+- `investigations/INV-*.md` records and any project-owned investigation layout.
 
 Report a canonical schema difference as a compatibility finding. Do not edit, rename, reformat, or migrate canonical content in this workflow.
 

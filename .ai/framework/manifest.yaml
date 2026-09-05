@@ -1,6 +1,6 @@
 framework:
   name: ai-dev-forge
-  version: 4.7.1
+  version: 4.8.0
   schema_version: 2
 
 adapters: [codex, claude, opencode]
@@ -30,6 +30,7 @@ ownership:
     - DECISIONS.md
     - decisions/
     - execution/
+    - investigations/
     - quality/mutation-testing/
     - hooks/
     - mcp/
@@ -62,6 +63,7 @@ skills:
   - forge-migrate-framework
   - forge-security-audit
   - forge-mutation-test
+  - forge-investigate
   - forge-check-framework
   - forge-sync-adapters
 

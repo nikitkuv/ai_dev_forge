@@ -108,7 +108,7 @@ For each neutral agent, render `.ai/templates/adapters/codex/agent.toml` with:
 - the configured `model_reasoning_effort`;
 - the neutral `codex_sandbox_mode`.
 
-Copy all sixteen portable `SKILL.md` files verbatim into `.agents/skills/`.
+Copy all seventeen portable `SKILL.md` files verbatim into `.agents/skills/`.
 Copy the Codex-side Claude launcher template verbatim to `.codex/forge/claude-role-runner.mjs`.
 
 ## Render Claude Code
@@ -142,7 +142,7 @@ For each neutral agent, render `.ai/templates/adapters/claude/agent.md` with:
 - the same English role contract used by the Codex adapter.
 - Write every `.claude/agents/*.md` file as UTF-8 **without BOM**. Byte zero must be the first `-` of the opening `---` frontmatter delimiter; never prepend `EF BB BF`.
 
-Copy all sixteen portable `SKILL.md` files verbatim into `.claude/skills/`.
+Copy all seventeen portable `SKILL.md` files verbatim into `.claude/skills/`.
 
 Copy the Claude-side Codex launcher template verbatim to `.claude/forge/codex-role-runner.mjs`. The launcher must resolve an explicit `FORGE_CODEX_BIN` or a real installed Codex CLI, prioritize the Windows npm-global directory and the running Node directory before inherited PATH entries, validate `codex exec` and `codex login status`, remove inherited plugin broker and `BASH_ENV` variables from the child environment, and pass the prompt to fresh ephemeral read-only `codex exec` through stdin. It must never install Codex, create a user-level wrapper, write `BASH_ENV`, inspect or modify `CLAUDE_PLUGIN_DATA`, or connect to an app-server broker. Preserve every one of the eleven generated agents on Codex and Claude, including `epic-planner`, `reviewer`, `mutation-runner`, and `mutation-analyzer`, because `native_subagents` is a first-class mode. Render the complete neutral reviewer contract unchanged, including its production-only blocking findings, separate advisory non-production observations, and production-fingerprint review-reuse rules. Generate both launchers regardless of the selected mode or local prerequisite availability. Do not preflight, install, authenticate, or invoke either external runtime or a mutation backend while generating adapters.
 
@@ -191,6 +191,7 @@ Verify the staged outputs:
 - no hook or MCP file was generated.
 - no `.ai/integrations/` file or project-local provider/tool name was generated or embedded;
 - no `quality/mutation-testing/` record was generated or embedded.
+- no `investigations/` record was generated or embedded; `forge-investigate` is present as a main-agent portable skill and invokes no generated subagent.
 
 If any enabled platform fails, replace none. After all pass, replace all enabled adapter sets as one logical operation and restore every previous set if replacement validation fails.
 

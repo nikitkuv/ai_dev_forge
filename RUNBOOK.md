@@ -1,4 +1,4 @@
-# AI Development Forge v4.7 — Runbook
+# AI Development Forge v4.8 — Runbook
 
 ## Режим выполнения planner и reviewer
 
@@ -245,7 +245,26 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 
 Расширение каждого ограничения требует отдельного разрешения. Пользователь решает, какие findings превратить в Bug, TASK или Epic. Отдельный security report не создаётся.
 
-## 13A. Standalone mutation testing
+## 13A. Ad hoc investigation
+
+Для свободного исследования вне Backlog явно вызовите `forge-investigate`:
+
+```text
+Исследуй, почему алгоритм расчёта работает медленно.
+```
+
+Основной агент создаёт `investigations/INV-NNNN-<name>.md`, не вызывает субагентов и сам выбирает подходящие локальные проверки, experiments, benchmarks или profiling. Если запрос содержит «исследуй и исправь», он также разрешает прямое исправление в пределах этой проблемы; иначе код и тесты не меняются до отдельного разрешения.
+
+После исследования выберите исход:
+
+- `no_action` — сохранить выводы и ничего не делать;
+- `promoted` — оформить обычный Bug, Epic или Replan через его существующий approval;
+- `fixed_directly` — основной агент исправляет и проверяет проблему без TASK workflow;
+- `unresolved` — сохранить гипотезы, blocker и следующие эксперименты.
+
+При прямом исправлении INV перечисляет added/modified/removed paths, объясняет изменения, фиксирует verification commands/results, риски и revision/commit либо scoped-diff fingerprint. Commit не выполняется автоматически. При promotion обе стороны получают ссылку `INV-NNNN`; поздний Epic planner проверяет baseline и relevant paths и использует актуальные выводы вместо полного повторного исследования.
+
+## 13B. Standalone mutation testing
 
 Mutation testing не является частью Task/Epic lifecycle и может запускаться в любой момент, включая отсутствие active work:
 

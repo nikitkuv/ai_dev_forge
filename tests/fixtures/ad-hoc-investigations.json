@@ -1,0 +1,68 @@
+[
+  {
+    "name": "research completed without action",
+    "record": {
+      "id": "INV-0001",
+      "outcome": "no_action",
+      "reason": "The measured cost is below the accepted budget",
+      "future_recommendation": "Repeat after workload growth"
+    },
+    "valid": true
+  },
+  {
+    "name": "promoted into an epic",
+    "record": {
+      "id": "INV-0002",
+      "outcome": "promoted",
+      "linked_work": ["EPIC-009"],
+      "reciprocal_research_refs": ["EPIC-009"]
+    },
+    "valid": true
+  },
+  {
+    "name": "direct fix has a durable ledger",
+    "record": {
+      "id": "INV-0003",
+      "outcome": "fixed_directly",
+      "fix_authorized": true,
+      "changes": {
+        "added": ["tests/performance.test.js"],
+        "modified": ["src/algorithm.js"],
+        "removed": []
+      },
+      "verification": ["node --test tests/performance.test.js: passed"],
+      "final_reference": "scoped-diff:abc123"
+    },
+    "valid": true
+  },
+  {
+    "name": "unresolved research retains next experiments",
+    "record": {
+      "id": "INV-0004",
+      "outcome": "unresolved",
+      "remaining_hypotheses": ["I/O contention"],
+      "next_experiments": ["Run the benchmark on the production-size fixture"]
+    },
+    "valid": true
+  },
+  {
+    "name": "fixed outcome without verification is rejected",
+    "record": {
+      "id": "INV-0005",
+      "outcome": "fixed_directly",
+      "fix_authorized": true,
+      "changes": {"added": [], "modified": ["src/algorithm.js"], "removed": []}
+    },
+    "valid": false
+  },
+  {
+    "name": "duplicate style legacy id is rejected",
+    "record": {
+      "id": "INV-12",
+      "outcome": "no_action",
+      "reason": "No action",
+      "future_recommendation": "None"
+    },
+    "valid": false
+  }
+]

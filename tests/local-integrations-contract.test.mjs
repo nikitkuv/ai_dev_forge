@@ -107,7 +107,7 @@ test("Claude imports the canonical router and portable integration contract rema
   ]);
   assert.equal(claude.trim(), "@AGENTS.md");
   assert.match(manifest, /- forge-intake-external-work/);
-  assert.match(generation, /sixteen portable `SKILL\.md` files/);
+  assert.match(generation, /seventeen portable `SKILL\.md` files/);
   assert.match(generation, /no `\.ai\/integrations\/` file or project-local provider\/tool name/i);
   assert.ok(codex.split(/\r?\n/).length <= 150);
 });

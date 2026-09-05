@@ -5,6 +5,7 @@ language: "<language-code>"
 epic_id: EPIC-NNN
 created_at: "<YYYY-MM-DD>"
 approved_at:
+research_refs: []
 ---
 
 # EPIC-NNN — <Epic Name> — Execution Plan
@@ -42,6 +43,12 @@ External work-source relationships are traceability metadata only. They never ow
 ## Implementation Strategy
 
 <Describe the high-level delivery approach, boundaries, sequencing rationale, and relevant architecture. Do not include line-by-line coding instructions or execution state.>
+
+## Research Context
+
+- **Investigations used:** <INV-NNNN references from `research_refs`, or —.>
+- **Reused conclusions:** <Applicable causes, risks, correction ideas, and verification evidence, or —.>
+- **Applicability check:** <Whether baseline, relevant paths, and material assumptions remain current; note anything rechecked.>
 
 ## Requirement Coverage
 

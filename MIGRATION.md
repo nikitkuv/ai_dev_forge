@@ -1,6 +1,10 @@
 # Миграция AI Development Forge
 
-## Обновление до v4.7
+## Обновление до v4.8
+
+v4.8 добавляет lifecycle-independent `forge-investigate`: основной агент исследует проблему без субагентов и хранит один project-owned `investigations/INV-NNNN-<short-name>.md`. Migration устанавливает только contracts/template/skill/router support, не создаёт synthetic INV records, сохраняет существующий `investigations/` byte-for-byte и останавливается на несовместимой path collision. Новый INV может завершиться `no_action`, `promoted`, `fixed_directly` или `unresolved`; ни один outcome сам по себе не меняет Epic/TASK lifecycle и не разрешает commit.
+
+## Изменения v4.7
 
 v4.7 добавляет OpenCode как третий native adapter. Корневой `AGENTS.md` остаётся единым router для Codex и OpenCode, `.agents/skills/` переиспользуется обеими платформами, а одиннадцать OpenCode subagents генерируются под `.opencode/agents/`. `.opencode/skills/` и отдельный OpenCode router не создаются.
 

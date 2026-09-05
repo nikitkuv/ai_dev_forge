@@ -7,7 +7,7 @@ description: Add a new feature, product change, or retained future idea to an in
 
 ## Classify the request
 
-1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, all affected planned workspaces, the active Epic plan, current TASK, and Git state.
+1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, all affected planned workspaces, the active Epic plan, current TASK, explicitly referenced `INV-NNNN` records, obviously relevant investigations by subject, area, or relevant paths, and Git state. Confirm uncertain investigation matches with the user. Check their baseline and relevant paths before reusing conclusions; recheck only what changed materially.
 2. Clarify the desired observable outcome, users, scope, exclusions, acceptance direction, constraints, urgency, and dependencies.
 3. Separate confirmed user intent, repository evidence, assumptions, and unresolved decisions. Do not turn an inference into target behavior.
 4. If a material product or design choice remains, present two or three viable approaches with trade-offs and a recommendation. Keep the discussion proportional to the decision; do not create a parallel design artifact.
@@ -22,9 +22,11 @@ Discovery ends at the applicable canonical approval gate. Do not invoke implemen
 
 1. Present the proposed feature candidate and request explicit user approval to retain it.
 2. Allocate the next global `EPIC-NNN`.
-3. Add it to the Epic Roadmap as `PLANNED` with readiness `OUTLINE`, linked requirements marked `TBD` where necessary, user-defined priority, dependencies, and `Blocked by`.
+3. Add it to the Epic Roadmap as `PLANNED` with readiness `OUTLINE`, linked requirements marked `TBD` where necessary, compact `Research` references for investigations actually used, user-defined priority, dependencies, and `Blocked by`.
 4. When invoked from approved external-work intake, add the compact provider-neutral `Sources` keys and stage the matching reverse provenance; otherwise use `—` and create no integration state.
 5. Do not activate it or change active work.
+
+When an approved feature is promoted from an investigation, update the INV to `outcome: promoted`, add the new Epic under Linked Work and Outcome History, and store the reciprocal research reference. Apply those references as one logical canonical update; the INV never approves the Epic.
 
 Every retained future idea is an Epic; do not create a separate idea list.
 
