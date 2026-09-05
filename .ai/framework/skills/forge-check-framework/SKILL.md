@@ -7,7 +7,7 @@ description: Use after bootstrap, resume, adapter synchronization, framework upg
 
 ## Read authoritative inputs
 
-Read the manifest, lifecycle, integration and mutation-testing contracts, project configuration, framework lock, custom overlays, optional project-owned integration definitions/state, optional project-owned mutation registry/run records, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state. Never invoke a local connector or mutation backend during conformance checking.
+Read the manifest, lifecycle, ad hoc investigation, integration and mutation-testing contracts, project configuration, framework lock, custom overlays, optional project-owned `investigations/`, integration definitions/state, mutation registry/run records, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state. Never invoke a local connector or mutation backend during conformance checking.
 
 Do not repair files during this check.
 
@@ -26,6 +26,7 @@ Do not repair files during this check.
 - Verify the framework did not create default hooks, MCP configuration, mandatory CLI dependencies, `opencode.json`, or duplicate `.opencode/skills/` during generation. Preserve OpenCode commands, plugins, skills, provider configuration, and unlisted agents as project-owned content. External prerequisites are required only when their mode is selected; `native_subagents` remains dependency-free.
 - Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
 - Verify `quality/mutation-testing/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization.
+- Verify `investigations/` is optional and absent in a clean project; when present, it is project-owned canonical evidence, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization. Verify `forge-investigate` has portable parity and is declared as an orchestrator-only workflow that invokes no generated subagent.
 - Verify optional `mutation_testing` configuration is absent, null, or backed by confirmed repository/build/CI evidence. A configured backend requires exact version, baseline, mutation and result-adapter commands plus explicit budgets and constraints; missing setup blocks only a requested mutation run and never bootstrap or development.
 - Verify `mutation-runner` is fast, baseline-first, fingerprinted before/during/after execution, runtime-artifacts-only, network-disabled, and prohibited from installation, tracked edits, remediation, lifecycle changes and spawning. Verify `mutation-analyzer` is strong, explicitly authorized, candidate- and budget-gated, runtime-artifacts-only, network-disabled, and prohibited from remediation, lifecycle changes and spawning. Verify both roles and `forge-mutation-test` have generated parity on every enabled platform, with OpenCode using the shared skill copy.
 - Classify each integration definition/state file as current-supported, older-migratable, malformed, unsupported-future, custom-profile, or ownership collision. Preserve unknown profiles. Treat only ownership collisions and repository-safety violations as global blockers; other findings block only consuming skills.
@@ -52,6 +53,13 @@ Do not repair files during this check.
 - Check the current gate can be reconstructed without session history.
 - Check Epic Start always consumes one approved planned workspace through an atomic planned-to-active move plus Backlog transition.
 - For configured `work_source` integrations, check Backlog `Sources`, TASK `external_sources`, Epic source coverage, and `.ai/integrations/work-items.yaml` in both directions. Canonical lifecycle state remains authoritative; non-work profiles require no work-item mapping.
+
+## Validate ad hoc investigations
+
+- When investigation history is absent, require no directory, record, Backlog entry, lifecycle transition, or blocker.
+- When present, require unique monotonic `INV-NNNN` IDs, matching `investigations/INV-NNNN-<short-name>.md` paths, required frontmatter and sections, and one outcome from `no_action`, `promoted`, `fixed_directly`, or `unresolved`.
+- Require `no_action` to record its reason, `promoted` to have reciprocal approved work references, `fixed_directly` to contain complete added/modified/removed path tables, per-path intent, material effects, verification commands/results, remaining risk, and a final commit/revision or scoped-diff reference, and `unresolved` to preserve remaining hypotheses and next experiments.
+- Validate every `research_refs` target and reciprocal INV Linked Work reference. Treat INV content as evidence rather than product intent or lifecycle state. Report direct-fix paths that make existing TASK/Epic evidence stale.
 
 ## Validate independent mutation history
 

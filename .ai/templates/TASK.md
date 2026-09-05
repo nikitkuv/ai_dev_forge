@@ -12,6 +12,7 @@ risk_level: standard
 risk_flags: []
 delivery_track: standard
 external_sources: []
+research_refs: []
 ---
 
 # TASK-NNN — <Task Title>
@@ -89,6 +90,7 @@ Removing or weakening an approved check requires an explicit rationale and orche
 - **Epic plan:** <Relative path to plan.md>
 - **Related defects:** <BUG-IDs or —>
 - **External sources:** <Provider-neutral work-source keys from `external_sources`, or —>
+- **Investigations:** <INV-NNNN keys from `research_refs`, or —>
 
 ## Workflow State
 

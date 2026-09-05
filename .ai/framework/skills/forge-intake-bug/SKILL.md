@@ -7,7 +7,7 @@ description: Classify and record a reported defect in an initialized Forge proje
 
 ## Establish the affected state
 
-1. Read the reported behavior, relevant requirements, affected planned workspaces, active Epic and TASK files, user-validation history, accepted code history, and Git state.
+1. Read the reported behavior, relevant requirements, affected planned workspaces, active Epic and TASK files, user-validation history, accepted code history, explicitly referenced `INV-NNNN` records, obviously relevant investigations by subject, area, or relevant paths, and Git state. Confirm uncertain investigation matches with the user. Check their baseline and relevant paths, reuse applicable evidence and causes, and repeat only what changed or remains unsupported.
 2. Clarify reproduction conditions, expected behavior, actual behavior, impact, affected versions or environments, and available evidence.
 3. Reproduce the problem consistently when local evidence permits. Capture exact commands, inputs, outputs, error messages, and environmental differences; if it is not reproducible, state the evidence gap instead of guessing.
 4. Inspect relevant recent changes, data flow, component boundaries, dependencies, and similar working behavior. Trace the first point where observed behavior diverges from expected behavior.
@@ -32,10 +32,12 @@ Investigation before scheduling is read-only with respect to production code and
 1. Present the defect candidate and request explicit user approval to track it.
 2. Allocate the next global `BUG-NNN`.
 3. Add it to the Backlog Defect Queue as `OPEN`.
-4. Record observable problem, impact severity, user-defined priority, related requirement, and no Scheduled TASK yet.
+4. Record observable problem, impact severity, user-defined priority, related requirement, compact `Research` references for investigations actually used, and no Scheduled TASK yet.
 5. When invoked from approved external-work intake, record compact provider-neutral `Sources` keys and stage reverse provenance; otherwise use `—` and create no integration state.
 
 Severity describes consequences; priority belongs to the user.
+
+When a Bug is promoted from an investigation, update the INV to `outcome: promoted`, add the Bug under Linked Work and Outcome History, and store reciprocal research references as one logical canonical update. Investigation evidence supports classification but does not approve or schedule the Bug.
 
 ## Decide scheduling without side effects
 

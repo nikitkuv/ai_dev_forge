@@ -13,6 +13,7 @@ Use:
 - `.ai/CONVENTIONS.md`;
 - `.ai/framework/contracts.yaml`.
 - optional Backlog `Sources` and `.ai/integrations/work-items.yaml` entries for the selected Epic.
+- optional Backlog `Research` and `investigations/INV-*.md` relevant to the selected Epic.
 
 This step prepares execution state only. Plan Approval does not change the Epic lifecycle status. Epic Start moves one approved planned workspace to active state. Neither action modifies product code, implements a Task, or starts the first Task.
 
@@ -34,12 +35,12 @@ An `OUTLINE` Epic or an Epic with unresolved requirements or boundaries cannot r
 
 ## Prepare the Proposed Plan
 
-Invoke the strong read-only `epic-planner` with the approved canonical documents, selected Epic, relevant repository and CI evidence, project quality configuration, framework contracts, conventions, and templates. Require `.ai/project.yaml` to contain one valid `role_execution.mode`: `claude_with_codex` requires Claude Code and the managed stable `codex exec` route, `codex_with_claude` requires Codex and the managed headless Claude Code route, and `native_subagents` uses the active Codex, Claude Code, or OpenCode platform's generated planner without external preflight. OpenCode-led bootstrap proposes the existing `native_subagents` value by default when no approved route exists, but it remains an explicit approved project value and adds no new mode. Active-orchestrator mismatch, unavailable selected prerequisites, or any started external-run failure blocks planning; there is no fallback. Every route receives the complete neutral contract and identical evidence. The selected executor returns a proposal only; it does not write files, approve definitions, activate the Epic, or contact the user.
+Invoke the strong read-only `epic-planner` with the approved canonical documents, selected Epic, explicit and clearly relevant INV records chosen by the orchestrator, relevant repository and CI evidence, project quality configuration, framework contracts, conventions, and templates. Before invocation, check each INV baseline and relevant paths, confirm uncertain matches with the user, and reuse applicable evidence rather than repeating the complete investigation. Require `.ai/project.yaml` to contain one valid `role_execution.mode`: `claude_with_codex` requires Claude Code and the managed stable `codex exec` route, `codex_with_claude` requires Codex and the managed headless Claude Code route, and `native_subagents` uses the active Codex, Claude Code, or OpenCode platform's generated planner without external preflight. OpenCode-led bootstrap proposes the existing `native_subagents` value by default when no approved route exists, but it remains an explicit approved project value and adds no new mode. Active-orchestrator mismatch, unavailable selected prerequisites, or any started external-run failure blocks planning; there is no fallback. Every route receives the complete neutral contract and identical evidence. The selected executor returns a proposal only; it does not write files, approve definitions, activate the Epic, or contact the user.
 
 The orchestrator must independently check the proposal against canonical sources and repository evidence, resolve blockers with the user, and remain responsible for the final displayed plan. Build the proposal with:
 
 1. define the Epic objective and expected outcome;
-2. identify dependencies, risks, and implementation strategy;
+2. identify dependencies, risks, implementation strategy, and Research Context listing every used INV plus its applicability check;
 3. create an ordered Task sequence with explicit `Depends on` relationships;
 4. define Epic acceptance criteria;
 5. map requirements to planned Task and Epic-level evidence;
@@ -68,6 +69,7 @@ For every TASK:
 - add reproducible manual verification;
 - link requirements, architecture sections, ADRs, defects, and the Epic plan where applicable;
 - copy only the provider-neutral work-source keys covered by this TASK into `external_sources`;
+- copy applicable `INV-NNNN` references into `research_refs`;
 - record dependencies through the ordered plan;
 - initialize lifecycle `status: TODO`;
 - keep `definition_status: draft` until the user approves the complete plan.
@@ -94,7 +96,8 @@ After explicit Plan Approval:
 4. write every TASK with `definition_status: approved` and `status: TODO`;
 5. leave the Backlog Epic status `PLANNED` and preserve its priority, order, dependencies and blockers;
 6. when external sources apply, update TASK references, the plan coverage matrix, and `.ai/integrations/work-items.yaml` reverse mappings together;
-7. validate links, IDs, dependencies, source coverage, directory uniqueness and the absence of product-code changes.
+7. when investigations apply, update plan/TASK `research_refs` and each INV Linked Work/Outcome History together;
+8. validate links, IDs, dependencies, source coverage, research references, directory uniqueness and the absence of product-code changes.
 
 Treat planned-workspace creation as one logical write. On failure, remove only the partial newly created workspace and preserve the prior Backlog and other planned/active workspaces. Approval of a TASK definition is not authorization to implement it.
 

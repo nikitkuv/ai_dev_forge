@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Perform a read-only final conformance check and prove that a new orchestrator can recover the project state without session history.
+Perform a read-only final conformance check and prove that a new orchestrator can recover the project and ad hoc investigation state without session history.
 
 Do not redesign, implement, silently repair canonical state, or create a validation report file.
 
 ## Required Inputs
 
-Read the framework manifest and lifecycle/integration/mutation-testing contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, all enabled generated adapter sets, custom overlays, optional project-owned integration definitions/state, optional project-owned mutation history, and Git state. Do not invoke local connectors, OpenCode providers, or mutation backends.
+Read the framework manifest and lifecycle/investigation/integration/mutation-testing contracts, project configuration and lock, canonical documents, ADRs, execution tree, neutral sources, all enabled generated adapter sets, custom overlays, optional project-owned investigations, integration definitions/state, mutation history, and Git state. Do not invoke local connectors, OpenCode providers, or mutation backends.
 
 If an earlier step is incomplete, return to that step and its approval gate.
 
@@ -30,12 +30,13 @@ If an earlier step is incomplete, return to that step and its approval gate.
 
 ## Validate IDs, References, and Decisions
 
-- `EPIC-*`, `TASK-*`, `BUG-*`, and `ADR-*` IDs are globally unique by type, zero-padded, allocated from the prior maximum, and never reused.
+- `EPIC-*`, `TASK-*`, `BUG-*`, `ADR-*`, and `INV-*` IDs are globally unique by type, zero-padded, allocated from the prior maximum, and never reused.
 - TASK numbering does not restart per Epic.
 - Every requirement, Epic, Task, Bug, ADR, architecture component, plan, and canonical path reference resolves or is explicitly marked as an approved external reference.
 - When work-source references exist, every Backlog `Sources`, TASK `external_sources`, plan coverage, and reverse provenance mapping agrees; non-work profiles require no Epic or Task links.
 - Every ADR index row points to one ADR and every ADR appears once in the generated index.
 - Accepted ADRs are not rewritten to change decisions; supersession links are consistent.
+- Every `INV-NNNN` path matches its ID and contains the required question, scope, investigation, evidence, causes, conclusion, next action, linked work, and outcome history. Its outcome is `no_action`, `promoted`, `fixed_directly`, or `unresolved`; promoted work has reciprocal references, and direct fixes have a complete path-level ledger, verification, risks, and final revision/commit/scoped-diff reference.
 
 ## Validate Lifecycle and Execution
 
@@ -58,7 +59,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 ## Validate Ownership State
 
 - Framework-owned, project-owned, and generated paths match `.ai/framework/manifest.yaml`.
-- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, optional `quality/mutation-testing/`, canonical documents, ADRs, and execution state were not overwritten as framework release content.
+- `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `.ai/integrations/`, optional `quality/mutation-testing/`, canonical documents, ADRs, and execution state were not overwritten as framework release content.
 - Lock source hashes match actual managed-output inputs: neutral sources, renderers, configuration, and custom overlays. Local integration definitions/state are validated separately and do not create framework drift.
 - Generated adapter hashes match current outputs or the collision is explicitly reported.
 - Obsolete framework-owned files, including the former Step 05, are absent.
@@ -86,6 +87,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - A clean project has no `.ai/integrations/` and passes without connector preflight. Supported, custom, malformed, future-version, or offline integrations remain project-owned; only their consumers are blocked unless an ownership/safety collision exists.
 - A clean project has no `quality/mutation-testing/` and passes without a mutation backend or preflight. When history exists, registry and `MUT-NNNN` records pass the independent schema, identity, fingerprint, metrics, artifact, analysis-authorization and disposition checks; their outcomes have no lifecycle or gate effect.
 - The generated set contains fast `mutation-runner`, strong `mutation-analyzer`, and discoverable `forge-mutation-test` on every enabled platform. Metrics-only is the default, strong analysis requires explicit authorization plus current candidates and budget, and neither role may install tools, edit tracked files, remediate, change lifecycle state, or spawn agents.
+- The generated skill set contains `forge-investigate` on every enabled platform. It is a main-agent workflow, invokes no generated subagent, stores one project-owned INV record, and never changes Epic/TASK state or authorizes a commit implicitly.
 
 ## Simulate Recovery
 
@@ -103,6 +105,7 @@ Ignore conversation history and reconstruct:
 10. adapter provenance from `.ai/framework.lock`.
 11. optional integration compatibility and work-source relationships from project-owned `.ai/integrations/`, without using them as lifecycle authority;
 12. optional mutation history from `quality/mutation-testing/`, without using it as lifecycle or development evidence authority.
+13. optional ad hoc investigations from `investigations/`, including unresolved work, direct changes, reciprocal planning references, and any lifecycle evidence made stale by those changes.
 
 The same repository state must yield the same current gate. Missing persisted agent evidence means that stage must be rerun.
 

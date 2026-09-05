@@ -21,9 +21,10 @@ For ongoing work, recover state from canonical files and Git, not session histor
 5. Every queued `execution/planned/` Epic — approved strategy and `TODO` Task definitions pending Epic Start, ordered only by Backlog.
 6. Active or paused Epic `plan.md` — strategy, Task order, quality profiles, Epic Validation, fuzzing, and user validation.
 7. TASK files — the only Task lifecycle state and Task evidence.
-8. Optional `.ai/integrations/` — project-owned capability definitions and work-source provenance; absence is the clean baseline.
-9. Optional `quality/mutation-testing/` — project-owned, lifecycle-independent mutation run history; absence is the clean baseline.
-10. Git status and diff — unfinished file changes.
+8. Optional `investigations/INV-*.md` — project-owned ad hoc research, direct-fix records, and links to later work; absence is the clean baseline.
+9. Optional `.ai/integrations/` — project-owned capability definitions and work-source provenance; absence is the clean baseline.
+10. Optional `quality/mutation-testing/` — project-owned, lifecycle-independent mutation run history; absence is the clean baseline.
+11. Git status and diff — unfinished file changes.
 
 Report contradictions instead of silently reconciling them.
 
@@ -65,10 +66,12 @@ Explicitly invoke the matching bundled Forge skill by its exact name using the p
 - Bootstrap: `forge-bootstrap-new`, `forge-bootstrap-existing`.
 - Intake and priority: `forge-intake-feature`, `forge-intake-bug`, `forge-intake-external-work`, `forge-reprioritize-backlog`.
 - Execution: `forge-prepare-epic`, `forge-resume-development`, `forge-run-task`, `forge-complete-task`, `forge-complete-epic`.
-- Diagnostics: `forge-security-audit`, `forge-mutation-test`.
+- Diagnostics: `forge-investigate`, `forge-security-audit`, `forge-mutation-test`.
 - Maintenance: `forge-migrate-framework`, `forge-check-framework`, `forge-sync-adapters`.
 
 Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not add lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
+
+`forge-investigate` is a lifecycle-independent main-agent workflow. It invokes no generated subagent, writes one canonical `INV-NNNN` record, and ends as `no_action`, `promoted`, `fixed_directly`, or `unresolved`. Direct fixes require explicit authorization, proportionate verification, and a path-level change ledger; they never imply lifecycle acceptance or commit permission.
 
 ## Subagents
 
@@ -115,5 +118,6 @@ Run no more than one code-writing Task at a time. Independent read-only research
 - The framework creates no hooks or MCP configuration. Project-specific hooks and MCP remain project-owned.
 - `.ai/integrations/` is optional project-owned state. Registration alone grants no tool authority; only an explicitly selected compatible consumer may use allowed operations. Missing or invalid integrations block only their consumers, and framework upgrade never requires a live connector.
 - `quality/mutation-testing/` is optional project-owned history created only by an explicit mutation request. A bare request is metrics-only; strong analysis requires separate authorization and current candidates. Mutation outcomes never change Epic, TASK, Backlog, gate, evidence, acceptance, or commit state.
+- `investigations/` is optional project-owned canonical research history. Planning may reuse applicable `INV-NNNN` evidence through `research_refs`; Forge creates no synthetic records during bootstrap, migration, or synchronization.
 
 {{ custom.router_shared }}

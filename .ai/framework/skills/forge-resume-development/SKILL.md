@@ -7,7 +7,7 @@ description: Recover planned, active, or paused Forge development state after in
 
 ## Reconstruct state from durable evidence
 
-1. Ask `context-collector` to read `BACKLOG.md`, all execution directories, every planned workspace, the active or paused Epic plan and TASK files, relevant ADRs, optional `.ai/integrations/` definitions/state, and Git status and diff.
+1. Ask `context-collector` to read `BACKLOG.md`, all execution directories, every planned workspace, the active or paused Epic plan and TASK files, relevant ADRs, relevant or unfinished `investigations/INV-*.md`, optional `.ai/integrations/` definitions/state, and Git status and diff.
 2. Treat session history as optional context, never as the source of truth.
 3. Determine:
    - every queued planned workspace in Backlog priority and row order, whether it is still `PLANNED + READY`, and its Epic Start dependencies and blockers;
@@ -19,7 +19,8 @@ description: Recover planned, active, or paused Forge development state after in
    - implementation revision, whole-implementation fingerprint, production-surface fingerprint, path classification, and any ambiguous-path rationale;
    - current Fast Assurance Summary or standard Review Packet, structured review and selected Task-testing, plus Epic Validation, fuzzing, and user-validation evidence;
    - selected quality profiles, Task verification selections, Epic Verification Plan, Epic Fuzzing Plan, every final Task fuzzing impact and smoke result, and any unresolved command configuration;
-   - staged, unstaged, and untracked changes relevant to the work.
+   - staged, unstaged, and untracked changes relevant to the work;
+   - unfinished or unresolved investigations, reciprocal `research_refs`, and any direct-fix paths that make existing TASK or Epic evidence stale;
    - for configured `work_source` integrations, linked source keys, per-TASK coverage, uncovered source slices, last reviewed source versions, and forward/reverse mapping integrity.
 4. Report duplicate Epic workspaces, planned directories without `PLANNED + READY` Backlog entries, planned workspaces with non-approved definitions, duplicate active Epics, invalid transitions, mismatched directories, stale fingerprints, broken links, contradictory source mappings, or conflicting canonical facts before continuing. An unavailable or invalid integration blocks only work that consumes it; absence of `.ai/integrations/` is the clean baseline.
 
@@ -37,6 +38,7 @@ description: Recover planned, active, or paused Forge development state after in
 - Require explicit user authorization before resuming a `PAUSED` Epic or TASK, starting a `TODO` TASK, accepting work, replanning, or crossing another gate.
 - Do not infer acceptance or completion from a clean Git tree, a prior chat message, or an agent invocation alone.
 - Do not infer Forge lifecycle state from an external item. Canonical Backlog, plan, and TASK state wins; relationship repair or changed source coverage requires an explicit intake/Replan reconciliation.
+- Treat INV records as canonical research evidence, never as lifecycle authority. Report broken reciprocal references and re-evaluate affected TASK/Epic evidence when `fixed_directly` paths changed after that evidence was recorded.
 
 Present a compact recovery summary with canonical paths, the ordered planned queue and eligibility, current active/paused state, inconsistencies, unfinished changes, evidence that remains valid, evidence that must be rerun, and the next required user decision.
 

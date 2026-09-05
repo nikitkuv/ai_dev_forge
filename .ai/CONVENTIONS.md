@@ -6,7 +6,7 @@ This document is the human-readable companion to the machine-readable framework 
 
 ## Naming and global identifiers
 
-Identifiers are globally unique within a project. Epic, Task, Bug, and Decision IDs are zero-padded to three digits; independent mutation-run IDs are zero-padded to at least four digits. Allocate each entity type independently by taking its maximum existing ID and adding one; do not fill gaps. Task numbering is project-global and never restarts for an Epic. Never reuse an ID that was deleted, cancelled, skipped, or otherwise retired:
+Identifiers are globally unique within a project. Epic, Task, Bug, and Decision IDs are zero-padded to three digits; investigation and independent mutation-run IDs are zero-padded to at least four digits. Allocate each entity type independently by taking its maximum existing ID and adding one; do not fill gaps. Task numbering is project-global and never restarts for an Epic. Never reuse an ID that was deleted, cancelled, skipped, or otherwise retired:
 
 | Entity | Identifier | Canonical location |
 | --- | --- | --- |
@@ -14,6 +14,7 @@ Identifiers are globally unique within a project. Epic, Task, Bug, and Decision 
 | Task | `TASK-001` | `execution/<state>/EPIC-001-<short-name>/tasks/TASK-001-<short-name>.md` |
 | Bug | `BUG-001` | `BACKLOG.md` |
 | Decision | `ADR-001` | `decisions/ADR-001-<short-name>.md` |
+| Investigation | `INV-0001` | `investigations/INV-0001-<short-name>.md` |
 | Mutation run | `MUT-0001` | `quality/mutation-testing/runs/MUT-0001.yaml` |
 
 `<short-name>` is stable, lowercase kebab-case, and one to four words. An Epic folder name must match its Epic name in `BACKLOG.md`; each Task belongs to exactly one Epic.
@@ -31,6 +32,7 @@ project/
 |- DECISIONS.md
 |- decisions/
 |- execution/{planned,active,paused,completed}/
+|- investigations/                 # optional project-owned ad hoc research history
 |- .ai/{project.yaml,framework.lock,custom/}
 |- .ai/integrations/                 # optional, project-owned, absent by default
 |- quality/mutation-testing/         # optional, project-owned, created on first requested run
@@ -51,6 +53,7 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Framework-owned: bootstrap control documents, `CONVENTIONS.md`, `.ai/templates/`, and `.ai/framework/`.
 - Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, canonical documents, decisions, execution state, and project-specific hooks, MCP, APIs, or CLIs.
 - Independent mutation history under `quality/mutation-testing/` is optional project-owned state. Bootstrap and adapter synchronization do not create or overwrite it.
+- Ad hoc investigation history under `investigations/` is optional project-owned canonical evidence. Framework installation provides only the template and never creates synthetic `INV-*` records.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, `.agents/`, and `.opencode/agents/`. Unlisted entries remain project-owned; `opencode.json` and `.opencode/commands/`, `plugins/`, and `skills/` are never generated.
 
 Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router shared by Codex and OpenCode; `CLAUDE.md` contains only `@AGENTS.md`. OpenCode discovers Forge skills from `.agents/skills/`, so Forge creates no duplicate `.opencode/skills/`. Do not edit managed outputs manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
@@ -66,6 +69,14 @@ Definitions use `.ai/framework/integrations/contracts.yaml`. They describe provi
 Framework upgrades preserve unknown profiles, definitions, state, and project-owned consumers. Unsupported or malformed integrations block only their consumers unless they collide with a framework-owned path or violate repository safety. Local integration content is not a managed adapter input and its normal changes are not framework drift.
 
 Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not introduce additional lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
+
+## Ad hoc investigations
+
+`forge-investigate` lets the main orchestrator investigate a material codebase question without creating or advancing Bug, Epic, or TASK work and without invoking generated subagents. Each material investigation is stored as one `investigations/INV-NNNN-<short-name>.md` record derived from `.ai/templates/INVESTIGATION.md`.
+
+Every INV records exactly one current outcome: `no_action`, `promoted`, `fixed_directly`, or `unresolved`. Promotion uses the existing intake or Replan approval and writes reciprocal `research_refs`. A direct fix requires explicit user authorization and records added, modified, and removed paths, per-path intent, material effects, verification results, remaining risks, and a final commit/revision or scoped-diff reference. The INV explains the change; Git remains authoritative for the exact diff.
+
+Investigations are evidence history, not target product or architecture truth and not lifecycle gates. Planning may reuse a referenced or obviously relevant INV after checking its baseline, relevant paths, and assumptions. Creating or completing an INV never implies acceptance or commit authorization.
 
 ## Independent mutation testing
 

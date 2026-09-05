@@ -35,7 +35,7 @@ test("manifest exposes optional mutation capability without a lifecycle route", 
     read(".ai/framework/manifest.yaml"),
     read(".ai/framework/contracts.yaml")
   ]);
-  assert.match(manifest, /version: 4\.7\.1/);
+  assert.match(manifest, /version: 4\.8\.0/);
   assert.match(manifest, /- quality\/mutation-testing\//);
   assert.match(manifest, /- forge-mutation-test/);
   assert.match(manifest, /mutation-runner, mutation-analyzer/);
@@ -146,7 +146,7 @@ test("dual-platform generation declares both mutation roles and portable skill",
     assert.match(generation, new RegExp(`\\.claude/agents/${id}\\.md`));
     assert.match(codexRouter, new RegExp(id));
   }
-  assert.match(generation, /sixteen portable `SKILL\.md` files/);
+  assert.match(generation, /seventeen portable `SKILL\.md` files/);
   assert.match(sync, /Generate no `\.ai\/integrations\/` or `quality\/mutation-testing\/` content/);
 });
 

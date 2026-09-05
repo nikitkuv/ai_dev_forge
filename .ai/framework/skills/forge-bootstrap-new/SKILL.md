@@ -30,8 +30,8 @@ Require explicit user approval at every document, ADR, Plan Approval, Epic Start
 
 - Create canonical documents at the project root, never inside `.ai/`.
 - Write canonical content in the user's language by filling the provided templates; do not translate technical identifiers.
-- Treat `.ai/` as the framework bundle, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, and optional `.ai/integrations/` as project-owned state, and generated adapters as replaceable derived outputs.
-- Create no default hooks, MCP configuration, framework CLI, local integration registry, or external lifecycle dependency. Absence of `.ai/integrations/` is the clean baseline and triggers no connector preflight.
-- Never create separate progress, research, review, test, fuzzing, security, or validation Markdown reports.
+- Treat `.ai/` as the framework bundle, `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, and optional `.ai/integrations/` as project-owned state, and generated adapters as replaceable derived outputs.
+- Create no synthetic investigation records, default hooks, MCP configuration, framework CLI, local integration registry, or external lifecycle dependency. Absence of `investigations/` and `.ai/integrations/` is the clean baseline and triggers no investigation or connector preflight.
+- Never create separate progress, review, test, fuzzing, security, or validation Markdown reports. Material ad hoc research is stored only through explicitly invoked `forge-investigate` as one canonical INV record.
 
 Finish only after Step 06 passes and each required approval is recorded in canonical metadata.

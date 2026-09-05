@@ -1,4 +1,4 @@
-# AI Development Forge v4.7
+# AI Development Forge v4.8
 
 ## Настраиваемый planner/reviewer route
 
@@ -23,6 +23,7 @@ ARCHITECTURE.md
 BACKLOG.md
 DECISIONS.md
 decisions/ADR-NNN-<name>.md
+investigations/INV-NNNN-<name>.md
 execution/{planned,active,paused,completed}/
 .ai/
 .codex/agents/
@@ -32,7 +33,7 @@ execution/{planned,active,paused,completed}/
 .opencode/agents/
 ```
 
-`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются источниками истины. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
+`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются target/execution источниками истины; `INV-NNNN` хранит каноническую историю ad hoc исследования. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
 
 Mutation testing доступен отдельно через `forge-mutation-test` и никогда не является lifecycle gate. Bare-запрос использует fast `mutation-runner` и возвращает metrics; strong `mutation-analyzer` запускается только по отдельному разрешению и только при наличии текущих candidates. История попыток сохраняется как project-owned `MUT-NNNN` records без изменения Backlog, Epic или TASK.
 
@@ -124,9 +125,17 @@ Epic planner заранее создаёт Epic Fuzzing Plan и оценивае
 
 Kaiten — только пример `work_source`. Для такого profile Forge может хранить двусторонние ссылки `external item ↔ EPIC/BUG/TASK`; остальные типы не получают искусственных связей с Backlog. Framework upgrade работает offline, сохраняет неизвестные project-owned profiles и отделяет замену Forge от отдельно подтверждаемой миграции integration schema. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
-Feature discovery, root-cause investigation, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Внешние process skills не управляют lifecycle проекта.
+Feature discovery, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Для исследования вне Backlog используется отдельный `forge-investigate`; внешние process skills не управляют lifecycle проекта.
 
 Mutation backend не входит в обязательные зависимости. Проект отдельно настраивает подтверждённую команду для своего языка; отсутствие backend не мешает bootstrap, adapter sync, migration или обычной разработке и даёт `SETUP REQUIRED` только при явном mutation-запросе.
+
+## Ad hoc исследования
+
+`forge-investigate` позволяет основному агенту исследовать конкретную проблему без создания Epic/TASK и без вызова субагентов. Агент сам выбирает подходящие способы: чтение кода и истории, трассировку, локальные эксперименты, тесты, benchmarks или profiling. Материальный результат сохраняется одним каноническим файлом `investigations/INV-NNNN-<name>.md`.
+
+У INV ровно один текущий outcome: `no_action`, `promoted`, `fixed_directly` или `unresolved`. Пользователь может оставить только выводы, передать результат в обычный Bug/Epic/Replan или попросить основного агента сразу исправить проблему. Для `fixed_directly` INV фиксирует добавленные, изменённые и удалённые пути, смысл изменений, влияние, команды проверок, результаты, ограничения и Git commit/revision либо fingerprint незакоммиченного diff. Сам commit по-прежнему требует применимого явного разрешения.
+
+Позднее intake или Epic planner может использовать явный `research_refs: [INV-NNNN]` либо предложить очевидно связанный INV по теме, области и путям. Перед переиспользованием агент быстро проверяет baseline и релевантные изменения, затем не повторяет уже применимое исследование.
 
 ## Дальнейшая работа
 
