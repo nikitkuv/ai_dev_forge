@@ -1,6 +1,6 @@
-name = "{{ agent.id }}"
-description = "{{ agent.description }}"
-model = "{{ models.codex[agent.model_tier].model }}"
-model_reasoning_effort = "{{ models.codex[agent.model_tier].reasoning_effort }}"
-sandbox_mode = "{{ agent.codex_sandbox_mode }}"
-developer_instructions = """{{ agent.instructions }}"""
+name = {{ agent.id | tojson }}
+description = {{ agent.description | tojson }}
+model = {{ models.codex[agent.model_tier].model | tojson }}
+model_reasoning_effort = {{ models.codex[agent.model_tier].reasoning_effort | tojson }}
+sandbox_mode = {{ agent.codex_sandbox_mode | tojson }}
+developer_instructions = {{ agent.instructions | tojson }}

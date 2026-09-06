@@ -8,6 +8,8 @@ This step generates derived platform files. It does not change canonical product
 
 ## Inputs
 
+Use `python .ai/tools/forge.py adapters --diff` and the reviewed preview-token apply flow from `forge-sync-adapters` when Python tooling is available. The script reads the source files below; the model need not load or regenerate every agent and skill body. Inspect errors/collisions and configuration decisions only. Read `.ai/tools/USAGE.md` for setup and recovery. The Python helper is optional local tooling, not a globally installed framework CLI dependency.
+
 Read:
 
 - `.ai/framework/manifest.yaml` and `.ai/framework/contracts.yaml`;

@@ -1,6 +1,14 @@
 # Миграция AI Development Forge
 
-## Обновление до v4.8
+## Обновление до v4.9
+
+v4.9 добавляет optional Python-инструменты в framework-owned `.ai/tools/`, сокращённый router и metadata-first восстановление. Скопируйте новый bundle, при необходимости настройте Python 3.11+ с pinned requirements, затем выполните preview adapter sync. Bootstrap внутри исходного Forge не требуется.
+
+Добавьте `.ai/local/`, `.forge-venv/` и `__pycache__/` в ignore целевого проекта. Project configuration, local artifacts и неизвестные поля lock сохраняются. Renderer добавляет только `python_adapter_state`; неизвестные старые hashes не разрешают перезапись вручную изменённых файлов. Retired outputs сохраняются для отдельного решения.
+
+При переходе на `forge-files-v1` evidence с несовместимым fingerprint становится stale; не объявляйте его актуальным задним числом. Кэш команд по умолчанию выключен; Epic Validation не кэшируется. Bounded Task Start требует отдельного решения пользователя. Legacy `.mjs` transports продолжают работать; предпочтительный helper transport — Python.
+
+## Изменения v4.8
 
 v4.8 добавляет lifecycle-independent `forge-investigate`: основной агент исследует проблему без субагентов и хранит один project-owned `investigations/INV-NNNN-<short-name>.md`. Migration устанавливает только contracts/template/skill/router support, не создаёт synthetic INV records, сохраняет существующий `investigations/` byte-for-byte и останавливается на несовместимой path collision. Новый INV может завершиться `no_action`, `promoted`, `fixed_directly` или `unresolved`; ни один outcome сам по себе не меняет Epic/TASK lifecycle и не разрешает commit.
 

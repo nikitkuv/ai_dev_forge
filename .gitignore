@@ -7,3 +7,9 @@ venv/
 dist/
 build/
 superpowers/
+.python/
+.uv-cache/
+.forge-venv/
+.ai/local/
+__pycache__/
+*.pyc

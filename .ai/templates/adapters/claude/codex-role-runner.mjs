@@ -95,6 +95,7 @@ function run(command, args, options = {}) {
     encoding: "utf8",
     input: options.input,
     maxBuffer: 16 * 1024 * 1024,
+    timeout: options.timeout ?? 15000,
     windowsHide: true
   };
   if (process.platform === "win32" && [".cmd", ".bat"].includes(extname(command).toLowerCase())) {
@@ -182,12 +183,14 @@ export function main(argv = process.argv.slice(2), env = process.env, cwd = proc
   if (!existsSync(promptFile)) throw new Error(`Prompt file does not exist: ${promptFile}`);
   const prompt = readFileSync(promptFile, "utf8");
   const runtimeEnv = buildRuntimeEnv(env);
+  const timeout = Number(env.FORGE_ROLE_TIMEOUT_MS || 900000);
+  if (!Number.isFinite(timeout) || timeout <= 0) throw new Error("FORGE_ROLE_TIMEOUT_MS must be positive and finite.");
   const result = run(
     check.codexPath,
     ["exec", "--ephemeral", "--sandbox", "read-only", "--model", REQUIRED_MODEL, "--config", `model_reasoning_effort='${REQUIRED_EFFORT}'`, "--color", "never", "-"],
-    { cwd, env: runtimeEnv, input: prompt }
+    { cwd, env: runtimeEnv, input: prompt, timeout }
   );
-  const exitCode = result.error ? 1 : result.status ?? 1;
+  const exitCode = result.error?.code === "ETIMEDOUT" ? 124 : result.error ? 1 : result.status === 0 && !result.stdout?.trim() ? 1 : result.status ?? 1;
   json({
     provider: "codex-cli",
     transport: "exec",

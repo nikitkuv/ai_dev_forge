@@ -5,7 +5,11 @@ description: Prepare one PLANNED and READY Epic as an approved queued workspace 
 
 # Prepare an Epic
 
+Use Python `context`/`validate` for inventory and ID consistency, and `section` for relevant source excerpts; do not delegate mechanical collection to a model. Pass the planner one bounded assignment with authoritative relevant context and the complete role contract. For external routes prefer `python .ai/tools/forge.py role --orchestrator <active> --role epic-planner --prompt-file <path>`; its single internal preflight replaces the separate preflight/legacy-launcher sequence below. Never switch transport after a started failure. Reuse current INV research and avoid duplicating unrelated backlog/task bodies in the prompt.
+
 ## Verify eligibility
+
+For native_subagents the generated agent already contains the complete neutral role contract: send only the assignment/evidence, not a duplicate of those instructions. For an external CLI concatenate the full neutral contract exactly once. All routes receive the same effective contract and assignment.
 
 1. Read `BACKLOG.md`, approved SPEC and ARCHITECTURE, relevant ADRs, execution state, templates, conventions, framework contracts, explicitly referenced `INV-NNNN` records, obvious investigation matches by subject, area, or relevant paths, and any Backlog source keys plus optional work-source provenance relevant to the selected Epic. Confirm uncertain INV matches with the user. Check each selected investigation's baseline, relevant paths, and material assumptions; reuse applicable research and recheck only doubtful portions.
 2. Require the selected Epic to be `PLANNED + READY` with approved requirements and boundaries and explicitly declared dependencies and blockers.

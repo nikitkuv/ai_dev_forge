@@ -7,7 +7,7 @@ description: Use after bootstrap, resume, adapter synchronization, framework upg
 
 ## Read authoritative inputs
 
-Read the manifest, lifecycle, ad hoc investigation, integration and mutation-testing contracts, project configuration, framework lock, custom overlays, optional project-owned `investigations/`, integration definitions/state, mutation registry/run records, canonical documents, ADRs, execution tree, neutral agent and skill sources, generated adapters, and Git state. Never invoke a local connector or mutation backend during conformance checking.
+Start with `python .ai/tools/forge.py validate --project --adapters`. It checks source IDs/YAML, lifecycle inventory and generated output drift without a model. Consume its coverage and requires_judgment fields: a mechanical pass is not full conformance. Inspect only reported errors and relevant inputs for the semantic checks below; do not reload all agent/skill bodies just to repeat successful structural checks. When Python is unavailable, perform the same checks manually. Never invoke a local connector or mutation backend during conformance checking.
 
 Do not repair files during this check.
 

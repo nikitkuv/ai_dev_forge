@@ -1,4 +1,4 @@
-# AI Development Forge v4.8 — Architecture
+# AI Development Forge v4.9 — Architecture
 
 ## Configurable planner/reviewer routing
 
@@ -6,7 +6,21 @@
 
 Этот документ описывает реализованную архитектуру фреймворка и её обязательные lifecycle-контракты.
 
-## Назначение
+## Локальная автоматизация
+
+`.ai/tools/forge.py` выполняет механические операции на Python 3.11+: metadata inventory, извлечение разделов, fingerprints, структурную валидацию, генерацию adapters, bounded subprocess checks и агрегацию usage. Зависимости зафиксированы в `.ai/tools/requirements.txt`. Это optional local tooling внутри bundle; native workflows сохраняются без Python.
+
+Возобновление использует metadata-first загрузку. Оркестратор не вызывает context-collector для штатной инвентаризации, не читает полные тела всех planned TASK и не просит модель генерировать адаптеры. Роли получают релевантные источники плюс полный собственный контракт. Python не выбирает scope, не доказывает test integrity, не принимает работу и не меняет lifecycle.
+
+`forge-files-v1` покрывает явно переданные файлы, отсутствующие пути и executable flags; он не заменяет Git baseline/diff или анализ зависимостей. Кэш команд opt-in: требуются полный набор входов, неизменные команды/runtime/environment и целые сохранённые logs. Epic Validation не использует кэш.
+
+Renderer проверяет YAML/TOML, сравнивает preview token, сохраняет backups и записывает lock последним. При сбое изменения откатываются; после аварийного завершения нужен journal recovery. Это не атомарная межфайловая транзакция ОС. Unlisted и retired outputs сохраняются; namespaced `python_adapter_state` не удаляет неизвестные lock fields.
+
+Optional `bounded_task_starts` содержит явное решение пользователя, approver, срок действия и fingerprints точных TASK definitions. Оно удовлетворяет только Task Start; acceptance, commit, Replan, Epic Start и eligibility остаются отдельными. По умолчанию действует `strict`.
+
+Raw logs, кэш и metrics находятся в project-owned `.ai/local/`, не входят в render inputs и не заменяют evidence в TASK/plan. Отсутствие usage означает unknown; characters/4 budget — оценка размера контекста, не фактический биллинг.
+
+## Назначение и ответственность
 
 AI Development Forge превращает репозиторий в долговременную среду разработки, где:
 

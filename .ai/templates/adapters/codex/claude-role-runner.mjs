@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { delimiter, dirname, extname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -35,12 +35,29 @@ export function claudeCommand(env = process.env, platform = process.platform) {
 }
 
 function runClaude(args, env, cwd, options = {}) {
-  const { command, prefixArgs } = claudeCommand(env);
+  let { command, prefixArgs } = claudeCommand(env);
+  if (process.platform === "win32" && !prefixArgs.length) {
+    const pathKey = Object.keys(env).find((key) => key.toLowerCase() === "path");
+    const dirs = (env[pathKey] || "").split(delimiter).filter(Boolean);
+    if (!env.FORGE_CLAUDE_EXECUTABLE) {
+      const native = dirs.map((dir) => join(dir, "claude.exe")).find(existsSync);
+      if (native) command = native;
+    }
+    if ([".cmd", ".bat"].includes(extname(command).toLowerCase())) {
+      const wrapper = isAbsolute(command) ? command : dirs.map((dir) => join(dir, command)).find(existsSync);
+      const entry = wrapper && join(dirname(wrapper), "node_modules", "@anthropic-ai", "claude-code", "cli.js");
+      if (!entry || !existsSync(entry)) return { status: null, stdout: "", stderr: "Unsupported or missing Claude wrapper; configure FORGE_CLAUDE_EXECUTABLE to a native executable.", error: new Error("Unsupported Claude wrapper") };
+      command = process.execPath;
+      prefixArgs = [entry];
+    }
+  }
   return spawnSync(command, [...prefixArgs, ...args], {
     cwd,
     env,
     encoding: "utf8",
     windowsHide: true,
+    timeout: 15000,
+    maxBuffer: 16 * 1024 * 1024,
     ...options
   });
 }
@@ -56,6 +73,7 @@ export function preflight(env = process.env, cwd = process.cwd()) {
   if (auth.status !== 0) return { available: false, reason: auth.stderr?.trim() || "Claude Code is not authenticated.", version: versionText };
   try {
     const authentication = JSON.parse(auth.stdout);
+    if (authentication?.loggedIn !== true) return { available: false, reason: "Claude Code is not authenticated.", version: versionText };
     return { available: true, version: versionText, authentication };
   } catch {
     return { available: false, reason: "Claude Code returned invalid authentication JSON.", version: versionText };
@@ -105,12 +123,13 @@ export function main(argv = process.argv.slice(2), env = process.env, cwd = proc
   if (!existsSync(promptFile)) throw new Error(`Prompt file does not exist: ${promptFile}`);
   const prompt = readFileSync(promptFile, "utf8");
   const timeout = Number.parseInt(env.FORGE_ROLE_TIMEOUT_MS || "900000", 10);
+  if (!Number.isFinite(timeout) || timeout <= 0) throw new Error("FORGE_ROLE_TIMEOUT_MS must be positive and finite.");
   const result = runClaude(buildClaudeArgs(options.model, options.effort), env, cwd, { input: prompt, timeout });
   const timedOut = result.error?.code === "ETIMEDOUT";
   let parsed = null;
   let validOutput = false;
   if (!timedOut && result.status === 0) {
-    try { parsed = JSON.parse(result.stdout); validOutput = true; } catch { validOutput = false; }
+    try { parsed = JSON.parse(result.stdout); validOutput = parsed !== null && typeof parsed === "object" && parsed.is_error !== true && typeof parsed.result === "string" && parsed.result.trim().length > 0; } catch { validOutput = false; }
   }
   const exitCode = timedOut ? 124 : (result.status ?? 1);
   json({
@@ -125,7 +144,7 @@ export function main(argv = process.argv.slice(2), env = process.env, cwd = proc
     session_persistence: false,
     read_only: true,
     nested_agents: false,
-    started: true,
+    started: !result.error || timedOut,
     timed_out: timedOut,
     valid_output: validOutput,
     exit_code: exitCode,

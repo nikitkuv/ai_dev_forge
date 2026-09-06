@@ -5,6 +5,8 @@ description: Use when a consumer repository already contains an older AI Develop
 
 # Migrate the Framework
 
+The Python automation bundle `.ai/tools/` is framework-owned. Preserve project-owned `.ai/local/` caches/logs/metrics and unknown lock fields; exclude local artifacts from render inputs. Do not install Python, enable command reuse, or create bounded Task Start grants implicitly. Use the deterministic preview/apply flow after the framework replacement when available. Incompatible legacy fingerprints require fresh evidence, not relabeling. Preserve and report retired generated outputs for a separately reviewed removal. Keep existing runtime settings and manual workflow support.
+
 ## Establish a recoverable baseline
 
 1. Read `.ai-next/MIGRATE.md` in full and verify that active `.ai/` and staged `.ai-next/` are distinct, complete bundles.

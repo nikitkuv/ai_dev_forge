@@ -5,12 +5,22 @@ description: Execute one approved Forge TASK through its fast or standard delive
 
 # Run One TASK
 
+## Mechanical work and compact evidence
+
+Use `python .ai/tools/forge.py fingerprint <explicit-files>` for whole/production surfaces, and `section` to read only the selected TASK/plan sections. Include additions/deletions and relevant dependencies; a file hash is not proof that scope is complete. Preserve base revision and reproducible Git diffs separately. New fingerprint algorithms invalidate incompatible old evidence.
+
+Execute approved command packets through `checks <packet.json> --execute`; use `--reuse` only for approved deterministic Task checks with complete input closure, matching runtime/environment/commands and no external mutable state. Reuse revalidates command evidence, never the independent fast assurance, standard review/test-integrity judgment, RED failure requirement or acceptance. Epic Validation always executes afresh. Do not call a model just to run commands or summarize success. Persist compact command results/fingerprints in TASK; raw logs remain local. Read `.ai/tools/USAGE.md` for packet fields. Record available actual usage via `metrics-record`; missing token counts remain unknown.
+
+For external planner/reviewer transport prefer `forge.py role` with the active orchestrator, role and secure prompt path; it resolves the existing route and performs one bounded preflight internally. Do not execute a separate preflight and then repeat it inside the launcher. Legacy launcher paths below remain the compatibility transport if Python is unavailable. A started failure never changes provider or transport automatically.
+
 ## Start the TASK
+
+Native generated agents already receive their neutral instructions; do not duplicate the role contract in their assignment. External role prompts include that contract exactly once. This preserves identical effective instructions while avoiding repeated input tokens.
 
 1. Require `definition_status: approved`, lifecycle `status: TODO`, satisfied dependencies, no unresolved blocker, and no other code-writing TASK in progress.
 2. Resolve the delivery track. Treat a legacy TASK without `delivery_track` as `standard`. Require an approved track and rationale; for `fast`, revalidate bounded scope, reversibility, low risk, unambiguous expected behavior, deterministic focused verification, and absence of every disqualifier in `.ai/framework/contracts.yaml`. Missing, uncertain, stale, or contradictory evidence selects or escalates to `standard` rather than guessing.
 3. Show the TASK goal, scope, acceptance criteria, affected surface, risk flags, delivery track and rationale, Verification Plan, review focus, constraints, and any `external_sources` with their source intent. Do not require connector access for an unlinked TASK.
-4. Obtain explicit Task Start authorization.
+4. Obtain explicit Task Start authorization, or verify an existing user-approved bounded grant using `task-start-check <TASK-path>`. A matching grant covers only this unchanged approved definition and never bypasses dependencies, blockers, eligibility or single-writer checks. Do not ask again for authorization already granted within those boundaries.
 5. Let only the orchestrator transition the TASK to `IN PROGRESS`, record the gate, establish the next implementation revision, and record the track used at start. Standard to fast is forbidden after Task Start.
 
 ## Run common implementation
