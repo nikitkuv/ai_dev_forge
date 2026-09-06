@@ -1,7 +1,7 @@
 schema_version: 2
 framework:
   name: ai-dev-forge
-version: 4.8.0
+version: 4.9.0
 
 platforms:
   codex:
@@ -41,6 +41,15 @@ framework_language: en
 
 git:
   policy: manual
+
+# Python helpers run mechanical work locally. Caches never grant approval.
+automation:
+  authorization:
+    mode: strict  # Or explicitly approved bounded_task_starts.
+    decision_ref: null
+    approved_by: null
+    expires_at: null
+    task_starts: []  # Exact task_path + definition_fingerprint pairs.
 
 # Local integrations are deliberately not configured here. A clean Forge
 # project has no `.ai/integrations/`. When needed, create project-owned

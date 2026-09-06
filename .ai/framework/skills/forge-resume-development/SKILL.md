@@ -7,7 +7,7 @@ description: Recover planned, active, or paused Forge development state after in
 
 ## Reconstruct state from durable evidence
 
-1. Ask `context-collector` to read `BACKLOG.md`, all execution directories, every planned workspace, the active or paused Epic plan and TASK files, relevant ADRs, relevant or unfinished `investigations/INV-*.md`, optional `.ai/integrations/` definitions/state, and Git status and diff.
+1. Run `python .ai/tools/forge.py context` and `validate --project`; consume every metadata page. Read `BACKLOG.md`, the selected active or paused plan, current TASK, relevant Git diff and linked ADR/INV sections. Inventory every planned workspace through metadata; read bodies only for a concrete dependency, eligibility or consistency question. Optional integrations are read only for a relevant consumer. Do not invoke `context-collector` for successful mechanical recovery; use it only for unresolved cross-file interpretation. If Python is unavailable, collect the same bounded inventory with local tools without installing dependencies implicitly.
 2. Treat session history as optional context, never as the source of truth.
 3. Determine:
    - every queued planned workspace in Backlog priority and row order, whether it is still `PLANNED + READY`, and its Epic Start dependencies and blockers;

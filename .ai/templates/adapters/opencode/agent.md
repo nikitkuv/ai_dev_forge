@@ -1,7 +1,7 @@
 ---
-description: "{{ agent.description }}"
+description: {{ agent.description | tojson }}
 mode: subagent
-model: "{{ models.opencode[agent.model_tier].model }}"
+model: {{ models.opencode[agent.model_tier].model | tojson }}
 permission:
   read: allow
   glob: allow

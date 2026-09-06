@@ -27,8 +27,8 @@ test("manifest and contracts expose a lifecycle-independent orchestrator workflo
     read(".ai/framework/contracts.yaml"),
     read(".ai/templates/project.yaml")
   ]);
-  assert.match(manifest, /version: 4\.8\.0/);
-  assert.match(project, /version: 4\.8\.0/);
+  assert.match(manifest, /version: 4\.9\.0/);
+  assert.match(project, /version: 4\.9\.0/);
   assert.match(manifest, /- investigations\//);
   assert.match(manifest, /- forge-investigate/);
   assert.match(contracts, /investigation_outcomes: \[no_action, promoted, fixed_directly, unresolved\]/);

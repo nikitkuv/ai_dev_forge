@@ -1,6 +1,6 @@
 framework:
   name: ai-dev-forge
-  version: 4.8.0
+  version: 4.9.0
   schema_version: 2
 
 adapters: [codex, claude, opencode]
@@ -18,6 +18,7 @@ ownership:
     - .ai/CONVENTIONS.md
     - .ai/framework/
     - .ai/templates/
+    - .ai/tools/
   project_owned_paths:
     - .ai/project.yaml
     - .ai/framework.lock
@@ -34,6 +35,7 @@ ownership:
     - quality/mutation-testing/
     - hooks/
     - mcp/
+    - .ai/local/
   generated_adapter_outputs:
     - AGENTS.md
     - CLAUDE.md
@@ -70,6 +72,8 @@ skills:
 subagents: [context-collector, documentation-researcher, epic-planner, implementer, reviewer, tester, epic-validator, fuzzer, security-auditor, mutation-runner, mutation-analyzer]
 
 role_execution:
+  preferred_python_helper: .ai/tools/forge.py role
+  legacy_launchers: supported_when_python_unavailable
   config_path: role_execution.mode
   roles: [epic-planner, reviewer]
   supported_modes: [claude_with_codex, codex_with_claude, native_subagents]
@@ -104,6 +108,13 @@ role_execution:
       opencode_default_when_primary: true
 
 optional_capabilities:
+  python_automation:
+    supported: true
+    required: false
+    entrypoint: .ai/tools/forge.py
+    minimum_python: "3.11"
+    requirements: .ai/tools/requirements.txt
+    local_artifacts: .ai/local/
   hooks: false
   mcp: false
   cli: false

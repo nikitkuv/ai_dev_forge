@@ -5,6 +5,8 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 
 # Complete an Epic
 
+Use Python fingerprints and `checks` with `stage: epic` to execute the approved aggregate commands and return compact evidence. Epic command reuse is disabled even with `--reuse`. The epic-validator still independently assesses requirement/critical-path coverage and profile gates; a mechanical pass alone cannot complete this skill.
+
 ## Enter Epic Validation
 
 1. Verify every planned TASK is `DONE`; every accepted implementation has current track-specific evidence (fast orchestrator assurance or standard structured review plus selected Task testing); requirement coverage is complete; any work-source coverage matrix has no unexplained gaps or contradictory reverse mappings; the approved Epic Verification Plan contains evidenced commands or explicit blockers; and the approved Epic Fuzzing Plan contains a valid applicability assessment and required evidence.

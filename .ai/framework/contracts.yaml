@@ -1,5 +1,26 @@
 schema_version: 1
 
+python_automation:
+  source: .ai/tools/forge.py
+  required_runtime: false
+  model_free_operations: [inventory, section_extraction, fingerprints, structural_validation, adapter_rendering, approved_command_execution, usage_aggregation]
+  semantic_authority: orchestrator_and_existing_role_contracts
+  unknown_or_incomplete_evidence: requires_inspection
+  context_loading: metadata_first_then_relevant_sections
+  context_collector: unresolved_interpretation_only
+  check_reuse:
+    default: disabled
+    requires: [explicit_opt_in, approved_complete_inputs, unchanged_files_commands_runtime_environment, prior_success, intact_local_logs]
+    forbidden: [epic_validation, external_mutable_state, replacing_test_integrity, replacing_review, inferring_acceptance]
+  local_artifacts: .ai/local/
+  local_artifact_authority: noncanonical
+  task_start_authorization:
+    default: strict
+    optional_mode: bounded_task_starts
+    requires: [explicit_user_decision, approver, future_expiry, exact_task_path, unchanged_definition_fingerprint, ordinary_start_preconditions]
+    grants_only: Task_Start
+    never_grants: [Task_Acceptance, Epic_Start, Epic_Acceptance, Replan, commit, scope_expansion]
+
 integration_contracts:
   source: .ai/framework/integrations/contracts.yaml
   optional_registry: .ai/integrations/

@@ -19,7 +19,7 @@ test("manifest and project template declare OpenCode without adding a route mode
     read(".ai/templates/project.yaml")
   ]);
 
-  assert.match(manifest, /version: 4\.8\.0/);
+  assert.match(manifest, /version: 4\.9\.0/);
   assert.match(manifest, /adapters: \[codex, claude, opencode\]/);
   assert.match(manifest, /- \.opencode\/agents\//);
   assert.match(manifest, /opencode_default_when_primary: true/);

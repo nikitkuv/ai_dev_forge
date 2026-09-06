@@ -29,6 +29,8 @@ Preserve every unlisted adapter entry in place. Do not modify canonical product 
 
 ## Render local adapters
 
+Prefer `python .ai/tools/forge.py adapters --diff`, then `adapters --apply <preview_token>` after reviewing the exact preview. Supply `--approve-collision <path>` only for each explicitly approved collision. The Python renderer loads templates and validates emitted YAML/TOML without model generation; copies complete skill resource trees; preserves unlisted entries; and compares inputs/outputs again before writes. It writes a backup journal and replaces the lock last. After an interrupted transaction, inspect `.ai/local/adapter-transaction/` and use `adapters --recover` before retrying. Retired managed outputs are reported and preserved for separately reviewed migration. Do not install Python implicitly; the manual procedure below remains available when tooling is absent.
+
 Stage one synchronized candidate containing:
 
 - full root `AGENTS.md` from its template plus the shared overlay, and root `CLAUDE.md` containing exactly `@AGENTS.md`;

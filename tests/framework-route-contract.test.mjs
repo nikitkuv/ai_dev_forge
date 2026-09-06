@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("manifest declares the three role-execution modes and both external routes", async () => {
   const manifest = await read(".ai/framework/manifest.yaml");
-  assert.match(manifest, /version: 4\.8\.0/);
+  assert.match(manifest, /version: 4\.9\.0/);
   assert.match(manifest, /roles: \[epic-planner, reviewer\]/);
   assert.match(manifest, /supported_modes: \[claude_with_codex, codex_with_claude, native_subagents\]/);
   assert.match(manifest, /fallback: forbidden/);
