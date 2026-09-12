@@ -25,7 +25,7 @@ The user owns priority and row order. Never reorder silently.
 
 1. Present the exact `BACKLOG.md` diff.
 2. Request explicit user approval.
-3. Update only approved priority, row-order, dependency, and `Blocked by` fields.
+3. Update only approved priority, row-order, dependency, and `Blocked by` fields through `backlog update-row --id <ID> --set Column=Value [--move-before <ID>]` (preview, then apply the reviewed token); the helper changes only named cells, keeps unrelated rows byte-identical, and revalidates project consistency.
 4. Preserve a conflicting user order when requested: keep the affected Epic `PLANNED` and record its blocker.
 5. Revalidate IDs, readiness, dependencies, and the invariant of at most one `ACTIVE` Epic.
 

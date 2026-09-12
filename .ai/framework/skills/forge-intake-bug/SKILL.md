@@ -30,7 +30,7 @@ Investigation before scheduling is read-only with respect to production code and
 ### Defect in previously accepted code
 
 1. Present the defect candidate and request explicit user approval to track it.
-2. Allocate the next global `BUG-NNN`.
+2. Allocate the next global `BUG-NNN` with `next-id --kind bug` and insert the row through `backlog add-bug` (preview, then apply the reviewed token) as `OPEN` with exactly the approved fields.
 3. Add it to the Backlog Defect Queue as `OPEN`.
 4. Record observable problem, impact severity, user-defined priority, related requirement, compact `Research` references for investigations actually used, and no Scheduled TASK yet.
 5. When invoked from approved external-work intake, record compact provider-neutral `Sources` keys and stage reverse provenance; otherwise use `—` and create no integration state.

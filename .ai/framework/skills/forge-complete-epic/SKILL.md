@@ -5,7 +5,7 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 
 # Complete an Epic
 
-Use Python fingerprints and `checks` with `stage: epic` to execute the approved aggregate commands and return compact evidence. Epic command reuse is disabled even with `--reuse`. The epic-validator still independently assesses requirement/critical-path coverage and profile gates; a mechanical pass alone cannot complete this skill.
+Use Python fingerprints and `checks` with `stage: epic` to execute the approved aggregate commands and return compact evidence. Epic command reuse is disabled even with `--reuse`. Gather gate inputs mechanically: `evidence-check --epic <EPIC-ID>` reports all-DONE coverage, final fuzz evidence presence, and the aggregate fingerprint; `transition epic <EPIC-ID> --to <status>` executes each approved Backlog status edit (preview, then apply); `epic-complete <EPIC-ID>` performs the final atomic move to `execution/completed/` with rollback. The epic-validator still independently assesses requirement/critical-path coverage and profile gates; a mechanical pass alone cannot complete this skill.
 
 ## Enter Epic Validation
 

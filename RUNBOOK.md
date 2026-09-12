@@ -2,9 +2,13 @@
 
 ## Локальные операции без вызова модели
 
-Начинайте восстановление с `python .ai/tools/forge.py context`: прочитайте все страницы metadata, затем Backlog и выбранные текущие evidence. `section` извлекает нужные разделы, `fingerprint` хеширует явный scope, `validate --project --adapters` проверяет структуру и drift. Не вызывайте context-collector для успешной механической инвентаризации.
+Начинайте восстановление с `python .ai/tools/forge.py context`: прочитайте все страницы metadata, затем Backlog и выбранные текущие evidence. `section` извлекает нужные разделы, `fingerprint` хеширует явный scope, `validate --project --adapters` проверяет структуру, drift и конформанс (line budget роутера, BOM/frontmatter агентов, ADR parity, plan-order, Workflow State, структуру INV и mutation registry). Не вызывайте context-collector для успешной механической инвентаризации.
 
-Для sync используйте `adapters --diff`, затем применяйте утверждённый preview token. Для проверок — `checks <packet.json> --execute`; reuse требует явного полного dependency scope и не применяется к Epic Validation. `role` выполняет один bounded preflight внутри вызова. Нельзя автоматически сменить provider после ошибки.
+Свежесть evidence не пересчитывается вручную: `evidence-check <TASK-path>` возвращает вердикты review-freshness/testing/fast-assurance и механическую eligibility приёмки, `evidence-check --epic <EPIC-ID>` — готовность Epic gate (all DONE, fuzz evidence, агрегатный fingerprint). `next-id --kind <task|bug|inv|epic|adr|mut>` выделяет идентификаторы без заполнения пробелов.
+
+Для sync используйте `adapters --diff`, затем применяйте утверждённый preview token. Для проверок — `checks <packet.json> --execute` (packet собирается `checks-new`); reuse требует явного полного dependency scope и не применяется к Epic Validation. `role --assignment-file` подставляет нейтральный контракт сам и выполняет один bounded preflight внутри вызова. Нельзя автоматически сменить provider после ошибки.
+
+Статусные правки после принятых решений идут через helpers: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row`, `inv-create`, `commit-scoped`. Все они по умолчанию показывают preview и применяются только по `--apply TOKEN` с journal-откатом; авторизация и приёмка остаются явными решениями пользователя.
 
 При уже выданном bounded Task Start grant выполните `task-start-check <TASK-path>` и проверьте eligibility; повторное согласование той же неизменной задачи не требуется. Приёмка результата и Git gates остаются отдельными. Форматы команд и ограничения: [.ai/tools/USAGE.md](.ai/tools/USAGE.md).
 

@@ -5,7 +5,7 @@ description: Prepare one PLANNED and READY Epic as an approved queued workspace 
 
 # Prepare an Epic
 
-Use Python `context`/`validate` for inventory and ID consistency, and `section` for relevant source excerpts; do not delegate mechanical collection to a model. Pass the planner one bounded assignment with authoritative relevant context and the complete role contract. For external routes prefer `python .ai/tools/forge.py role --orchestrator <active> --role epic-planner --prompt-file <path>`; its single internal preflight replaces the separate preflight/legacy-launcher sequence below. Never switch transport after a started failure. Reuse current INV research and avoid duplicating unrelated backlog/task bodies in the prompt.
+Use Python `context`/`validate` for inventory and ID consistency, and `section` for relevant source excerpts; do not delegate mechanical collection to a model. Allocate project-global TASK identifiers with `next-id --kind task`. Pass the planner one bounded assignment with authoritative relevant context; for external routes prefer `python .ai/tools/forge.py role --orchestrator <active> --role epic-planner --assignment-file <path>` — the helper embeds the complete neutral contract itself, so only the assignment passes through orchestrator context. Its single internal preflight replaces the separate preflight/legacy-launcher sequence below. Never switch transport after a started failure. Reuse current INV research and avoid duplicating unrelated backlog/task bodies in the prompt.
 
 ## Verify eligibility
 
@@ -43,12 +43,12 @@ Multiple planned workspaces may coexist. Their queue order remains the user-defi
 
 Epic Start may occur immediately or later. Before requesting it, require satisfied dependencies, empty `Blocked by`, no other nonterminal active-work Epic, and an unchanged approved planned workspace.
 
-After explicit Epic Start authorization:
+After explicit Epic Start authorization, execute the whole transition through `python .ai/tools/forge.py epic-start <EPIC-ID>` (preview, then apply the reviewed token). The helper:
 
-1. move `execution/planned/EPIC-NNN-<short-name>/` to `execution/active/`;
-2. transition only that Epic from `PLANNED` to `ACTIVE` in `BACKLOG.md`;
-3. validate the Backlog and execution tree as one logical state transition;
-4. on failure, restore the complete workspace under `execution/planned/` and the Backlog status to `PLANNED`.
+1. moves `execution/planned/EPIC-NNN-<short-name>/` to `execution/active/`;
+2. transitions only that Epic from `PLANNED` to `ACTIVE` in `BACKLOG.md`;
+3. validates the Backlog and execution tree as one logical state transition;
+4. on failure, restores the complete workspace under `execution/planned/` and the Backlog status to `PLANNED`.
 
 Plan Approval and Epic Start are separate gates. One user message may grant both only when it clearly states both decisions.
 

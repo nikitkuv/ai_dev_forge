@@ -7,6 +7,10 @@ description: Record explicit user acceptance for a verified Forge TASK, close an
 
 ## Verify acceptance eligibility
 
+Run `python .ai/tools/forge.py evidence-check <TASK-path>` for the mechanical part: status, delivery track, recorded fingerprints versus the current whole/production sets, and Epic gate inputs. Treat `insufficient`/`stale` verdicts as blockers; `mechanically_eligible` still requires the judgment checks below.
+
+1. Require lifecycle `status: AWAITING USER ACCEPTANCE`.
+
 1. Require lifecycle `status: AWAITING USER ACCEPTANCE`.
 2. Resolve the recorded delivery track, treating a legacy TASK without the field as `standard`.
 3. For `fast`, require a current `PASSED` Fast Assurance Summary whose assurance fingerprint exactly matches the current whole implementation; confirm eligibility was revalidated against the actual surface and the orchestrator executed or reproduced every selected check. Stale, incomplete, failed, or disqualified fast evidence is ineligible for acceptance and escalates to standard.
@@ -18,7 +22,7 @@ If the user requests changes, record the feedback and return the TASK to `IN PRO
 
 ## Record completion
 
-After explicit acceptance:
+After explicit acceptance, record it through `accept-record <TASK-path> --by <user> --decision-ref <decision> [--notes ...] [--resolve-bug BUG-NNN]` (preview, then apply the reviewed token): it appends the acceptance facts, transitions only that TASK to `DONE`, and resolves the linked `SCHEDULED` Bug only as an explicit input. It refuses missing decision facts and never infers acceptance. Equivalent manual edits remain the fallback.
 
 1. record the user decision, accepting user or role, date, notes, and final revision/fingerprint in the TASK's User Acceptance and Iteration History;
 2. transition only that TASK to `DONE`;
@@ -29,7 +33,7 @@ After explicit acceptance:
 
 ## Apply Git policy
 
-Read `git.policy` from `.ai/project.yaml`.
+Read `git.policy` from `.ai/project.yaml`. Execute the commit through `commit-scoped <TASK-path>`: it stages exactly the recorded scope, reports unrelated changes it excludes, and commits only under `auto_commit_after_acceptance` with explicit authorization and a `DONE` status. Under `manual` it prints the exact staged set and proposed message and performs no commit.
 
 The commit gate follows Task Acceptance; it never precedes or constitutes user acceptance. Do not commit the TASK while it is awaiting acceptance.
 
