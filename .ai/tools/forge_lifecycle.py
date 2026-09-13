@@ -17,7 +17,7 @@ from forge_core import (ForgeError, Transaction, atomic_replace, backlog_rows, c
                         frontmatter, git_capture, inventory, load_yaml, sections, snapshot, table_rows, text,
                         within, workflow_state, yaml_value)
 
-ID_FORMATS = {"task": ("TASK-", 3), "bug": ("BUG-", 3), "inv": ("INV-", 4),
+ID_FORMATS = {"task": ("TASK-", 3), "bug": ("BUG-", 3), "inv": ("INV-", 4), "int": ("INT-", 4),
               "epic": ("EPIC-", 3), "adr": ("ADR-", 3), "mut": ("MUT-", 4)}
 
 # Values that mean "not recorded yet"; they never satisfy a mechanical comparison.
@@ -70,7 +70,17 @@ def next_id(root, kind):
         base = within(root, "investigations")
         if base.exists():
             for path in sorted(base.glob("INV-*.md")):
-                found[path.stem] = path.relative_to(Path(root).resolve()).as_posix()
+                match = re.match(r"INV-\d+", path.stem)
+                if match:
+                    found[match.group(0)] = path.relative_to(Path(root).resolve()).as_posix()
+    elif kind == "int":
+        sources = ["intents/"]
+        base = within(root, "intents")
+        if base.exists():
+            for path in sorted(base.glob("INT-*.md")):
+                match = re.match(r"INT-\d+", path.stem)
+                if match:
+                    found[match.group(0)] = path.relative_to(Path(root).resolve()).as_posix()
     elif kind == "adr":
         sources = ["decisions/", "DECISIONS.md"]
         base = within(root, "decisions")

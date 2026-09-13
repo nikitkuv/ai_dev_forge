@@ -18,10 +18,10 @@ The user controls `P0`–`P3` priority and row order within each priority. The a
 
 ## Epic Roadmap
 
-| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| EPIC-001 | <Name — observable outcome> | <FR-/NFR-/BR-IDs or `TBD` while OUTLINE> | <provider-neutral source keys or —> | <INV-NNNN or —> | P0 | READY | — | PLANNED | — |
-| EPIC-002 | <Name — observable outcome> | TBD | — | — | P1 | OUTLINE | EPIC-001 | PLANNED | EPIC-001 |
+| ID | Epic and intended outcome | Requirements | Sources | Research | Intent | Priority | Readiness | Dependencies | Status | Blocked by |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| EPIC-001 | <Name — observable outcome> | <FR-/NFR-/BR-IDs or `TBD` while OUTLINE> | <provider-neutral source keys or —> | <INV-NNNN or —> | <INT-NNNN or —> | P0 | READY | — | PLANNED | — |
+| EPIC-002 | <Name — observable outcome> | TBD | — | — | — | P1 | OUTLINE | EPIC-001 | PLANNED | EPIC-001 |
 
 Readiness and lifecycle values are defined only in `.ai/framework/contracts.yaml`. An `OUTLINE` Epic cannot receive an approved detailed workspace. A `PLANNED + READY` Epic may have one approved workspace under `execution/planned/` even while its declared dependencies or blockers prevent activation. At most one Epic may occupy the nonterminal active-work states `ACTIVE`, `VALIDATING`, `FUZZING`, or `AWAITING EPIC ACCEPTANCE`.
 
@@ -37,3 +37,5 @@ Severity describes impact; user priority controls repair order. Defect lifecycle
 `Sources` is optional and contains compact references only for approved work originating from a configured `work_source`. It never controls priority, readiness, status, acceptance, or completion. Existing Backlogs without the column remain valid until a separately approved canonical-schema migration adds it.
 
 `Research` is optional and contains `INV-NNNN` references used to understand or plan the work. It never controls lifecycle state or approval. Existing Backlogs without the column remain valid.
+
+`Intent` is optional and contains the single `INT-NNNN` product-request record the Epic originated from. It never controls priority, readiness, status, or approval. Existing Backlogs without the column remain valid.

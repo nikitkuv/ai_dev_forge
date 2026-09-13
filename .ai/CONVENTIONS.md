@@ -6,7 +6,7 @@ This document is the human-readable companion to the machine-readable framework 
 
 ## Naming and global identifiers
 
-Identifiers are globally unique within a project. Epic, Task, Bug, and Decision IDs are zero-padded to three digits; investigation and independent mutation-run IDs are zero-padded to at least four digits. Allocate each entity type independently by taking its maximum existing ID and adding one; do not fill gaps. Task numbering is project-global and never restarts for an Epic. Never reuse an ID that was deleted, cancelled, skipped, or otherwise retired:
+Identifiers are globally unique within a project. Epic, Task, Bug, and Decision IDs are zero-padded to three digits; investigation, intent, and independent mutation-run IDs are zero-padded to at least four digits. Allocate each entity type independently by taking its maximum existing ID and adding one; do not fill gaps. Task numbering is project-global and never restarts for an Epic. Never reuse an ID that was deleted, cancelled, skipped, or otherwise retired:
 
 | Entity | Identifier | Canonical location |
 | --- | --- | --- |
@@ -15,6 +15,7 @@ Identifiers are globally unique within a project. Epic, Task, Bug, and Decision 
 | Bug | `BUG-001` | `BACKLOG.md` |
 | Decision | `ADR-001` | `decisions/ADR-001-<short-name>.md` |
 | Investigation | `INV-0001` | `investigations/INV-0001-<short-name>.md` |
+| Intent | `INT-0001` | `intents/INT-0001-<short-name>.md` |
 | Mutation run | `MUT-0001` | `quality/mutation-testing/runs/MUT-0001.yaml` |
 
 `<short-name>` is stable, lowercase kebab-case, and one to four words. An Epic folder name must match its Epic name in `BACKLOG.md`; each Task belongs to exactly one Epic.
@@ -33,6 +34,7 @@ project/
 |- decisions/
 |- execution/{planned,active,paused,completed}/
 |- investigations/                 # optional project-owned ad hoc research history
+|- intents/                        # optional project-owned product request history
 |- .ai/{project.yaml,framework.lock,custom/}
 |- .ai/integrations/                 # optional, project-owned, absent by default
 |- quality/mutation-testing/         # optional, project-owned, created on first requested run
@@ -54,6 +56,7 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Project-owned state and customizations: `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `.ai/integrations/`, canonical documents, decisions, execution state, and project-specific hooks, MCP, APIs, or CLIs.
 - Independent mutation history under `quality/mutation-testing/` is optional project-owned state. Bootstrap and adapter synchronization do not create or overwrite it.
 - Ad hoc investigation history under `investigations/` is optional project-owned canonical evidence. Framework installation provides only the template and never creates synthetic `INV-*` records.
+- Product request history under `intents/` is optional project-owned canonical evidence. Framework installation provides only the template and never creates synthetic `INT-*` records.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, `.agents/`, and `.opencode/agents/`. Unlisted entries remain project-owned; `opencode.json` and `.opencode/commands/`, `plugins/`, and `skills/` are never generated.
 
 Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router shared by Codex and OpenCode; `CLAUDE.md` contains only `@AGENTS.md`. OpenCode discovers Forge skills from `.agents/skills/`, so Forge creates no duplicate `.opencode/skills/`. Do not edit managed outputs manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
@@ -69,6 +72,14 @@ Definitions use `.ai/framework/integrations/contracts.yaml`. They describe provi
 Framework upgrades preserve unknown profiles, definitions, state, and project-owned consumers. Unsupported or malformed integrations block only their consumers unless they collide with a framework-owned path or violate repository safety. Local integration content is not a managed adapter input and its normal changes are not framework drift.
 
 Forge lifecycle behavior comes only from bundled Forge skills, `.ai/framework/contracts.yaml`, and generated agent definitions. External process skills may not introduce additional lifecycle gates, canonical or report artifacts, status transitions, agent routing, or Git actions.
+
+## Intent records
+
+Material feature, product-change, and external-work requests are captured as one `intents/INT-NNNN-<short-name>.md` record derived from `.ai/templates/INTENT.md`. Intake reserves the identifier as its first durable action, fills the bounded template through a proportionate interview, and confirms the assembled record with the user before Backlog retention. Approved criteria exist only in `SPEC.md`; implementation strategy exists only in the Epic plan.
+
+Every INT records exactly one current outcome: `draft`, `accepted`, `promoted`, `rejected`, `deferred`, or `superseded`, with transitions kept in outcome history. Rejected and deferred requests are retained with rationale and create no Backlog row; a repeat request surfaces the prior record before a new one is created. Records are never deleted.
+
+Intent records are evidence history, not target product truth and not lifecycle state: they never control priority, readiness, status, acceptance, or commit permission. Epic preparation reads a linked INT as a primary input alongside `SPEC.md`, and material open questions block `OUTLINE → READY`.
 
 ## Ad hoc investigations
 
@@ -107,6 +118,7 @@ Each kind of information has one canonical owner:
 - File history: Git.
 - Local integration definitions and reverse source mappings: optional `.ai/integrations/`; Forge lifecycle and acceptance remain owned by Backlog, plans, and TASK files.
 - Independent mutation-test history: optional `quality/mutation-testing/`; it may reference later approved work but never owns or changes that work's state.
+- Product request history and outcomes: optional `intents/`; it links to approved work but never owns requirement criteria, lifecycle state, or acceptance.
 
 Do not create separate progress, report, checkpoint, user-validation, security, research, or fuzzing Markdown files. Keep document approval status separate from lifecycle status. If source documents disagree, report the inconsistency instead of silently reconciling it.
 

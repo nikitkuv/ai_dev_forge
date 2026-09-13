@@ -45,6 +45,53 @@ enums:
   mutation_run_outcomes: [COMPLETED, PARTIAL, INCONCLUSIVE, "SETUP REQUIRED", BLOCKED, CANCELLED]
   mutation_analysis_statuses: [not_requested, skipped_no_candidates, completed, partial, blocked, stale]
   investigation_outcomes: [no_action, promoted, fixed_directly, unresolved]
+  intent_outcomes: [draft, accepted, promoted, rejected, deferred, superseded]
+  intent_origins: [conversation, external-work]
+
+intent_records:
+  invocation: intake_driven
+  execution_owner: orchestrator
+  creation: direct_orchestrator_write_after_next_id
+  materiality_bar: request_may_affect_spec_architecture_or_epic_scope
+  record:
+    id_format: INT-NNNN
+    path_glob: intents/INT-*.md
+    allocate_from_prior_maximum: true
+    create_as_first_durable_intake_action: true
+    bounded_one_page: true
+    required_frontmatter: [document_type, id, subject, area, origin, outcome, created_at, updated_at, author, promoted_to, sources, research_refs]
+    required_sections: [Problem and Motivation, Proposed Outcome, Affected Users and Systems, Constraints, Considered Alternatives, Open Questions, Outcome History]
+    user_words_preferred: true
+  outcomes:
+    draft:
+      requires: [allocated_id, started_template_sections]
+    accepted:
+      requires: [confirmed_by_user, no_material_open_question_before_ready]
+    promoted:
+      requires: [approved_epic_or_bug_reference]
+    rejected:
+      requires: [short_rationale, no_backlog_row]
+    deferred:
+      requires: [reason]
+    superseded:
+      requires: [superseding_intent_or_work_reference]
+  retention:
+    deletion: forbidden
+    rejected_and_deferred_retained: true
+    repeat_request: check_prior_intents_and_surface_rationale_first
+  planning_reuse:
+    primary_input_with_spec: true
+    discover_by: [subject, area, relevant_outcome]
+    open_questions_block_readiness: true
+  boundaries:
+    lifecycle_state_control: forbidden
+    priority_or_readiness_control: forbidden
+    spec_criteria_duplication: forbidden
+    implementation_strategy_duplication: forbidden
+  development_effects:
+    automatic_bug_epic_task_or_replan: forbidden
+    lifecycle_status_changes: forbidden
+    gate_satisfaction: forbidden
 
 ad_hoc_investigations:
   invocation: explicit_user_request

@@ -14,6 +14,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / ".ai/tools"))
 import forge
@@ -460,7 +462,7 @@ class LifecycleTests(Repository):
 
     def test_next_id_inv_does_not_fill_gaps(self):
         self.write("investigations/INV-0001.md", "---\nid: INV-0001\noutcome: unresolved\n---\n")
-        self.write("investigations/INV-0003.md", "---\nid: INV-0003\noutcome: no_action\n---\n")
+        self.write("investigations/INV-0003-slow-start.md", "---\nid: INV-0003\noutcome: no_action\n---\n")
         result = lifecycle.next_id(self.root, "inv")
         self.assertEqual(result["next_id"], "INV-0004")
         self.assertEqual(result["current_max"], "INV-0003")
@@ -477,6 +479,15 @@ class LifecycleTests(Repository):
         self.write("quality/mutation-testing/registry.yaml",
                    "schema_version: 1\nnext_id: MUT-0005\nruns: [{id: MUT-0007}]\n")
         self.assertEqual(lifecycle.next_id(self.root, "mut")["next_id"], "MUT-0008")
+
+    def test_next_id_int_monotonic_and_never_reused(self):
+        self.assertEqual(lifecycle.next_id(self.root, "int")["next_id"], "INT-0001")
+        self.write("intents/INT-0001-exports.md", "---\ndocument_type: intent\nid: INT-0001\noutcome: draft\n---\n# INT\n")
+        self.assertEqual(lifecycle.next_id(self.root, "int")["next_id"], "INT-0002")
+        self.write("intents/INT-0004-archived-idea.md", "---\ndocument_type: intent\nid: INT-0004\noutcome: rejected\n---\n# INT\n")
+        result = lifecycle.next_id(self.root, "int")
+        self.assertEqual(result["next_id"], "INT-0005")
+        self.assertEqual(result["current_max"], "INT-0004")
 
     def test_evidence_check_supporting_only_change_keeps_review_fresh(self):
         self.seed_backlog()
@@ -682,6 +693,58 @@ class ConformanceTests(Repository):
         self.assertIn("missing frontmatter field baseline_revision", errors)
         self.assertIn("Investigation missing section Question", errors)
 
+    def write_intent(self, path="intents/INT-0001-exports.md", **overrides):
+        front = {"document_type": "intent", "id": "INT-0001", "subject": "Data export",
+                 "area": "backend", "origin": "conversation", "outcome": "accepted",
+                 "created_at": "2026-09-12", "updated_at": "2026-09-12", "author": "user",
+                 "promoted_to": None, "sources": [], "research_refs": []}
+        front.update(overrides)
+        headings = ["Problem and Motivation", "Proposed Outcome", "Affected Users and Systems",
+                    "Constraints", "Considered Alternatives", "Open Questions", "Outcome History"]
+        body = "---\n" + yaml.safe_dump(front, sort_keys=True).rstrip("\n") + "\n---\n\n# INT — Data export\n\n"
+        body += "".join(f"## {heading}\n\ncontent\n\n" for heading in headings)
+        return self.write(path, body)
+
+    def test_intent_required_fields_sections_and_enums(self):
+        self.consumer(False)
+        self.write("intents/INT-0001-broken.md",
+                   "---\ndocument_type: intent\nid: INT-0001\noutcome: discarded\norigin: email\n---\n# INT\n")
+        errors = " ".join(self.consumer_errors())
+        self.assertIn("missing frontmatter field subject", errors)
+        self.assertIn("missing frontmatter field author", errors)
+        self.assertIn("Intent missing section Problem and Motivation", errors)
+        self.assertIn("Invalid intent outcome", errors)
+        self.assertIn("Invalid intent origin", errors)
+
+    def test_intent_valid_record_with_resolvable_references_passes(self):
+        self.consumer(False)
+        self.write("BACKLOG.md", "## Epic Roadmap\n| ID | Priority | Readiness | Status | Dependencies | Blocked by |\n| --- | --- | --- | --- | --- | --- |\n| EPIC-001 | P0 | READY | PLANNED | — | — |\n")
+        self.write("investigations/INV-0001-slow-export.md",
+                   "---\ndocument_type: investigation\nid: INV-0001\nsubject: Slow export\narea: backend\n"
+                   "outcome: unresolved\ncreated_at: 2026-09-12\nupdated_at: 2026-09-12\n"
+                   "baseline_revision: HEAD\nrelevant_paths: []\nresearch_refs: []\n---\n# INV\n\n"
+                   + "".join(f"## {heading}\n\ncontent\n\n" for heading in [
+                       "Question", "Scope", "Investigation", "Evidence", "Causes",
+                       "Conclusion", "Next Action", "Linked Work", "Outcome History"]))
+        self.write_intent(promoted_to="EPIC-001", research_refs=["INV-0001"])
+        self.assertEqual(self.consumer_errors(), [])
+
+    def test_intent_promoted_to_and_research_refs_must_resolve(self):
+        self.consumer(False)
+        self.write_intent(promoted_to="EPIC-009", research_refs=["INV-0007"])
+        errors = " ".join(self.consumer_errors())
+        self.assertIn("Intent promoted_to target missing", errors)
+        self.assertIn("Intent research_refs target missing: INV-0007", errors)
+
+    def test_intent_oversized_record_is_advisory_only(self):
+        self.consumer(False)
+        path = self.write_intent()
+        self.consumer_errors()
+        path.write_text(path.read_text(encoding="utf-8") + "x" * 6500, encoding="utf-8")
+        result = core.validate(self.root, True)
+        self.assertTrue(result["passed"])
+        self.assertIn("one-page bound", " ".join(result["advisory"]))
+
 
 class MutationTests(Repository):
     def seeded(self, plan_status="approved", backlog_rows_extra="", task_status="TODO", active=False):
@@ -729,8 +792,12 @@ class MutationTests(Repository):
         self.assertIn('subject: "Slow login"', content)
         self.assertIn("src/login.py", content)
         self.assertIn("no Git repository; working tree only", content)
-        with self.assertRaisesRegex(core.ForgeError, "already exists"):
-            lifecycle.inv_create(self.root, "Slow login", "auth")
+        second = lifecycle.inv_create(self.root, "Slow login", "auth")
+        self.assertTrue(second["changes"][0]["new_file"])
+        self.assertIn("INV-0002", second["changes"][0]["path"])
+        with patch.object(lifecycle, "next_id", return_value={"next_id": "INV-0001"}):
+            with self.assertRaisesRegex(core.ForgeError, "already exists"):
+                lifecycle.inv_create(self.root, "Slow login", "auth")
 
     def test_backlog_add_bug_preserves_unrelated_bytes_and_escapes_pipes(self):
         self.seeded(backlog_rows_extra="| EPIC-002 | Other | TBD | — | — | P1 | OUTLINE | — | PLANNED | — |")

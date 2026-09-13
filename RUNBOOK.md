@@ -97,7 +97,7 @@ Skill `forge-resume-development` определяет:
 
 Для локальной capability проект вручную добавляет definition по `.ai/templates/integration.yaml` и отдельно настраивает MCP/API/CLI. Definition содержит profile, semantic operations, scope, access policy, consumers и platform bindings, но не credentials. Интеграция вызывается только явно выбранным совместимым skill.
 
-Для доски задач используется profile `work_source` и skill `forge-intake-external-work`. Запрос может назвать тикет или попросить прочитать configured queue. Агент показывает retrieval boundary, классификацию и split/combine proposal, затем использует обычные feature/bug/Replan/Plan Approval gates. Связи с Epic/Bug/Task записываются только после approval; доска не становится lifecycle authority и не изменяется.
+Для доски задач используется profile `work_source` и skill `forge-intake-external-work`. Запрос может назвать тикет или попросить прочитать configured queue. Агент показывает retrieval boundary, классификацию и split/combine proposal. Каждый product-change кандидат фиксируется intent-записью (`origin: external-work`, source keys в `sources`) до canonical-изменений; отвергнутые кандидаты остаются `rejected` INT с rationale без Epic. Затем используются обычные feature/bug/Replan/Plan Approval gates, а feature intake завершает уже созданную запись вместо новой. Связи с Epic/Bug/Task записываются только после approval; доска не становится lifecycle authority и не изменяется.
 
 Knowledge/data/analysis/custom profiles используют тот же registry, но не получают `EPIC/BUG/TASK` links. Полные примеры: [docs/local-integrations.md](docs/local-integrations.md).
 
@@ -111,12 +111,16 @@ Knowledge/data/analysis/custom profiles используют тот же registr
 
 Skill `forge-intake-feature`:
 
-1. уточняет target behavior;
-2. после подтверждения создаёт `PLANNED/OUTLINE` Epic;
-3. показывает SPEC diff;
-4. при необходимости показывает ARCHITECTURE/ADR diff;
-5. переводит Epic в `READY` только после утверждения requirements, boundaries и dependencies;
-6. не изменяет active work без Replan.
+1. резервирует `INT-NNNN` и пишет черновик `intents/INT-NNNN-<name>.md` первым durable-действием — запрос переживает потерю сессии с первых минут;
+2. дозаполняет шаблон (проблема, outcome, затронутые системы, ограничения, альтернативы, открытые вопросы) через короткое интервью и показывает собранную запись на подтверждение;
+3. уточняет target behavior;
+4. после подтверждения создаёт `PLANNED/OUTLINE` Epic со ссылкой на INT в опциональной колонке `Intent`;
+5. показывает SPEC diff;
+6. при необходимости показывает ARCHITECTURE/ADR diff;
+7. переводит Epic в `READY` только после утверждения requirements, boundaries и dependencies и отсутствия материальных открытых вопросов в INT;
+8. не изменяет active work без Replan.
+
+Отвергнутая или отложенная идея остаётся INT-записью с rationale (`outcome: rejected`/`deferred`) без создания Epic; похожий повторный запрос сначала поднимает прежнюю запись. Записи не удаляются.
 
 Новая функция не добавляется незаметно в TASK, которую пользователь тестирует вручную.
 

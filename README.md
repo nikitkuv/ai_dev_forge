@@ -46,6 +46,7 @@ BACKLOG.md
 DECISIONS.md
 decisions/ADR-NNN-<name>.md
 investigations/INV-NNNN-<name>.md
+intents/INT-NNNN-<name>.md
 execution/{planned,active,paused,completed}/
 .ai/
 .codex/agents/
@@ -150,6 +151,12 @@ Kaiten — только пример `work_source`. Для такого profile 
 Feature discovery, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Для исследования вне Backlog используется отдельный `forge-investigate`; внешние process skills не управляют lifecycle проекта.
 
 Mutation backend не входит в обязательные зависимости. Проект отдельно настраивает подтверждённую команду для своего языка; отсутствие backend не мешает bootstrap, adapter sync, migration или обычной разработке и даёт `SETUP REQUIRED` только при явном mutation-запросе.
+
+## Intent records
+
+Материальные запросы новых фич, продуктовых изменений и external work фиксируются intent-записью `intents/INT-NNNN-<name>.md` по bounded-шаблону: intake резервирует ID первым durable-действием, дозаполняет шаблон через короткое интервью и подтверждает запись у пользователя до создания Epic. Запись хранит мотивацию словами пользователя, предлагаемый outcome, ограничения, отвергнутые альтернативы и открытые вопросы — утверждённые критерии остаются только в `SPEC.md`.
+
+Каждый INT имеет один текущий outcome (`draft/accepted/promoted/rejected/deferred/superseded`). Отвергнутые и отложенные идеи сохраняются с rationale и не создают Epic; записи не удаляются. Backlog ссылается на исходный INT опциональной колонкой `Intent`, `forge-prepare-epic` читает его как первичный вход вместе со SPEC, а материальные открытые вопросы блокируют `OUTLINE → READY`. Баги и bootstrap intent-записей не создают.
 
 ## Ad hoc исследования
 

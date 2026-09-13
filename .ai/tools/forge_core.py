@@ -303,7 +303,7 @@ def section(root, name, heading=None, offset=0, limit=12000):
 
 
 def inventory(root, include_completed=False):
-    roots = ["execution/planned", "execution/active", "execution/paused", "investigations"]
+    roots = ["execution/planned", "execution/active", "execution/paused", "investigations", "intents"]
     if include_completed:
         roots.append("execution/completed")
     records, errors = [], []
@@ -326,7 +326,8 @@ def inventory(root, include_completed=False):
                     content = text(root, path)
                     meta = frontmatter(content)
                     fields = ("id", "epic_id", "document_type", "document_status", "definition_status", "status",
-                              "delivery_track", "blocked_by", "research_refs", "outcome", "subject", "area", "relevant_paths")
+                              "delivery_track", "blocked_by", "research_refs", "outcome", "subject", "area",
+                              "relevant_paths", "origin", "promoted_to", "sources")
                     record = {"path": path, "sha256": digest(content.encode()),
                               "metadata": {key: meta[key] for key in fields if key in meta}}
                     records.append(record)
@@ -534,11 +535,23 @@ def record_structure_errors(root, record, contracts):
         for heading in record_contract["required_sections"]:
             if heading not in headings:
                 errors.append(f"Investigation missing section {heading}: {path}")
+    if meta.get("document_type") == "intent":
+        record_contract = contracts["intent_records"]["record"]
+        content = text(root, path)
+        full = frontmatter(content)
+        for field in record_contract["required_frontmatter"]:
+            if field not in full:
+                errors.append(f"Intent missing frontmatter field {field}: {path}")
+        headings = {value["heading"] for value in sections(content)}
+        for heading in record_contract["required_sections"]:
+            if heading not in headings:
+                errors.append(f"Intent missing section {heading}: {path}")
     return errors
 
 
 def validate(root, project=False):
     errors = []
+    advisory = []
     manifest = load_yaml(root, ".ai/framework/manifest.yaml")
     contracts = load_yaml(root, ".ai/framework/contracts.yaml")
     for category, directory, suffix in (("subagents", "agents", ".yaml"), ("skills", "skills", "/SKILL.md")):
@@ -605,6 +618,11 @@ def validate(root, project=False):
                     errors.append(f"Task identity/workspace mismatch: {path}")
             if meta.get("document_type") == "investigation" and meta.get("outcome") not in contracts["enums"]["investigation_outcomes"]:
                 errors.append(f"Invalid investigation outcome: {path}")
+            if meta.get("document_type") == "intent":
+                if meta.get("outcome") not in contracts["enums"]["intent_outcomes"]:
+                    errors.append(f"Invalid intent outcome: {path}")
+                if meta.get("origin") not in contracts["enums"]["intent_origins"]:
+                    errors.append(f"Invalid intent origin: {path}")
             try:
                 errors.extend(record_structure_errors(root, record, contracts))
             except (OSError, ForgeError) as exc:
@@ -614,7 +632,27 @@ def validate(root, project=False):
         for epic, row in roadmap.items():
             if row["Status"] in active | {"PAUSED", "COMPLETED"} and epic not in epics:
                 errors.append(f"Missing Epic workspace: {epic}")
-    return {"passed": not errors, "errors": errors,
+        bug_ids = {row["ID"].strip("`") for row in defect_rows(root)}
+        investigation_base = within(root, "investigations")
+        for record in records:
+            meta, path = record["metadata"], record["path"]
+            if meta.get("document_type") != "intent":
+                continue
+            target = meta.get("promoted_to")
+            if isinstance(target, str) and target.strip() and target not in roadmap and target not in bug_ids:
+                errors.append(f"Intent promoted_to target missing: {path}")
+            for ref in meta.get("research_refs") or []:
+                if not isinstance(ref, str) or not ref.startswith("INV-"):
+                    continue
+                known = investigation_base.exists() and any(investigation_base.glob(f"{ref}-*.md"))
+                if not known:
+                    errors.append(f"Intent research_refs target missing: {ref} in {path}")
+            try:
+                if len(text(root, path)) > 6000:
+                    advisory.append(f"Intent record exceeds the one-page bound: {path}")
+            except (OSError, ForgeError):
+                pass
+    return {"passed": not errors, "errors": errors, "advisory": advisory,
             "coverage": "manifest IDs and source syntax" + (", lifecycle inventory, Backlog consistency, and structural conformance" if project else ""),
             "requires_judgment": ["scope and permissions", "test integrity and coverage", "review protocol and evidence freshness", "integration and mutation semantics"]}
 

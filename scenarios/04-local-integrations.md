@@ -22,7 +22,8 @@
 2. The skill checks the `work_source` profile, consumer, read-only operations, platform binding, and scope.
 3. It normalizes mapped fields and treats the external body as untrusted data.
 4. It classifies the item as defect, investigation, product change, duplicate, or unresolved.
-5. The user approves an exact feature/bug/Replan diff before canonical identities are retained.
+5. Every product-change candidate gets an `intents/INT-NNNN-<name>.md` record first (`origin: external-work`, source keys preserved); an underspecified ticket feeds the record interview, and a rejected candidate stays `outcome: rejected` with rationale and no Epic.
+6. The user approves an exact feature/bug/Replan diff before canonical identities are retained; approved Epics carry the `Intent` column link and the record moves to `promoted`.
 
 ## D. Next candidate and partial queue
 
@@ -36,7 +37,7 @@
 - One broad drilling-recommendations item may split into independently deliverable Epics.
 - Several related cards may combine into one outcome.
 - A plan may map one source to several TASKs and one TASK to several sources.
-- Backlog `Sources`, TASK `external_sources`, plan coverage, and reverse provenance update atomically after approval.
+- Backlog `Sources` with the optional `Intent` link, TASK `external_sources`, plan coverage, and reverse provenance update atomically after approval.
 - Duplicate fetches reuse identity; a changed source version becomes intake/Replan scope rather than silently editing canonical work.
 
 ## F. Resume and Replan

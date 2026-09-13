@@ -70,7 +70,7 @@ def parser():
     c = sub.add_parser("task-start-check")
     c.add_argument("task")
     c = sub.add_parser("next-id", help="Monotonic max-plus-one identifier allocation")
-    c.add_argument("--kind", required=True, choices=["task", "bug", "inv", "epic", "adr", "mut"])
+    c.add_argument("--kind", required=True, choices=["task", "bug", "inv", "int", "epic", "adr", "mut"])
     c = sub.add_parser("evidence-check", help="Recompute recorded evidence fingerprints; verdicts, not judgments")
     c.add_argument("task", nargs="?")
     c.add_argument("--epic")

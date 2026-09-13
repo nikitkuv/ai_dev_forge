@@ -47,6 +47,8 @@ project/
 │   └── ADR-NNN-<name>.md
 ├── investigations/                # optional, создаётся первым forge-investigate
 │   └── INV-NNNN-<name>.md
+├── intents/                       # optional, создаётся первым material intake
+│   └── INT-NNNN-<name>.md
 ├── execution/
 │   ├── active/EPIC-NNN-<name>/
 │   │   ├── plan.md
@@ -81,6 +83,7 @@ project/
 | Стратегия Epic, порядок TASK, verification и fuzzing plans, Epic Validation, fuzzing outcome и user validation | `plan.md` |
 | TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
 | История ad hoc исследования и прямого исправления | соответствующий `investigations/INV-NNNN-*.md` |
+| История продуктовых запросов и их исходов | соответствующий `intents/INT-NNNN-*.md` |
 | Независимая история mutation testing | `quality/mutation-testing/` |
 | История файлов | Git |
 
@@ -101,7 +104,7 @@ project/
 Ownership разделён на три категории:
 
 - framework-owned release files поставляются текущей версией Forge;
-- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
+- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `intents/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
 - generated adapters пересоздаются после collision preview.
 
 ## Канонические документы
@@ -133,6 +136,7 @@ TASK-001
 BUG-001
 ADR-001
 INV-0001
+INT-0001
 MUT-0001
 ```
 
@@ -195,7 +199,7 @@ Framework control layer написан на английском. Канонич
 Семнадцать skills сгруппированы по назначению:
 
 - bootstrap нового и существующего проекта;
-- feature/bug/external-work intake и reprioritization;
+- feature/bug/external-work intake с intent-фиксацией и reprioritization;
 - Epic preparation и durable resume;
 - Task execution/completion и Epic completion;
 - security audit;
@@ -314,6 +318,12 @@ Severity описывает последствия, а priority задаётся
 По умолчанию запуск metrics-only и strong model не используется. `mutation-analyzer` вызывается только после отдельного разрешения и только если текущий результат содержит candidates и положительный analysis budget. Все mutants killed — analyzer пропускается. Deferred analysis использует сохранённый `MUT-NNNN` без повторения campaign; stale fingerprint или artifact checksum блокирует анализ. Большие candidate sets анализируются bounded batches с явным `partial` и remaining count.
 
 Каждая попытка получает независимый `MUT-NNNN` и сохраняется в project-owned `quality/mutation-testing/`. Findings не создают Bug, TASK, Epic или Replan автоматически. Любое remediation начинается только отдельным решением пользователя через существующий lifecycle; mutation record может хранить лишь информационные ссылки на уже утверждённую работу.
+
+## Intent records
+
+Material feature, product-change и external-work запросы фиксируются одним каноническим файлом `intents/INT-NNNN-<short-name>.md` по bounded-шаблону `.ai/templates/INTENT.md`. Intake резервирует `INT-NNNN` первым durable-действием, заполняет шаблон через proportionate interview и подтверждает собранную запись у пользователя до retention в Backlog. Запись хранит проблему/мотивацию словами пользователя, предлагаемый outcome, затронутые системы, ограничения, отвергнутые альтернативы и открытые вопросы; утверждённые критерии остаются только в `SPEC.md`, стратегия реализации — только в plan.md.
+
+Каждый INT несёт ровно один текущий outcome: `draft`, `accepted`, `promoted`, `rejected`, `deferred` или `superseded`; переходы сохраняются в Outcome History. Отвергнутые и отложенные запросы остаются с rationale и не создают Epic; повторный похожий запрос сначала поднимает прежнюю запись. Записи не удаляются. Epic row ссылается на исходный INT через опциональную колонку `Intent`, и `forge-prepare-epic` читает её как первичный вход вместе со SPEC; материальные открытые вопросы блокируют `OUTLINE → READY`. INT — evidence: он не управляет priority, readiness, status, acceptance или commit.
 
 ## Ad hoc investigations
 
