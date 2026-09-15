@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -21,8 +22,11 @@ sys.path.insert(0, str(ROOT / ".ai/tools"))
 import forge
 import forge_adapters as adapters
 import forge_core as core
+import forge_index as index
 import forge_lifecycle as lifecycle
 import forge_runtime as runtime
+
+forge_index_sqlite = index.sqlite3  # patched in the FTS5-unavailability test
 
 
 class Repository(unittest.TestCase):
@@ -907,7 +911,12 @@ class MutationTests(Repository):
         preview = lifecycle.epic_complete(self.root, "EPIC-001")
         lifecycle.epic_complete(self.root, "EPIC-001", apply_token=preview["preview_token"])
         self.assertTrue((self.root / "execution/completed/EPIC-001-example").is_dir())
-        self.assertEqual(next(r for r in core.backlog_rows(self.root) if r["ID"] == "EPIC-001")["Status"], "COMPLETED")
+        # Terminal row leaves the live Backlog and lands verbatim in the archive.
+        self.assertFalse(any(r["ID"] == "EPIC-001" for r in core.backlog_rows(self.root)))
+        archived = core.archived_backlog_rows(self.root, "Epic Roadmap")
+        self.assertEqual(archived[0]["cells"]["Status"], "COMPLETED")
+        self.assertEqual(archived[0]["cells"]["ID"], "EPIC-001")
+        self.assertEqual(len(preview["changes"]), 2)
 
     def test_accept_record_appends_history_and_resolves_scheduled_bug(self):
         task = self.seeded(active=True)
@@ -929,8 +938,11 @@ class MutationTests(Repository):
         self.assertIn("**Decision:** accepted", content)
         self.assertIn("chat decision 2026-09-09; looks good", content)
         self.assertIn("accepted by user (chat decision 2026-09-09)", content)
+        # Resolution archives BUG-001; the unrelated OPEN bug stays live.
         bugs = {row["ID"]: row["Status"] for row in core.defect_rows(self.root)}
-        self.assertEqual((bugs["BUG-001"], bugs["BUG-002"]), ("RESOLVED", "OPEN"))
+        self.assertEqual(bugs, {"BUG-002": "OPEN"})
+        archived = {row["cells"]["ID"]: row["cells"]["Status"] for row in core.archived_backlog_rows(self.root, "Defect Queue")}
+        self.assertEqual(archived, {"BUG-001": "RESOLVED"})
 
     def test_accept_record_requires_awaiting_status(self):
         task = self.seeded()
@@ -969,6 +981,360 @@ class MutationTests(Repository):
         self.assertNotIn("unrelated.txt", committed_files)
         unstaged = core.git_capture(self.root, ["status", "--porcelain"])["stdout"]
         self.assertIn("unrelated.txt", unstaged)
+
+
+class ArchiveTests(Repository):
+    def seeded(self, epic_status="PLANNED", bugs="| BUG-001 | Broken | medium | P1 | — | — | — | OPEN | — |",
+               active=False):
+        if not (self.root / ".ai").exists():
+            self.consumer(False)
+        status = "ACTIVE" if active else epic_status
+        self.write("BACKLOG.md", "## Epic Roadmap\n"
+                  "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  f"| EPIC-001 | Example | TBD | — | — | P0 | READY | — | {status} | — |\n"
+                  "## Defect Queue\n"
+                  "| ID | Problem | Severity | User priority | Related requirement | Sources | Research | Status | Scheduled TASK |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  f"{bugs}\n")
+        if active:
+            self.write("execution/active/EPIC-001-example/plan.md",
+                       "---\ndocument_type: epic_plan\nepic_id: EPIC-001\ndocument_status: approved\n---\n# Plan\n")
+            self.write("execution/active/EPIC-001-example/tasks/TASK-001.md",
+                       "---\ndocument_type: task\nid: TASK-001\nepic_id: EPIC-001\nstatus: DONE\n"
+                       "delivery_track: standard\n---\n# TASK-001 — Example\n\n## Workflow State\n\n```yaml\n"
+                       "current_gate: done\nimplementation_revision: 1\nreview_packet:\n  changed_paths: [src/a.py]\n"
+                       "  production_review_paths: [src/a.py]\n  supporting_evidence_paths: [tests/a.py]\n"
+                       "```\n\n## Verification Plan\n\n- **Fuzzing impact:** none\n"
+                       "- **Task fuzz smoke:** not applicable, no fuzzable boundary\n\n"
+                       "## Implementation Summary\n\n- **Base revision:** BASE\n- **Revision:** 1\n")
+
+    def test_archive_append_creates_and_extends_year_sections(self):
+        header = "| ID | Problem | Status |\n| --- | --- | --- |\n"
+        first = core.archive_append(None, "2026", "Defect Queue", header.splitlines()[0] + "\n",
+                                    header.splitlines()[1] + "\n", "| BUG-001 | Broken | RESOLVED |")
+        self.assertIn("# Backlog Archive", first)
+        self.assertIn("## 2026", first)
+        self.assertIn("### Defect Queue", first)
+        second = core.archive_append(first, "2026", "Defect Queue", header.splitlines()[0] + "\n",
+                                     header.splitlines()[1] + "\n", "| BUG-002 | Crash | RESOLVED |")
+        self.assertIn("### Epic Roadmap", core.archive_append(
+            second, "2026", "Epic Roadmap", "| ID | Status |\n", "| --- | --- |\n", "| EPIC-001 | COMPLETED |"))
+        cross_year = core.archive_append(second, "2027", "Defect Queue", header.splitlines()[0] + "\n",
+                                         header.splitlines()[1] + "\n", "| BUG-003 | Hang | RESOLVED |")
+        years = [line for line in cross_year.splitlines() if line.startswith("## ")]
+        self.assertEqual(years, ["## 2026", "## 2027"])
+        records = core.archive_records(cross_year)
+        self.assertEqual([r["cells"]["ID"] for r in records], ["BUG-001", "BUG-002", "BUG-003"])
+        self.assertEqual(records[-1]["year"], "2027")
+
+    def test_next_id_archive_bounds_bug_and_epic_allocation(self):
+        self.seeded(bugs="| BUG-003 | Broken | medium | P1 | — | — | — | OPEN | — |")
+        core.archive_append  # documented helper used below through the file write
+        self.write("BACKLOG-ARCHIVE.md", "# Backlog Archive\n\n## 2026\n\n### Defect Queue\n"
+                  "| ID | Problem | Severity | User priority | Related requirement | Sources | Research | Status | Scheduled TASK |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  "| BUG-0010 | Old | low | P2 | — | — | — | RESOLVED | — |\n")
+        result = lifecycle.next_id(self.root, "bug")
+        self.assertEqual(result["next_id"], "BUG-0011")
+        self.assertIn("BACKLOG.md", result["scanned"])
+        self.assertIn("BACKLOG-ARCHIVE.md", result["scanned"])
+        epic = lifecycle.next_id(self.root, "epic")
+        self.assertEqual(epic["next_id"], "EPIC-002")
+
+    def test_validate_flags_terminal_live_rows_and_archive_shape(self):
+        self.seeded(epic_status="COMPLETED",
+                    bugs="| BUG-001 | Broken | medium | P1 | — | — | — | RESOLVED | — |")
+        errors = core.conformance_errors(self.root, {})
+        self.assertTrue(any("Terminal Epic row in live Backlog: EPIC-001" in error for error in errors))
+        self.assertTrue(any("Terminal Bug row in live Backlog: BUG-001" in error for error in errors))
+        self.assertTrue(any("archive-row --id EPIC-001" in error for error in errors))
+        self.write("BACKLOG-ARCHIVE.md", "# Backlog Archive\n\n## twenty26\n\n### Defect Queue\n"
+                  "| ID | Status |\n| --- | --- |\n| BUG-001 | OPEN |\n")
+        errors = core.conformance_errors(self.root, {})
+        self.assertTrue(any("Archive year section" in error for error in errors))
+        self.assertTrue(any("Non-terminal archived row: BUG-001 is OPEN" in error for error in errors))
+
+    def test_backlog_archive_row_backfills_legacy_and_refuses_nonterminal(self):
+        self.seeded(epic_status="COMPLETED")
+        preview = lifecycle.backlog_archive_row(self.root, "EPIC-001")
+        self.assertEqual([change["path"] for change in preview["changes"]], ["BACKLOG.md", "BACKLOG-ARCHIVE.md"])
+        lifecycle.backlog_archive_row(self.root, "EPIC-001", apply_token=preview["preview_token"])
+        self.assertFalse(any(row["ID"] == "EPIC-001" for row in core.backlog_rows(self.root)))
+        archived = core.archived_backlog_rows(self.root, "Epic Roadmap")
+        self.assertEqual(archived[0]["cells"]["ID"], "EPIC-001")
+        self.assertEqual(archived[0]["cells"]["Status"], "COMPLETED")
+        with self.assertRaisesRegex(core.ForgeError, "Only terminal rows"):
+            lifecycle.backlog_archive_row(self.root, "BUG-001")  # OPEN stays live
+        with self.assertRaisesRegex(core.ForgeError, "Row not found"):
+            lifecycle.backlog_archive_row(self.root, "BUG-999")
+
+    def test_update_row_terminal_status_archives_and_rejects_extra_sets(self):
+        self.seeded(bugs="| BUG-001 | Broken | medium | P1 | — | — | — | SCHEDULED | TASK-001 |")
+        with self.assertRaisesRegex(core.ForgeError, "archives the row"):
+            lifecycle.backlog_update_row(self.root, "BUG-001", {"Status": "RESOLVED", "Problem": "Worse"})
+        preview = lifecycle.backlog_update_row(self.root, "BUG-001", {"Status": "RESOLVED"})
+        lifecycle.backlog_update_row(self.root, "BUG-001", {"Status": "RESOLVED"}, apply_token=preview["preview_token"])
+        self.assertEqual(core.defect_rows(self.root), [])
+        self.assertEqual(core.archived_backlog_rows(self.root, "Defect Queue")[0]["cells"]["Status"], "RESOLVED")
+
+    def test_stale_preview_rejected_when_archive_changes(self):
+        self.seeded(bugs="| BUG-001 | Broken | medium | P1 | — | — | — | SCHEDULED | TASK-001 |")
+        preview = lifecycle.backlog_update_row(self.root, "BUG-001", {"Status": "RESOLVED"})
+        self.write("BACKLOG-ARCHIVE.md", "# Backlog Archive\n\n## 2026\n")
+        with self.assertRaisesRegex(core.ForgeError, "Stale preview"):
+            lifecycle.backlog_update_row(self.root, "BUG-001", {"Status": "RESOLVED"},
+                                         apply_token=preview["preview_token"])
+        self.assertEqual(len(core.defect_rows(self.root)), 1)
+
+    def test_transition_epic_cancelled_archives_row(self):
+        self.seeded(epic_status="PLANNED")
+        preview = lifecycle.transition_epic(self.root, "EPIC-001", "CANCELLED")
+        lifecycle.transition_epic(self.root, "EPIC-001", "CANCELLED", apply_token=preview["preview_token"])
+        self.assertEqual(core.backlog_rows(self.root), [])
+        self.assertEqual(core.archived_backlog_rows(self.root, "Epic Roadmap")[0]["cells"]["Status"], "CANCELLED")
+
+    def test_epic_rollback_restores_backlog_and_removes_new_archive(self):
+        task = self.seeded(active=True)
+        # An orphan planned workspace fails post-write validation, forcing full rollback.
+        self.write("execution/planned/EPIC-009-orphan/plan.md",
+                   "---\ndocument_type: epic_plan\nepic_id: EPIC-009\ndocument_status: approved\n---\n# Orphan\n")
+        self.write("BACKLOG.md", core.text(self.root, "BACKLOG.md").replace(
+            "| EPIC-001 | Example | TBD | — | — | P0 | READY | — | ACTIVE | — |",
+            "| EPIC-001 | Example | TBD | — | — | P0 | READY | — | AWAITING EPIC ACCEPTANCE | — |"))
+        before = core.text(self.root, "BACKLOG.md")
+        preview = lifecycle.epic_complete(self.root, "EPIC-001")
+        with self.assertRaisesRegex(core.ForgeError, "validation failed"):
+            lifecycle.epic_complete(self.root, "EPIC-001", apply_token=preview["preview_token"])
+        self.assertEqual(core.text(self.root, "BACKLOG.md"), before)
+        self.assertFalse((self.root / "BACKLOG-ARCHIVE.md").exists())
+        self.assertTrue((self.root / "execution/active/EPIC-001-example").is_dir())
+
+    def test_epic_start_dependency_satisfied_from_archive(self):
+        self.seeded(epic_status="PLANNED",
+                    bugs="| BUG-001 | Broken | medium | P1 | — | — | — | OPEN | — |")
+        self.write("execution/planned/EPIC-001-example/plan.md",
+                   "---\ndocument_type: epic_plan\nepic_id: EPIC-001\ndocument_status: approved\n---\n# Plan\n")
+        self.write("BACKLOG-ARCHIVE.md", "# Backlog Archive\n\n## 2025\n\n### Epic Roadmap\n"
+                  "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  "| EPIC-000 | Prior | TBD | — | — | P0 | READY | — | COMPLETED | — |\n")
+        blocked = core.text(self.root, "BACKLOG.md").replace(
+            "| EPIC-001 | Example | TBD | — | — | P0 | READY | — | PLANNED | — |",
+            "| EPIC-001 | Example | TBD | — | — | P0 | READY | EPIC-000 | PLANNED | — |")
+        self.write("BACKLOG.md", blocked)
+        preview = lifecycle.epic_start(self.root, "EPIC-001")  # Archived COMPLETED dependency satisfies the gate.
+        lifecycle.epic_start(self.root, "EPIC-001", apply_token=preview["preview_token"])
+        self.assertEqual(next(row for row in core.backlog_rows(self.root) if row["ID"] == "EPIC-001")["Status"], "ACTIVE")
+
+    def test_archive_all_moves_every_legacy_terminal_row_in_one_transaction(self):
+        self.seeded(epic_status="COMPLETED",
+                    bugs="| BUG-001 | Broken | medium | P1 | — | — | — | RESOLVED | — |\n"
+                         "| BUG-002 | Open | low | P2 | — | — | — | OPEN | — |")
+        self.write("BACKLOG.md", core.text(self.root, "BACKLOG.md").replace(
+            "| EPIC-001 | Example | TBD | — | — | P0 | READY | — | COMPLETED | — |",
+            "| EPIC-001 | Example | TBD | — | — | P0 | READY | — | COMPLETED | — |\n"
+            "| EPIC-002 | Old thing | TBD | — | — | P2 | READY | — | CANCELLED | — |"))
+        preview = lifecycle.backlog_archive_all(self.root)
+        self.assertEqual([change["path"] for change in preview["changes"]], ["BACKLOG.md", "BACKLOG-ARCHIVE.md"])
+        result = lifecycle.backlog_archive_all(self.root, apply_token=preview["preview_token"])
+        self.assertEqual(result["operation"], "backlog-archive-all")
+        self.assertEqual([row["ID"] for row in core.backlog_rows(self.root)], [])
+        self.assertEqual([row["ID"] for row in core.defect_rows(self.root)], ["BUG-002"])
+        archived_epics = {row["cells"]["ID"]: row["cells"]["Status"]
+                          for row in core.archived_backlog_rows(self.root, "Epic Roadmap")}
+        self.assertEqual(archived_epics, {"EPIC-001": "COMPLETED", "EPIC-002": "CANCELLED"})
+        self.assertEqual([row["cells"]["ID"] for row in core.archived_backlog_rows(self.root, "Defect Queue")],
+                         ["BUG-001"])
+
+    def test_archive_all_reports_when_nothing_to_archive(self):
+        self.seeded()
+        report = lifecycle.backlog_archive_all(self.root)
+        self.assertNotIn("preview_token", report)
+        self.assertEqual(report["terminal_rows"], [])
+        self.assertIn("nothing to archive", report["note"])
+        self.assertFalse((self.root / "BACKLOG-ARCHIVE.md").exists())
+
+    def test_archive_all_stale_preview_rejected(self):
+        self.seeded(epic_status="COMPLETED")
+        preview = lifecycle.backlog_archive_all(self.root)
+        self.write("BACKLOG-ARCHIVE.md", "# Backlog Archive\n\n## 2026\n")
+        with self.assertRaisesRegex(core.ForgeError, "Stale preview"):
+            lifecycle.backlog_archive_all(self.root, apply_token=preview["preview_token"])
+        self.assertEqual(len(core.backlog_rows(self.root)), 1)
+
+    def _git_commit(self, message, dates=None):
+        environment = dict(os.environ, **dates) if dates else dict(os.environ)
+        for command in (["git", "add", "BACKLOG.md"],
+                        ["git", "commit", "-m", message]):
+            completed = subprocess.run(command, cwd=self.root, capture_output=True, env=environment)
+            self.assertEqual(completed.returncode, 0, completed.stderr.decode("utf-8", "replace"))
+
+    def test_stale_rows_report_is_mechanical_and_read_only(self):
+        self.seeded()
+        subprocess.run(["git", "init", "--quiet"], cwd=self.root, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "t@example.com"], cwd=self.root, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "t"], cwd=self.root, check=True, capture_output=True)
+        old = {"GIT_AUTHOR_DATE": "2026-01-01T00:00:00+00:00", "GIT_COMMITTER_DATE": "2026-01-01T00:00:00+00:00"}
+        before = core.text(self.root, "BACKLOG.md")
+        self._git_commit("legacy rows", old)
+        self.write("BACKLOG.md", before.replace(
+            "| BUG-001 | Broken | medium | P1 | — | — | — | OPEN | — |",
+            "| BUG-001 | Broken | medium | P1 | — | — | — | OPEN | — |\n"
+            "| BUG-002 | Fresh | low | P3 | — | — | — | OPEN | — |"))
+        self._git_commit("fresh row")
+        report = lifecycle.backlog_stale_rows(self.root, older_than=30)
+        # Both rows from the old commit are mechanically stale; only the fresh row is not.
+        self.assertEqual([item["id"] for item in report["stale"]], ["EPIC-001", "BUG-001"])
+        self.assertTrue(all(item["age_days"] > 30 for item in report["stale"]))
+        self.assertTrue(all(item["last_changed"].startswith("2026-01-01") for item in report["stale"]))
+        self.assertEqual(report["fresh"], 1)  # BUG-002 changed now
+        self.assertEqual(report["unknown"], [])
+        self.assertEqual(core.text(self.root, "BACKLOG.md").splitlines(), before.replace(
+            "| BUG-001 | Broken | medium | P1 | — | — | — | OPEN | — |",
+            "| BUG-001 | Broken | medium | P1 | — | — | — | OPEN | — |\n"
+            "| BUG-002 | Fresh | low | P3 | — | — | — | OPEN | — |").splitlines())
+
+    def test_stale_rows_without_git_history_reports_unknown(self):
+        self.seeded()
+        report = lifecycle.backlog_stale_rows(self.root, older_than=90)
+        self.assertEqual(report["stale"], [])
+        self.assertEqual({item["id"] for item in report["unknown"]}, {"EPIC-001", "BUG-001"})
+        self.assertEqual(report["fresh"], 0)
+        with self.assertRaisesRegex(core.ForgeError, "non-negative"):
+            lifecycle.backlog_stale_rows(self.root, older_than=-1)
+
+
+class SearchIndexTests(Repository):
+    def seeded(self):
+        self.write("investigations/INV-0001-auth-latency.md",
+                   "---\ndocument_type: investigation\nid: INV-0001\nsubject: Auth latency spikes\narea: auth\n"
+                   "outcome: unresolved\ncreated_at: \"2026-08-01\"\nupdated_at: \"2026-08-02\"\n---\n"
+                   "# INV-0001 — Auth latency spikes\n\nLogin latency spikes traced to token refresh storms.\n")
+        self.write("intents/INT-0001-faster-login.md",
+                   "---\ndocument_type: intent\nid: INT-0001\nsubject: Faster login\narea: auth\noutcome: promoted\n"
+                   "created_at: \"2026-07-01\"\npromoted_to: EPIC-002\n---\n# INT-0001 — Faster login\n\n")
+        self.write("decisions/ADR-001-token-cache.md",
+                   "---\nid: ADR-001\ntitle: Cache auth tokens\nstatus: ACCEPTED\ncreated_at: \"2026-06-01\"\n---\n"
+                   "# ADR-001 — Cache auth tokens\n\nDecision: cache tokens to cut latency.\n")
+        self.write("execution/completed/EPIC-002-login/tasks/TASK-003.md",
+                   "---\ndocument_type: task\nid: TASK-003\nepic_id: EPIC-002\nstatus: DONE\n---\n"
+                   "# TASK-003 — Token cache\n\nImplemented the token cache; latency dropped.\n")
+        self.write("BACKLOG.md", "## Epic Roadmap\n"
+                  "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  "| EPIC-002 | Login latency fix | TBD | — | — | P0 | READY | — | PLANNED | — |\n\n"
+                  "## Defect Queue\n"
+                  "| ID | Problem | Severity | User priority | Related requirement | Sources | Research | Status | Scheduled TASK |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  "| BUG-007 | Login latency warning | low | P2 | — | — | — | OPEN | — |\n")
+        self.write("BACKLOG-ARCHIVE.md", "# Backlog Archive\n\n## 2026\n\n### Defect Queue\n"
+                  "| ID | Problem | Severity | User priority | Related requirement | Sources | Research | Status | Scheduled TASK |\n"
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                  "| BUG-003 | Stale latency alert | low | P3 | — | — | — | RESOLVED | — |\n")
+
+    def _dump(self):
+        import forge_index
+        conn = forge_index._connect(self.root)
+        try:
+            return conn.execute("SELECT path, id, kind, sha256 FROM records ORDER BY path").fetchall()
+        finally:
+            conn.close()
+
+    def test_query_ranks_pointers_across_kinds_without_bodies(self):
+        self.seeded()
+        result = index.query(self.root, "latency")
+        kinds = {item["kind"] for item in result["results"]}
+        self.assertTrue({"INV", "BUG", "TASK"} <= kinds)
+        for item in result["results"]:
+            self.assertTrue(item["id"] and item["path"])
+            self.assertIsInstance(item["score"], float)
+            self.assertTrue(item["snippet"] is None or len(item["snippet"]) < 400)
+        self.assertIn("read the canonical file", result["note"])
+        paths = {item["path"] for item in result["results"]}
+        self.assertIn("investigations/INV-0001-auth-latency.md", paths)
+
+    def test_query_filters_kind_area_and_since(self):
+        self.seeded()
+        only_auth = index.query(self.root, "latency auth", area="auth")
+        self.assertTrue(only_auth["results"])
+        self.assertTrue(all(("INV" == item["kind"]) or ("INT" == item["kind"]) for item in only_auth["results"]))
+        archived_bug = index.query(self.root, "stale latency", kinds=["BUG"])
+        self.assertEqual([item["id"] for item in archived_bug["results"]], ["BUG-003"])
+        recent = index.query(self.root, "latency", since="2026-08-01")
+        self.assertTrue(all(item["id"] != "ADR-001" for item in recent["results"]))
+
+    def test_reconcile_picks_up_edits_and_removals(self):
+        self.seeded()
+        index.reconcile(self.root)
+        self.write("investigations/INV-0001-auth-latency.md",
+                   core.text(self.root, "investigations/INV-0001-auth-latency.md")
+                   .replace("token refresh storms", "database connection pool exhaustion"))
+        hit = index.query(self.root, "connection pool")
+        self.assertTrue(any(item["id"] == "INV-0001" for item in hit["results"]))
+        (self.root / "investigations/INV-0001-auth-latency.md").unlink()
+        gone = index.query(self.root, "refresh storms")
+        self.assertFalse(any(item["id"] == "INV-0001" for item in gone["results"]))
+        self.assertLess(len(self._dump()), 7)
+
+    def test_rebuild_is_deterministic_and_recovers_from_loss_and_corruption(self):
+        self.seeded()
+        first = index.rebuild(self.root)
+        dump_one = self._dump()
+        second = index.rebuild(self.root)
+        self.assertEqual(dump_one, self._dump())
+        self.assertEqual(first["total"], second["total"])
+        (self.root / ".ai/local/index.db").unlink()
+        recovered = index.query(self.root, "latency")
+        self.assertEqual(recovered["freshness"]["status"], "current")
+        self.assertEqual(self._dump(), dump_one)
+        (self.root / ".ai/local/index.db").write_bytes(b"not a database at all")
+        again = index.query(self.root, "latency")
+        self.assertEqual(again["freshness"]["status"], "current")
+        self.assertTrue(again["results"])
+
+    def test_fts5_unavailability_is_reported_not_swallowed(self):
+        self.seeded()
+
+        class RefusingConnection:
+            def __init__(self, inner):
+                self._inner = inner
+
+            def execute(self, sql, *args):
+                if "fts5" in sql.lower():
+                    raise sqlite3.OperationalError("no such module: fts5")
+                return self._inner.execute(sql, *args)
+
+            def close(self):
+                self._inner.close()
+
+            def commit(self):
+                self._inner.commit()
+
+        original_connect = forge_index_sqlite.connect
+
+        def refusing_connect(*args, **kwargs):
+            return RefusingConnection(original_connect(*args, **kwargs))
+
+        with patch.object(forge_index_sqlite, "connect", refusing_connect):
+            with self.assertRaisesRegex(core.ForgeError, "FTS5"):
+                index.reconcile(self.root)
+        report = index.status(self.root)
+        self.assertIsNotNone(report)
+
+    def test_cli_query_and_index_subcommands(self):
+        self.seeded()
+        tools = ROOT / ".ai" / "tools" / "forge.py"
+        environment = dict(os.environ, PYTHONPATH=str(ROOT / ".ai" / "tools"))
+        for arguments in (["index", "rebuild"], ["query", "latency", "--kind", "INV,BUG", "--limit", "5"],
+                          ["index", "status"]):
+            completed = subprocess.run([sys.executable, str(tools), *arguments],
+                                       cwd=self.root, capture_output=True, timeout=120, env=environment)
+            self.assertEqual(completed.returncode, 0, completed.stderr.decode("utf-8", "replace"))
+            payload = json.loads(completed.stdout.decode("utf-8"))
+            self.assertNotIn("error", payload)
+            if arguments[0] == "query":
+                self.assertTrue(payload["results"])
 
 
 def _set_status(content, status):

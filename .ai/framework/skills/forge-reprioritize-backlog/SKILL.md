@@ -11,6 +11,7 @@ description: Reprioritize the Epic Roadmap or Defect Queue while preserving user
 2. Ask the `context-collector` for a read-only dependency graph when repository evidence is needed.
 3. Capture the user's requested priority and ordering changes without applying them.
 4. Distinguish Epic dependencies from `Blocked by`, defect severity from user-defined priority, active execution from the planned queue, and Backlog order from filesystem creation order.
+5. Report stale candidates as suggestions only: when the Python helpers are present, `backlog stale-rows --older-than <N>` returns the mechanical report (Git row history; rows without history are `unknown`), and the orchestrator presents those candidates with their observed last-change dates. This never changes a row, status, or priority — closing stays an explicit approved transition the user requests. Terminal rows never linger: completion, cancellation, and defect resolution archive rows to `BACKLOG-ARCHIVE.md` automatically, so no compaction pass belongs here. If `validate` reports legacy terminal rows still in the live Backlog, offer the one-time `backlog archive-all` backfill transaction instead of editing rows by hand.
 
 ## Analyze conflicts
 

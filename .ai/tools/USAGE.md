@@ -41,7 +41,7 @@ python .ai/tools/forge.py validate
 python .ai/tools/forge.py validate --project --adapters
 ```
 
-Source mode checks manifest uniqueness, source IDs and YAML/frontmatter syntax. Project mode adds Task/Epic enums, duplicate IDs/workspaces, planned definitions, single-writer state, Backlog/workspace consistency, plus structural conformance: root `AGENTS.md` line budget and exact `CLAUDE.md` import, generated agent files UTF-8 without BOM starting frontmatter at byte zero, `DECISIONS.md`/`decisions/` ADR parity, plan Task order versus workspace TASK files, Workflow State block shape for started Tasks, investigation record structure, and mutation-registry structure. Adapter mode compares deterministic expected outputs. Inspect coverage and requires_judgment: this is not a complete semantic conformance verdict. Review protocol, test integrity, risk/scope, historical transitions, integration/mutation provenance and evidence applicability still need interpretation.
+Source mode checks manifest uniqueness, source IDs and YAML/frontmatter syntax. Project mode adds Task/Epic enums, duplicate IDs/workspaces, planned definitions, single-writer state, Backlog/workspace consistency, plus structural conformance: root `AGENTS.md` line budget and exact `CLAUDE.md` import, generated agent files UTF-8 without BOM starting frontmatter at byte zero, `DECISIONS.md`/`decisions/` ADR parity, plan Task order versus workspace TASK files, Workflow State block shape for started Tasks, investigation record structure, mutation-registry structure, and the Backlog archive invariant — no terminal rows in the live `BACKLOG.md`, and `BACKLOG-ARCHIVE.md` (when present) holds only terminal rows under `## <YYYY>` year sections. Adapter mode compares deterministic expected outputs. Inspect coverage and requires_judgment: this is not a complete semantic conformance verdict. Review protocol, test integrity, risk/scope, historical transitions, integration/mutation provenance and evidence applicability still need interpretation.
 
 ## Identifier allocation
 
@@ -49,7 +49,7 @@ Source mode checks manifest uniqueness, source IDs and YAML/frontmatter syntax. 
 python .ai/tools/forge.py next-id --kind task|bug|inv|epic|adr|mut
 ```
 
-Returns the max-plus-one identifier for the kind, the scanned canonical locations, and the current maximum. It never fills numbering gaps and never reuses retired identifiers; `mut` honors the registry's declared `next_id` when it exceeds every retained run.
+Returns the max-plus-one identifier for the kind, the scanned canonical locations, and the current maximum. It never fills numbering gaps and never reuses retired identifiers; `mut` honors the registry's declared `next_id` when it exceeds every retained run. Row-declared kinds (`bug`, `epic`) scan the live `BACKLOG.md` and `BACKLOG-ARCHIVE.md` together, so an archived maximum still bounds allocation.
 
 ## Evidence freshness and gate inputs
 
@@ -134,9 +134,14 @@ python .ai/tools/forge.py inv-create --subject "Slow login" --area auth --paths 
 python .ai/tools/forge.py backlog add-bug --problem "Crash on save" --severity high --priority P0
 python .ai/tools/forge.py backlog update-row --id BUG-001 --set Status=SCHEDULED --set "Scheduled TASK=TASK-001"
 python .ai/tools/forge.py backlog update-row --id EPIC-002 --set Priority=P0 --move-before EPIC-001
+python .ai/tools/forge.py backlog archive-row --id EPIC-003
+python .ai/tools/forge.py backlog archive-all
+python .ai/tools/forge.py backlog stale-rows --older-than 90
 ```
 
-`inv-create` allocates the next `INV-NNNN`, instantiates the canonical template, and records the baseline revision and dirty working-tree disposition; pass `--name` when the subject has no ASCII slug. `backlog add-bug` inserts exactly one `OPEN` Defect Queue row from the approved fields (the next `BUG-NNN` is allocated automatically; pass `--id` to use an explicit approved identifier). `backlog update-row` changes only the named cells (`--set Column=Value`, repeatable) and optionally moves one row before another; header, separator, and unrelated rows stay byte-identical, and `|` in values round-trips through escaping. All three default to a preview; apply only the reviewed `--apply TOKEN`. The user owns priority and row order — never reorder without an explicit decision.
+`inv-create` allocates the next `INV-NNN`, instantiates the canonical template, and records the baseline revision and dirty working-tree disposition; pass `--name` when the subject has no ASCII slug. `backlog add-bug` inserts exactly one `OPEN` Defect Queue row from the approved fields (the next `BUG-NNN` is allocated automatically; pass `--id` to use an explicit approved identifier). `backlog update-row` changes only the named cells (`--set Column=Value`, repeatable) and optionally moves one row before another; header, separator, and unrelated rows stay byte-identical, and `|` in values round-trips through escaping. A `--set` that leaves the row in a terminal status archives the row in the same mutation — apply the other cell edits first, then set the terminal Status alone. `backlog archive-row` moves one legacy terminal row verbatim to `BACKLOG-ARCHIVE.md` (one-time backfill; refuses non-terminal rows); `backlog archive-all` moves every legacy terminal row in one preview/apply transaction and reports without a mutation when none qualify. All mutating commands default to a preview; apply only the reviewed `--apply TOKEN`. The user owns priority and row order — never reorder without an explicit decision.
+
+`backlog stale-rows` is read-only: it reports live non-terminal rows whose last change in the Git history of `BACKLOG.md` is older than `--older-than` days, keyed by the exact padded row identity so one ID never matches another's history; rows without Git history are listed under `unknown` instead of being guessed. The report is suggestion-only mechanical evidence — closing any row stays an explicit approved user transition.
 
 ## Lifecycle transitions and acceptance
 
@@ -149,7 +154,17 @@ python .ai/tools/forge.py accept-record execution/active/EPIC-001-example/tasks/
   --by user --decision-ref "chat decision 2026-09-10" --notes "verified manually" --resolve-bug BUG-001
 ```
 
-Every mutating command defaults to a preview (exact diffs, preconditions, a token bound to current inputs) and executes only with `--apply TOKEN`; a changed input invalidates the token. `transition task` rewrites only the frontmatter status and Workflow State `current_gate`/timestamps; it validates enums, transition legality per `contracts.yaml`, the single-writer invariant, and project consistency, and refuses `DONE` (use `accept-record`). `transition epic` edits exactly one Backlog row. `epic-start`/`epic-complete` move the workspace directory and update the Backlog as one logical transition with rollback, including the move-back. `accept-record` appends only the explicitly supplied acceptance facts and refuses missing decision inputs; `--resolve-bug` resolves exactly one named `SCHEDULED` Bug as an explicit input. Backups live under `.ai/local/lifecycle-transaction/`; a caught failure restores everything, an interrupted operation leaves the journal, and recovery never overwrites later user edits. The helpers execute decisions; authorization, semantic gates, and acceptance remain with the user and orchestrator.
+Every mutating command defaults to a preview (exact diffs, preconditions, a token bound to current inputs) and executes only with `--apply TOKEN`; a changed input invalidates the token. `transition task` rewrites only the frontmatter status and Workflow State `current_gate`/timestamps; it validates enums, transition legality per `contracts.yaml`, the single-writer invariant, and project consistency, and refuses `DONE` (use `accept-record`). `transition epic` edits exactly one Backlog row; terminal targets (`COMPLETED`, `CANCELLED`) move the row to `BACKLOG-ARCHIVE.md` in the same mutation. `epic-start`/`epic-complete` move the workspace directory and update the Backlog as one logical transition with rollback, including the move-back; completion archives the Epic's row atomically with the workspace move, so the live Backlog never retains a terminal row. `accept-record` appends only the explicitly supplied acceptance facts and refuses missing decision inputs; `--resolve-bug` resolves exactly one named `SCHEDULED` Bug as an explicit input and archives its row in the same transaction. Backups live under `.ai/local/lifecycle-transaction/`; a caught failure restores everything, an interrupted operation leaves the journal, and recovery never overwrites later user edits. The helpers execute decisions; authorization, semantic gates, and acceptance remain with the user and orchestrator.
+
+## Search index
+
+```text
+python .ai/tools/forge.py query "auth token latency" --kind INV,ADR --area auth --since 2026-06
+python .ai/tools/forge.py index rebuild
+python .ai/tools/forge.py index status
+```
+
+`query` returns ranked pointers — identifier, kind, canonical path, BM25 score, and a short snippet — never record bodies. It searches one derived index over all durable records (ADR, INT, INV, TASK, plan, plus live and archived Backlog rows, including `execution/completed/`), so results rank against each other across kinds. Filters: `--kind` (comma-separated `TASK,INV,INT,ADR,PLAN,EPIC,BUG`), `--area` (exact recorded area), `--since` (`YYYY-MM` or `YYYY-MM-DD` floor on recorded dates; undated records drop out only when the filter is set). The index lives at `.ai/local/index.db`, is rebuilt automatically whenever missing, stale, or corrupt, and is refreshed incrementally (modification time plus content hash) before every query — no maintenance ritual. It is a cache, never evidence: read the canonical file behind a result before relying on it. Results are fully offline, standard-library only, and deterministic; a Python build without SQLite FTS5 reports search as unavailable and nothing else breaks. Read explicit references first; query only surfaces mechanical matches.
 
 ## Scoped commits
 

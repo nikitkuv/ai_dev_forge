@@ -49,6 +49,6 @@ Present the available paths:
 - leave the Bug `OPEN`;
 - reject, deduplicate, or mark it `WONT_FIX` after the user's decision.
 
-Set the Bug to `SCHEDULED` only after a repair TASK is actually approved. Set it to `RESOLVED` only after that repair is explicitly accepted by the user.
+Set the Bug to `SCHEDULED` only after a repair TASK is actually approved. Set it to `RESOLVED` only after that repair is explicitly accepted by the user. Terminal resolutions (`RESOLVED`, `REJECTED`, `DUPLICATE`, `WONT_FIX`) archive the row to `BACKLOG-ARCHIVE.md` in the same reviewed mutation — set the terminal Status alone after any other cell edits; the live Defect Queue never retains a terminal row.
 
 Do not pause an active Epic, change priority, create a TASK, start work, or invoke external security scanning without explicit authorization. Return the recorded classification, evidence gaps, and next gate to the orchestrator.

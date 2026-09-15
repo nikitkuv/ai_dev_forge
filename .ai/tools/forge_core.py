@@ -392,6 +392,82 @@ def defect_rows(root):
     return table_rows(text(root, "BACKLOG.md"), "Defect Queue", {"ID", "Status"}, optional=True)
 
 
+ARCHIVE_PATH = "BACKLOG-ARCHIVE.md"
+ARCHIVE_HEADER = ("# Backlog Archive\n\n"
+                  "Append-only archive of terminal Backlog rows. Rows move here verbatim from `BACKLOG.md`; "
+                  "they are never edited or deleted.\n")
+TERMINAL_EPIC_STATUSES = {"COMPLETED", "CANCELLED"}
+TERMINAL_BUG_STATUSES = {"RESOLVED", "REJECTED", "DUPLICATE", "WONT_FIX"}
+ARCHIVE_SECTIONS = {"Epic Roadmap": {"ID", "Status"}, "Defect Queue": {"ID", "Status"}}
+
+
+def archive_records(content):
+    """Parse archived rows: one `## <year>` section per year, `### <table>` subsections."""
+    records, year, section, headers = [], None, None, None
+    for line in content.splitlines():
+        if line.startswith("## "):
+            year, section, headers = line[3:].strip(), None, None
+            continue
+        if line.startswith("### "):
+            section, headers = line[4:].strip(), None
+            continue
+        if year is None or section is None or not line.strip().startswith("|"):
+            continue
+        cells = [v.strip().replace("\\|", "|") for v in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+        if headers is None:
+            headers = cells
+        elif not all(re.fullmatch(r":?-+:?", c.replace(" ", "")) for c in cells):
+            if len(cells) != len(headers):
+                raise ForgeError(f"Malformed archived {section} row; inspect {ARCHIVE_PATH}")
+            records.append({"year": year, "section": section, "cells": dict(zip(headers, cells))})
+    return records
+
+
+def archive_append(content, year, section, header_line, separator_line, row_line):
+    """Append one verbatim row to a year/section table, creating structure as needed."""
+    if section not in ARCHIVE_SECTIONS:
+        raise ForgeError(f"Unsupported archive section: {section}")
+    lines = (content or ARCHIVE_HEADER).splitlines(keepends=True)
+    if not lines or not lines[-1].endswith("\n"):
+        lines = [line + "\n" for line in (content.rstrip("\n").splitlines() if content else [ARCHIVE_HEADER.rstrip("\n")])]
+    block = [f"### {section}\n", header_line.rstrip("\n") + "\n", separator_line.rstrip("\n") + "\n",
+             row_line.rstrip("\n") + "\n", "\n"]
+    # Locate the year section, then the table subsection, then the table's last row.
+    year_start = next((i for i, line in enumerate(lines) if line.rstrip() == f"## {year}"), None)
+    if year_start is None:
+        return "".join(lines).rstrip("\n") + "\n\n" + f"## {year}\n\n" + "".join(block)
+    year_end = next((i for i in range(year_start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    section_start = next((i for i in range(year_start + 1, year_end) if lines[i].rstrip() == f"### {section}"), None)
+    if section_start is None:
+        insert_at = year_end
+        for index in range(year_end - 1, year_start, -1):
+            if lines[index].strip():
+                insert_at = index + 1
+                break
+        return "".join(lines[:insert_at]).rstrip("\n") + "\n\n" + "".join(block) + "".join(lines[insert_at:]).lstrip("\n")
+    section_end = next((i for i in range(section_start + 1, year_end) if lines[i].startswith("### ")), year_end)
+    last_row = None
+    for index in range(section_end - 1, section_start, -1):
+        if lines[index].strip().startswith("|"):
+            last_row = index
+            break
+        if lines[index].strip():
+            break
+    if last_row is None:  # Heading exists without a table yet.
+        return "".join(lines[:section_start + 1]) + "\n" + "".join(block[1:]) + "".join(lines[section_start + 1:]).lstrip("\n")
+    insert_at = last_row + 1
+    return "".join(lines[:insert_at]) + row_line.rstrip("\n") + "\n" + "".join(lines[insert_at:])
+
+
+def archived_backlog_rows(root, section=None):
+    """Archived rows as [{year, section, cells}], optionally filtered by section."""
+    archive = within(root, ARCHIVE_PATH)
+    if not archive.exists():
+        return []
+    records = archive_records(text(root, ARCHIVE_PATH))
+    return [record for record in records if section is None or record["section"] == section]
+
+
 def workflow_state(content):
     """Parse the YAML block of the Workflow State section; never guesses legacy layouts."""
     values = [s for s in sections(content) if s["heading"] == "Workflow State"]
@@ -472,6 +548,33 @@ def conformance_errors(root, contracts):
                 errors.append(f"Unindexed ADR: {path.relative_to(Path(root).resolve()).as_posix()}")
         for identity in sorted(indexed - set(files)):
             errors.append(f"Dangling ADR index entry: {identity}")
+    if within(root, "BACKLOG.md").exists():
+        for row in backlog_rows(root):
+            identity = row["ID"].strip("`")
+            if row["Status"] in TERMINAL_EPIC_STATUSES:
+                errors.append(f"Terminal Epic row in live Backlog: {identity}; "
+                              f"archive it via `backlog archive-all` or `backlog archive-row --id {identity}`")
+        for row in defect_rows(root):
+            identity = row["ID"].strip("`")
+            if row["Status"] in TERMINAL_BUG_STATUSES:
+                errors.append(f"Terminal Bug row in live Backlog: {identity}; "
+                              f"archive it via `backlog archive-all` or `backlog archive-row --id {identity}`")
+    archive = within(root, ARCHIVE_PATH)
+    if archive.exists():
+        content = text(root, ARCHIVE_PATH)
+        for line in content.splitlines():
+            if line.startswith("## ") and not re.fullmatch(r"## \d{4}", line.strip()):
+                errors.append(f"Archive year section must be `## <YYYY>`: {line.strip()!r} in {ARCHIVE_PATH}")
+        for record in archive_records(content):
+            identity = record["cells"].get("ID", "").strip("`")
+            terminal = TERMINAL_EPIC_STATUSES if record["section"] == "Epic Roadmap" else TERMINAL_BUG_STATUSES
+            required = ARCHIVE_SECTIONS.get(record["section"])
+            if required is None:
+                errors.append(f"Unsupported archive table: {record['section']} for {identity} in {ARCHIVE_PATH}")
+            elif not set(required).issubset(record["cells"]):
+                errors.append(f"Archived {record['section']} row lacks ID/Status columns: {identity} in {ARCHIVE_PATH}")
+            elif record["cells"]["Status"] not in terminal:
+                errors.append(f"Non-terminal archived row: {identity} is {record['cells']['Status']} in {ARCHIVE_PATH}")
     registry = within(root, "quality/mutation-testing/registry.yaml")
     if registry.exists():
         data = load_yaml(root, "quality/mutation-testing/registry.yaml")
@@ -572,6 +675,13 @@ def validate(root, project=False):
         errors.extend(conformance_errors(root, contracts))
         rows = backlog_rows(root)
         roadmap = {}
+        archived = {}
+        for record in archived_backlog_rows(root):
+            identity = record["cells"].get("ID", "").strip("`")
+            if identity:
+                if identity in archived:
+                    errors.append(f"Duplicate archived row: {identity}")
+                archived[identity] = record["cells"]
         active = {"ACTIVE", "VALIDATING", "FUZZING", "AWAITING EPIC ACCEPTANCE"}
         for row in rows:
             identity = row["ID"].strip("`")
@@ -597,7 +707,7 @@ def validate(root, project=False):
                 if epic in epics:
                     errors.append(f"Duplicate Epic workspace: {epic}")
                 epics.add(epic)
-                row = roadmap.get(epic)
+                row = roadmap.get(epic) or (archived.get(epic) if path.split("/")[1] == "completed" else None)
                 state = path.split("/")[1]
                 if not row:
                     errors.append(f"Workspace missing from Backlog: {path}")
@@ -639,7 +749,7 @@ def validate(root, project=False):
             if meta.get("document_type") != "intent":
                 continue
             target = meta.get("promoted_to")
-            if isinstance(target, str) and target.strip() and target not in roadmap and target not in bug_ids:
+            if isinstance(target, str) and target.strip() and target not in roadmap and target not in bug_ids and target not in archived:
                 errors.append(f"Intent promoted_to target missing: {path}")
             for ref in meta.get("research_refs") or []:
                 if not isinstance(ref, str) or not ref.startswith("INV-"):

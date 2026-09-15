@@ -30,7 +30,7 @@ description: Read and classify work candidates from an explicitly configured pro
 
 ## Classify and propose decomposition
 
-1. Inspect relevant SPEC, ARCHITECTURE, ADRs, Backlog, planned/active work, repository code/tests, and project-configured label hints.
+1. Inspect relevant SPEC, ARCHITECTURE, ADRs, Backlog, planned/active work, repository code/tests, and project-configured label hints. When the Python helpers are present, `python .ai/tools/forge.py query <terms> --kind INT,BUG,EPIC` may surface similar prior requests and archived rows as duplicate candidates — pointers only, never evidence; verify in the canonical files.
 2. Treat labels only as affected-area or candidate-domain hints. Validate existing paths; do not invent a module or use a label as an automatic Epic boundary.
 3. Classify every item as possible defect, investigation, product change, duplicate, rejected item, or unresolved candidate.
 4. Determine whether each item belongs in existing Epic scope, one new Epic, several independently deliverable Epics, or a coherent Epic combined with related items. An external item never becomes a standalone TASK merely because it is small.

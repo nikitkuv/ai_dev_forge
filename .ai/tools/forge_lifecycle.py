@@ -13,8 +13,9 @@ import shutil
 
 import yaml
 
-from forge_core import (ForgeError, Transaction, atomic_replace, backlog_rows, canonical, defect_rows, digest,
-                        frontmatter, git_capture, inventory, load_yaml, sections, snapshot, table_rows, text,
+from forge_core import (ARCHIVE_PATH, TERMINAL_BUG_STATUSES, TERMINAL_EPIC_STATUSES, ForgeError, Transaction,
+                        archived_backlog_rows, archive_append, atomic_replace, backlog_rows, canonical, defect_rows,
+                        digest, frontmatter, git_capture, inventory, load_yaml, sections, snapshot, table_rows, text,
                         within, workflow_state, yaml_value)
 
 ID_FORMATS = {"task": ("TASK-", 3), "bug": ("BUG-", 3), "inv": ("INV-", 4), "int": ("INT-", 4),
@@ -54,17 +55,25 @@ def next_id(root, kind):
             if identity and identity.startswith(prefix):
                 found[identity] = item["path"]
     elif kind == "epic":
-        sources = ["BACKLOG.md"]
+        sources = ["BACKLOG.md", ARCHIVE_PATH]
         for row in (backlog_rows(root) if within(root, "BACKLOG.md").exists() else []):
             identity = row["ID"].strip("`")
             if identity.startswith(prefix):
                 found[identity] = "BACKLOG.md"
+        for record in archived_backlog_rows(root, "Epic Roadmap"):
+            identity = record["cells"].get("ID", "").strip("`")
+            if identity.startswith(prefix):
+                found[identity] = ARCHIVE_PATH
     elif kind == "bug":
-        sources = ["BACKLOG.md"]
+        sources = ["BACKLOG.md", ARCHIVE_PATH]
         for row in (defect_rows(root) if within(root, "BACKLOG.md").exists() else []):
             identity = row["ID"].strip("`")
             if identity.startswith(prefix):
                 found[identity] = "BACKLOG.md"
+        for record in archived_backlog_rows(root, "Defect Queue"):
+            identity = record["cells"].get("ID", "").strip("`")
+            if identity.startswith(prefix):
+                found[identity] = ARCHIVE_PATH
     elif kind == "inv":
         sources = ["investigations/"]
         base = within(root, "investigations")
@@ -110,7 +119,9 @@ def next_id(root, kind):
     if numbers:
         maximum = max(numbers)
         candidate = max(maximum + 1, declared_next[0])
-        padding = max(width, len(str(max(numbers))), len(str(declared_next[0])))
+        # Keep at least the digit width of the widest existing identifier (e.g. BUG-0010).
+        widest = max(len(identity) - len(prefix) for identity in found if _digits(identity, kind) is not None)
+        padding = max(width, len(str(max(numbers))), len(str(declared_next[0])), widest)
     else:
         candidate, padding = max(1, declared_next[0]), width
     return {"kind": kind, "next_id": f"{prefix}{candidate:0{padding}d}",
@@ -547,6 +558,16 @@ def backlog_update_row(root, identity, sets, move_before=None, apply_token=None)
         unknown = [column for column in sets if column not in columns]
         if unknown:
             raise ForgeError("Unknown columns for this table: " + ", ".join(unknown))
+        if _terminal_target(heading, sets):
+            if len(sets) > 1 or move_before:
+                raise ForgeError("A terminal Status edit archives the row; apply other cell edits first, "
+                                 "then set the terminal Status alone")
+            backlog_bytes, archive_bytes = _archive_move(root, lines, heading, identity, sets["Status"])
+            updates = {"BACKLOG.md": backlog_bytes, ARCHIVE_PATH: archive_bytes}
+            if apply_token is None:
+                return mutation_preview(root, "backlog-update-row", updates,
+                                        description=f"Update {identity}: Status={sets['Status']} and archive")[0]
+            return mutation_apply(root, "backlog-update-row", updates, apply_token, validator=_validate_project)
         cells = list(cells)
         for column, value in sets.items():
             cells[columns.index(column)] = _escape_cell(value)
@@ -634,6 +655,142 @@ def _edit_backlog_status(root, lines, epic_id, target):
     raise ForgeError(f"Epic row not found: {epic_id}")
 
 
+_ARCHIVE_FROM_DISK = object()
+
+
+def _archive_move(root, lines, heading, identity, status=None, archive_content=_ARCHIVE_FROM_DISK):
+    """Set one row's Status (optional), then move the raw row line to the archive.
+
+    Returns (backlog_bytes, archive_bytes). Raw cells keep their escapes, so the
+    archived row matches the prior live row column-for-column. Batch callers pass
+    the running archive content so sequential moves compose into one update."""
+    header, separator, _ = _table_bounds(lines, heading)
+    if header is None:
+        raise ForgeError(f"{heading} table missing; inspect BACKLOG.md")
+    columns = [cell.strip() for cell in re.split(r"(?<!\\)\|", lines[header].strip())[1:-1]]
+    for index in range(separator + 1, len(lines)):
+        if not lines[index].strip().startswith("|"):
+            break
+        raw_cells = re.split(r"(?<!\\)\|", lines[index].strip())[1:-1]
+        if raw_cells and raw_cells[columns.index("ID")].strip().strip("`") == identity:
+            if status is not None:
+                raw_cells[columns.index("Status")] = f" {status} "
+            row_line = "|" + "|".join(cell.strip() for cell in raw_cells) + "|"
+            del lines[index]
+            if archive_content is _ARCHIVE_FROM_DISK:
+                archive_content = text(root, ARCHIVE_PATH) if within(root, ARCHIVE_PATH).exists() else None
+            archive_bytes = archive_append(archive_content, _today()[:4], heading,
+                                           lines[header], lines[separator], row_line).encode()
+            return "".join(lines).encode(), archive_bytes
+    raise ForgeError(f"Row not found in {heading}: {identity}")
+
+
+def _terminal_target(heading, sets):
+    """True when applying `sets` would leave the row in a terminal status."""
+    terminal = TERMINAL_EPIC_STATUSES if heading == "Epic Roadmap" else TERMINAL_BUG_STATUSES
+    return "Status" in sets and sets["Status"] in terminal
+
+
+def backlog_archive_row(root, identity, apply_token=None):
+    """Move one terminal live Backlog row verbatim to the append-only archive."""
+    lines = text(root, "BACKLOG.md").splitlines(keepends=True)
+    for heading, terminal in (("Epic Roadmap", TERMINAL_EPIC_STATUSES), ("Defect Queue", TERMINAL_BUG_STATUSES)):
+        header, separator, _ = _table_bounds(lines, heading)
+        if header is None:
+            continue
+        columns = [cell.strip() for cell in re.split(r"(?<!\\)\|", lines[header].strip())[1:-1]]
+        for index in range(separator + 1, len(lines)):
+            if not lines[index].strip().startswith("|"):
+                break
+            cells = [cell.strip().replace("\\|", "|") for cell in re.split(r"(?<!\\)\|", lines[index].strip())[1:-1]]
+            if cells and cells[columns.index("ID")] == identity:
+                if cells[columns.index("Status")] not in terminal:
+                    raise ForgeError(f"Only terminal rows can be archived: {identity} is {cells[columns.index('Status')]}")
+                backlog_bytes, archive_bytes = _archive_move(root, lines, heading, identity)
+                updates = {"BACKLOG.md": backlog_bytes, ARCHIVE_PATH: archive_bytes}
+                if apply_token is None:
+                    return mutation_preview(root, "backlog-archive-row", updates,
+                                            description=f"Move {identity} to {ARCHIVE_PATH}")[0]
+                return mutation_apply(root, "backlog-archive-row", updates, apply_token, validator=_validate_project)
+    raise ForgeError(f"Row not found: {identity}")
+
+
+def _terminal_targets(root):
+    """Every terminal live row as (heading, identity), using the validate classification."""
+    targets = []
+    for heading, terminal, rows in (("Epic Roadmap", TERMINAL_EPIC_STATUSES, backlog_rows(root)),
+                                     ("Defect Queue", TERMINAL_BUG_STATUSES, defect_rows(root))):
+        for row in rows:
+            if row["Status"] in terminal:
+                targets.append((heading, row["ID"].strip("`")))
+    return targets
+
+
+def backlog_archive_all(root, apply_token=None):
+    """Backfill every legacy terminal live row to the archive in one transaction."""
+    targets = _terminal_targets(root)
+    if not targets:
+        return {"operation": "backlog-archive-all", "terminal_rows": [], "archived": [],
+                "note": "No terminal rows in the live Backlog; nothing to archive"}
+    lines = text(root, "BACKLOG.md").splitlines(keepends=True)
+    archive_content = text(root, ARCHIVE_PATH) if within(root, ARCHIVE_PATH).exists() else None
+    for heading, identity in targets:
+        _, archive_bytes = _archive_move(root, lines, heading, identity, archive_content=archive_content)
+        archive_content = archive_bytes.decode()
+    updates = {"BACKLOG.md": "".join(lines).encode(), ARCHIVE_PATH: archive_content.encode()}
+    description = "Archive " + ", ".join(f"{identity} ({heading})" for heading, identity in targets)
+    if apply_token is None:
+        return mutation_preview(root, "backlog-archive-all", updates, description=description)[0]
+    return mutation_apply(root, "backlog-archive-all", updates, apply_token, validator=_validate_project)
+
+
+def backlog_stale_rows(root, older_than=90):
+    """Read-only staleness report from Git row history; changes nothing."""
+    if older_than < 0:
+        raise ForgeError("--older-than must be non-negative")
+    today = datetime.now(timezone.utc).date()
+    stale, unknown, fresh = [], [], 0
+    for heading, terminal, rows in (("Epic Roadmap", TERMINAL_EPIC_STATUSES, backlog_rows(root)),
+                                     ("Defect Queue", TERMINAL_BUG_STATUSES, defect_rows(root))):
+        for row in rows:
+            identity = row["ID"].strip("`")
+            if row["Status"] in terminal:
+                continue  # terminal rows are archived by their transition; staleness is moot
+            # Exact padded cell as the pickaxe key: EPIC-001 never matches EPIC-0010 history.
+            result = git_capture(root, ["log", "-S", f"| {identity} |", "--format=%cI",
+                                        "--max-count=1", "--", "BACKLOG.md"])
+            stamp = result["stdout"].strip().splitlines()[-1].strip() if result["stdout"].strip() else ""
+            if result["exit_code"] or not stamp:
+                unknown.append({"id": identity, "section": heading, "status": row["Status"],
+                                "reason": "no Git history for this row"})
+                continue
+            try:
+                changed = datetime.fromisoformat(stamp).date()
+            except ValueError:
+                unknown.append({"id": identity, "section": heading, "status": row["Status"],
+                                "reason": f"unparseable commit date: {stamp!r}"})
+                continue
+            age = (today - changed).days
+            if age >= older_than:
+                stale.append({"id": identity, "section": heading, "status": row["Status"],
+                              "last_changed": changed.isoformat(), "age_days": age})
+            else:
+                fresh += 1
+    return {"older_than_days": older_than, "stale": stale, "unknown": unknown, "fresh": fresh,
+            "note": "Suggestion-only mechanical report; closing any row stays an explicit approved user transition"}
+
+
+def _epic_status(root, epic_id):
+    """Live status first, then archived: completed dependencies live in the archive."""
+    for row in backlog_rows(root):
+        if row["ID"].strip("`") == epic_id:
+            return row["Status"]
+    for record in archived_backlog_rows(root, "Epic Roadmap"):
+        if record["cells"].get("ID", "").strip("`") == epic_id:
+            return record["cells"].get("Status")
+    return None
+
+
 def transition_epic(root, epic_id, target, apply_token=None):
     """Transition one Epic's Backlog row through the exact approved status."""
     contracts = _contracts(root)
@@ -644,8 +801,12 @@ def transition_epic(root, epic_id, target, apply_token=None):
     if target not in contracts["transitions"]["epic_status"].get(source, []):
         raise ForgeError(f"Forbidden transition {source!r} -> {target!r} per contracts.yaml")
     lines = text(root, "BACKLOG.md").splitlines(keepends=True)
-    _edit_backlog_status(root, lines, epic_id, target)
-    updates = {"BACKLOG.md": "".join(lines).encode()}
+    if target in TERMINAL_EPIC_STATUSES:
+        backlog_bytes, archive_bytes = _archive_move(root, lines, "Epic Roadmap", epic_id, target)
+        updates = {"BACKLOG.md": backlog_bytes, ARCHIVE_PATH: archive_bytes}
+    else:
+        _edit_backlog_status(root, lines, epic_id, target)
+        updates = {"BACKLOG.md": "".join(lines).encode()}
     if apply_token is None:
         return mutation_preview(root, "transition-epic", updates,
                                 description=f"{epic_id}: {source} -> {target}")[0]
@@ -673,9 +834,9 @@ def epic_start(root, epic_id, apply_token=None):
         raise ForgeError(f"Epic Start blocked by: {row['Blocked by']}")
     dependencies = [value.strip() for value in row["Dependencies"].replace("`", "").split(",") if value.strip() not in ("", "—", "–", "-")]
     for dependency in dependencies:
-        dep = _epic_row(root, dependency)
-        if dep["Status"] != "COMPLETED":
-            raise ForgeError(f"Dependency not satisfied: {dependency} is {dep['Status']}")
+        status = _epic_status(root, dependency)
+        if status != "COMPLETED":
+            raise ForgeError(f"Dependency not satisfied: {dependency} is {status or 'not in Backlog or archive'}")
     if any(other["ID"].strip("`") != epic_id and other["Status"] in ACTIVE_STATES for other in backlog_rows(root)):
         raise ForgeError("Another nonterminal active-work Epic exists")
     planned = _workspace_directory(root, "execution/planned", epic_id)
@@ -691,7 +852,7 @@ def epic_start(root, epic_id, apply_token=None):
 
 
 def epic_complete(root, epic_id, apply_token=None):
-    """Atomically move an accepted Epic's workspace to completed and update the Backlog."""
+    """Atomically move an accepted Epic's workspace to completed and archive its Backlog row."""
     row = _epic_row(root, epic_id)
     if row["Status"] != "AWAITING EPIC ACCEPTANCE":
         raise ForgeError("Epic completion requires AWAITING EPIC ACCEPTANCE")
@@ -699,11 +860,11 @@ def epic_complete(root, epic_id, apply_token=None):
     name = active.split("/")[-1]
     moves = [(active, f"execution/completed/{name}")]
     lines = text(root, "BACKLOG.md").splitlines(keepends=True)
-    _edit_backlog_status(root, lines, epic_id, "COMPLETED")
-    updates = {"BACKLOG.md": "".join(lines).encode()}
+    backlog_bytes, archive_bytes = _archive_move(root, lines, "Epic Roadmap", epic_id, "COMPLETED")
+    updates = {"BACKLOG.md": backlog_bytes, ARCHIVE_PATH: archive_bytes}
     if apply_token is None:
         return mutation_preview(root, "epic-complete", updates, moves,
-                                description=f"Move {active} to completed and set {epic_id} COMPLETED")[0]
+                                description=f"Move {active} to completed and archive {epic_id} COMPLETED")[0]
     return mutation_apply(root, "epic-complete", updates, apply_token, moves, validator=_validate_project)
 
 
@@ -772,19 +933,10 @@ def accept_record(root, task_path, accepted_by, decision_ref, notes=None, resolv
             raise ForgeError(f"Bug not found: {resolve_bug}")
         if row["Status"] != "SCHEDULED":
             raise ForgeError(f"Only a SCHEDULED Bug can be RESOLVED, found {row['Status']}")
-        bug_sets = {"Status": "RESOLVED"}
-        lines = text(root, "BACKLOG.md").splitlines(keepends=True)
-        header, separator, _ = _table_bounds(lines, "Defect Queue")
-        columns = [cell.strip() for cell in re.split(r"(?<!\\)\|", lines[header].strip())[1:-1]]
-        for index in range(separator + 1, len(lines)):
-            if not lines[index].strip().startswith("|"):
-                break
-            cells = [cell.strip().replace("\\|", "|") for cell in re.split(r"(?<!\\)\|", lines[index].strip())[1:-1]]
-            if cells and cells[columns.index("ID")] == resolve_bug:
-                cells[columns.index("Status")] = "RESOLVED"
-                lines[index] = "| " + " | ".join(cells) + " |\n"
-                break
-        updates["BACKLOG.md"] = "".join(lines).encode()
+        bug_lines = text(root, "BACKLOG.md").splitlines(keepends=True)
+        backlog_bytes, archive_bytes = _archive_move(root, bug_lines, "Defect Queue", resolve_bug, "RESOLVED")
+        updates["BACKLOG.md"] = backlog_bytes
+        updates[ARCHIVE_PATH] = archive_bytes
     if apply_token is None:
         return mutation_preview(root, "accept-record", updates,
                                 description=f"Record acceptance and set {task_path} DONE")[0]

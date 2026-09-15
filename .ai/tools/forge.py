@@ -108,6 +108,23 @@ def parser():
     update_row.add_argument("--set", dest="sets", action="append", required=True)
     update_row.add_argument("--move-before")
     update_row.add_argument("--apply", metavar="PREVIEW_TOKEN")
+    archive_row = backlog_sub.add_parser("archive-row", help="Move one terminal row to BACKLOG-ARCHIVE.md")
+    archive_row.add_argument("--id", required=True)
+    archive_row.add_argument("--apply", metavar="PREVIEW_TOKEN")
+    archive_all = backlog_sub.add_parser("archive-all", help="Backfill every legacy terminal row in one transaction")
+    archive_all.add_argument("--apply", metavar="PREVIEW_TOKEN")
+    stale_rows = backlog_sub.add_parser("stale-rows", help="Read-only staleness report from Git row history")
+    stale_rows.add_argument("--older-than", type=int, default=90)
+    c = sub.add_parser("query", help="Ranked record pointers from the derived local search index")
+    c.add_argument("text")
+    c.add_argument("--kind", help="Comma-separated filter: TASK,INV,INT,ADR,PLAN,EPIC,BUG")
+    c.add_argument("--area")
+    c.add_argument("--since", help="YYYY-MM or YYYY-MM-DD floor on recorded dates")
+    c.add_argument("--limit", type=int, default=20)
+    index = sub.add_parser("index", help="Derived search index maintenance")
+    index_sub = index.add_subparsers(dest="index_command", required=True)
+    index_sub.add_parser("rebuild")
+    index_sub.add_parser("status")
     transition = sub.add_parser("transition", help="Execute one approved status transition")
     transition_sub = transition.add_subparsers(dest="transition_command", required=True)
     transition_task = transition_sub.add_parser("task")
@@ -193,6 +210,15 @@ def main(argv=None):
         if args.backlog_command == "add-bug":
             result = backlog_add_bug(root, args.problem, args.severity, args.priority, args.requirement,
                                      args.sources, args.research, args.id, args.apply)
+        elif args.backlog_command == "archive-row":
+            from forge_lifecycle import backlog_archive_row
+            result = backlog_archive_row(root, args.id, args.apply)
+        elif args.backlog_command == "archive-all":
+            from forge_lifecycle import backlog_archive_all
+            result = backlog_archive_all(root, args.apply)
+        elif args.backlog_command == "stale-rows":
+            from forge_lifecycle import backlog_stale_rows
+            result = backlog_stale_rows(root, args.older_than)
         else:
             result = backlog_update_row(root, args.id, sets, args.move_before, args.apply)
     elif args.command == "transition":
@@ -213,6 +239,14 @@ def main(argv=None):
     elif args.command == "commit-scoped":
         from forge_lifecycle import commit_scoped
         result = commit_scoped(root, args.path, args.message, args.paths, args.authorized)
+    elif args.command == "query":
+        from forge_index import query as index_query
+        kinds = ([value.strip().upper() for value in args.kind.split(",") if value.strip()]
+                 if args.kind else None)
+        result = index_query(root, args.text, kinds, args.area, args.since, args.limit)
+    elif args.command == "index":
+        from forge_index import rebuild as index_rebuild, status as index_status
+        result = index_rebuild(root) if args.index_command == "rebuild" else index_status(root)
     elif args.command == "validate":
         result = validate(root, args.project)
         if args.adapters:

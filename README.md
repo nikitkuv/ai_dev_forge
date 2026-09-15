@@ -43,6 +43,7 @@ CLAUDE.md
 SPEC.md
 ARCHITECTURE.md
 BACKLOG.md
+BACKLOG-ARCHIVE.md
 DECISIONS.md
 decisions/ADR-NNN-<name>.md
 investigations/INV-NNNN-<name>.md
@@ -56,7 +57,7 @@ execution/{planned,active,paused,completed}/
 .opencode/agents/
 ```
 
-`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются target/execution источниками истины; `INV-NNNN` хранит каноническую историю ad hoc исследования. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
+`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются target/execution источниками истины; `INV-NNNN` хранит каноническую историю ad hoc исследования. Терминальные строки Backlog автоматически архивируются в append-only `BACKLOG-ARCHIVE.md` тем же терминальным переходом — живой Backlog остаётся размером с активный горизонт, а ID-аллокация учитывает архив. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
 
 Mutation testing доступен отдельно через `forge-mutation-test` и никогда не является lifecycle gate. Bare-запрос использует fast `mutation-runner` и возвращает metrics; strong `mutation-analyzer` запускается только по отдельному разрешению и только при наличии текущих candidates. История попыток сохраняется как project-owned `MUT-NNNN` records без изменения Backlog, Epic или TASK.
 
