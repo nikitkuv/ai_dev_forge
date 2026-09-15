@@ -1,4 +1,4 @@
-# AI Development Forge v4.9 — Architecture
+# AI Development Forge v4.11 — Architecture
 
 ## Configurable planner/reviewer routing
 
@@ -8,9 +8,11 @@
 
 ## Локальная автоматизация
 
-`.ai/tools/forge.py` выполняет механические операции на Python 3.11+: metadata inventory, извлечение разделов, fingerprints, структурную валидацию, генерацию adapters, bounded subprocess checks и агрегацию usage. Зависимости зафиксированы в `.ai/tools/requirements.txt`. Это optional local tooling внутри bundle; native workflows сохраняются без Python.
+`.ai/tools/forge.py` выполняет механические операции на Python 3.11+: metadata inventory, извлечение разделов, fingerprints, структурную валидацию (включая конформанс-проверки: line budget роутера, BOM/frontmatter сгенерированных агентов, ADR parity, plan-order, структуру INV и mutation-registry, инвариант архива Backlog), генерацию adapters, bounded subprocess checks и агрегацию usage. Read-only сборка: `next-id` (монотонное выделение TASK/BUG/INV/EPIC/ADR/MUT идентификаторов; для BUG/EPIC сканируются Backlog и архив), `evidence-check` (механические вердикты свежести review/testing/fast-assurance и готовности Epic gate по записанным fingerprint'ам), `review-packet` (компактный пакет из записанной классификации путей с scoped-диффами), `checks-new` (запись packet'а из явных argv), `role --assignment-file` (хелпер сам подставляет нейтральный контракт — тот больше не проходит через контекст оркестратора) и `query` (ранжированные указатели из derived SQLite FTS-индекса по всем durable-записям, включая `execution/completed/` и архив Backlog; индекс в `.ai/local/index.db` пересобирается детерминированно при каждом запросе по mtime/content-hash и никогда не является evidence). Зависимости зафиксированы в `.ai/tools/requirements.txt`. Это optional local tooling внутри bundle; native workflows сохраняются без Python.
 
-Возобновление использует metadata-first загрузку. Оркестратор не вызывает context-collector для штатной инвентаризации, не читает полные тела всех planned TASK и не просит модель генерировать адаптеры. Роли получают релевантные источники плюс полный собственный контракт. Python не выбирает scope, не доказывает test integrity, не принимает работу и не меняет lifecycle.
+Возобновление использует metadata-first загрузку. Оркестратор не вызывает context-collector для штатной инвентаризации, не читает полные тела всех planned TASK и не просит модель генерировать адаптеры. Роли получают релевантные источники плюс полный собственный контракт. Python не выбирает scope, не доказывает test integrity, не принимает работу и не решает lifecycle-переходы.
+
+Мутации lifecycle (`transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog` row-операции (включая `archive-row` для разового backfill), `inv-create`, `commit-scoped`) выполняются только через preview/apply: preview показывает точные диффы и токен, привязанный к текущим входам; apply выполняет запись через journal-транзакцию с откатом, включая возврат перемещённых директорий. Терминальные переходы переносят строку Backlog в архив в той же транзакции; токен привязан к обоим файлам. Хелперы исполняют явно запрошенные и уже утверждённые изменения — авторизация, семантические gates и приёмка остаются за пользователем и оркестратором.
 
 `forge-files-v1` покрывает явно переданные файлы, отсутствующие пути и executable flags; он не заменяет Git baseline/diff или анализ зависимостей. Кэш команд opt-in: требуются полный набор входов, неизменные команды/runtime/environment и целые сохранённые logs. Epic Validation не использует кэш.
 
@@ -40,11 +42,14 @@ project/
 ├── SPEC.md
 ├── ARCHITECTURE.md
 ├── BACKLOG.md
+├── BACKLOG-ARCHIVE.md              # optional, создаётся первым терминальным переходом
 ├── DECISIONS.md
 ├── decisions/
 │   └── ADR-NNN-<name>.md
 ├── investigations/                # optional, создаётся первым forge-investigate
 │   └── INV-NNNN-<name>.md
+├── intents/                       # optional, создаётся первым material intake
+│   └── INT-NNNN-<name>.md
 ├── execution/
 │   ├── active/EPIC-NNN-<name>/
 │   │   ├── plan.md
@@ -74,11 +79,13 @@ project/
 | Целевое поведение продукта | `SPEC.md` |
 | Целевая архитектура | `ARCHITECTURE.md` |
 | Epic, приоритет, readiness, status и дефекты | `BACKLOG.md` |
+| Терминальные строки Backlog как история | append-only `BACKLOG-ARCHIVE.md` |
 | Содержание одного архитектурного решения | соответствующий ADR |
 | Навигация по решениям | генерируемый `DECISIONS.md` |
 | Стратегия Epic, порядок TASK, verification и fuzzing plans, Epic Validation, fuzzing outcome и user validation | `plan.md` |
 | TASK scope, status и implementation/review/test/user evidence | соответствующий TASK-файл |
 | История ad hoc исследования и прямого исправления | соответствующий `investigations/INV-NNNN-*.md` |
+| История продуктовых запросов и их исходов | соответствующий `intents/INT-NNNN-*.md` |
 | Независимая история mutation testing | `quality/mutation-testing/` |
 | История файлов | Git |
 
@@ -99,7 +106,7 @@ project/
 Ownership разделён на три категории:
 
 - framework-owned release files поставляются текущей версией Forge;
-- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
+- project-owned `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `intents/`, optional `quality/mutation-testing/`, canonical и execution-файлы сохраняются;
 - generated adapters пересоздаются после collision preview.
 
 ## Канонические документы
@@ -112,6 +119,8 @@ Ownership разделён на три категории:
 
 - Epic Roadmap;
 - Defect Queue.
+
+Терминальные строки (Epic `COMPLETED`/`CANCELLED`, Bug `RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX`) не задерживаются в живом файле: тот же терминальный переход атомарно переносит строку дословно в append-only `BACKLOG-ARCHIVE.md`, секционированный по годам. Архив только дополняется и не редактируется; conformance-проверка инвариантна: живой Backlog не содержит терминальных строк, архив — только терминальные. Легаси-терминальные строки переносятся разовой мутацией `backlog archive-row`.
 
 Все сохранённые будущие идеи становятся `PLANNED` Epic. `OUTLINE` разрешает сохранить неполную идею; `READY` требуется для активации.
 
@@ -131,10 +140,11 @@ TASK-001
 BUG-001
 ADR-001
 INV-0001
+INT-0001
 MUT-0001
 ```
 
-Следующий ID равен максимальному существующему ID данного типа плюс один. TASK numbering не начинается заново в каждом Epic.
+Следующий ID равен максимальному существующему ID данного типа плюс один. TASK numbering не начинается заново в каждом Epic. Для видов, объявляемых строками Backlog (`BUG`, `EPIC`), сканируются живой `BACKLOG.md` и `BACKLOG-ARCHIVE.md` вместе — архивный максимум ограничивает аллокацию, поэтому ID не переиспользуются и после архивирования.
 
 Framework control layer написан на английском. Канонические документы генерируются на языке общения пользователя. Технические IDs, status values, paths, commands и model IDs остаются английскими.
 
@@ -193,7 +203,7 @@ Framework control layer написан на английском. Канонич
 Семнадцать skills сгруппированы по назначению:
 
 - bootstrap нового и существующего проекта;
-- feature/bug/external-work intake и reprioritization;
+- feature/bug/external-work intake с intent-фиксацией и reprioritization;
 - Epic preparation и durable resume;
 - Task execution/completion и Epic completion;
 - security audit;
@@ -259,7 +269,7 @@ PLANNED → ACTIVE → VALIDATING → FUZZING → AWAITING EPIC ACCEPTANCE → C
 
 Harness или remediation создаются как новые TASK через Replan и собственный Task Start. После изменений повторяется assurance выбранного delivery track, затем полный Epic Validation и fuzzing.
 
-Только отдельный Epic Acceptance завершает Epic и перемещает его каталог в `execution/completed/`. Следующий Epic автоматически не активируется.
+Только отдельный Epic Acceptance завершает Epic, перемещает его каталог в `execution/completed/` и атомарно архивирует строку в `BACKLOG-ARCHIVE.md`. Следующий Epic автоматически не активируется.
 
 ## Quality gates и project profiles
 
@@ -312,6 +322,12 @@ Severity описывает последствия, а priority задаётся
 По умолчанию запуск metrics-only и strong model не используется. `mutation-analyzer` вызывается только после отдельного разрешения и только если текущий результат содержит candidates и положительный analysis budget. Все mutants killed — analyzer пропускается. Deferred analysis использует сохранённый `MUT-NNNN` без повторения campaign; stale fingerprint или artifact checksum блокирует анализ. Большие candidate sets анализируются bounded batches с явным `partial` и remaining count.
 
 Каждая попытка получает независимый `MUT-NNNN` и сохраняется в project-owned `quality/mutation-testing/`. Findings не создают Bug, TASK, Epic или Replan автоматически. Любое remediation начинается только отдельным решением пользователя через существующий lifecycle; mutation record может хранить лишь информационные ссылки на уже утверждённую работу.
+
+## Intent records
+
+Material feature, product-change и external-work запросы фиксируются одним каноническим файлом `intents/INT-NNNN-<short-name>.md` по bounded-шаблону `.ai/templates/INTENT.md`. Intake резервирует `INT-NNNN` первым durable-действием, заполняет шаблон через proportionate interview и подтверждает собранную запись у пользователя до retention в Backlog. Запись хранит проблему/мотивацию словами пользователя, предлагаемый outcome, затронутые системы, ограничения, отвергнутые альтернативы и открытые вопросы; утверждённые критерии остаются только в `SPEC.md`, стратегия реализации — только в plan.md.
+
+Каждый INT несёт ровно один текущий outcome: `draft`, `accepted`, `promoted`, `rejected`, `deferred` или `superseded`; переходы сохраняются в Outcome History. Отвергнутые и отложенные запросы остаются с rationale и не создают Epic; повторный похожий запрос сначала поднимает прежнюю запись. Записи не удаляются. Epic row ссылается на исходный INT через опциональную колонку `Intent`, и `forge-prepare-epic` читает её как первичный вход вместе со SPEC; материальные открытые вопросы блокируют `OUTLINE → READY`. INT — evidence: он не управляет priority, readiness, status, acceptance или commit.
 
 ## Ad hoc investigations
 

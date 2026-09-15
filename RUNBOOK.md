@@ -2,9 +2,15 @@
 
 ## Локальные операции без вызова модели
 
-Начинайте восстановление с `python .ai/tools/forge.py context`: прочитайте все страницы metadata, затем Backlog и выбранные текущие evidence. `section` извлекает нужные разделы, `fingerprint` хеширует явный scope, `validate --project --adapters` проверяет структуру и drift. Не вызывайте context-collector для успешной механической инвентаризации.
+Начинайте восстановление с `python .ai/tools/forge.py context`: прочитайте все страницы metadata, затем Backlog и выбранные текущие evidence. `section` извлекает нужные разделы, `fingerprint` хеширует явный scope, `validate --project --adapters` проверяет структуру, drift и конформанс (line budget роутера, BOM/frontmatter агентов, ADR parity, plan-order, Workflow State, структуру INV и mutation registry, инвариант архива Backlog). Не вызывайте context-collector для успешной механической инвентаризации.
 
-Для sync используйте `adapters --diff`, затем применяйте утверждённый preview token. Для проверок — `checks <packet.json> --execute`; reuse требует явного полного dependency scope и не применяется к Epic Validation. `role` выполняет один bounded preflight внутри вызова. Нельзя автоматически сменить provider после ошибки.
+Свежесть evidence не пересчитывается вручную: `evidence-check <TASK-path>` возвращает вердикты review-freshness/testing/fast-assurance и механическую eligibility приёмки, `evidence-check --epic <EPIC-ID>` — готовность Epic gate (all DONE, fuzz evidence, агрегатный fingerprint). `next-id --kind <task|bug|inv|epic|adr|mut>` выделяет идентификаторы без заполнения пробелов (для `bug`/`epic` сканируются Backlog и архив вместе).
+
+Поиск по накопленным записям — `query "<термины>" [--kind ADR,INV,INT,TASK,PLAN,EPIC,BUG] [--area <area>] [--since YYYY-MM]`: возвращает ранжированные указатели (ID, kind, путь, score, сниппет) по всем durable-записям, включая `execution/completed/` и архив Backlog, без загрузки тел. Индекс — derived-кэш `.ai/local/index.db`: пересобирается автоматически при каждом запросе, никогда не является evidence; перед опорой на результат читается канонический файл. `index rebuild|status` — явное обслуживание, не обязательное.
+
+Для sync используйте `adapters --diff`, затем применяйте утверждённый preview token. Для проверок — `checks <packet.json> --execute` (packet собирается `checks-new`); reuse требует явного полного dependency scope и не применяется к Epic Validation. `role --assignment-file` подставляет нейтральный контракт сам и выполняет один bounded preflight внутри вызова. Нельзя автоматически сменить provider после ошибки.
+
+Статусные правки после принятых решений идут через helpers: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row|archive-row|archive-all`, `inv-create`, `commit-scoped`; read-only `backlog stale-rows` возвращает механический отчёт об устаревших строках из их Git-истории. Мутирующие команды по умолчанию показывают preview и применяются только по `--apply TOKEN` с journal-откатом; авторизация и приёмка остаются явными решениями пользователя. Терминальные переходы (Epic `COMPLETED`/`CANCELLED`, Bug `RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX`) переносят строку в `BACKLOG-ARCHIVE.md` той же транзакцией; `archive-all` — разовый батч-backfill легаси-строк.
 
 При уже выданном bounded Task Start grant выполните `task-start-check <TASK-path>` и проверьте eligibility; повторное согласование той же неизменной задачи не требуется. Приёмка результата и Git gates остаются отдельными. Форматы команд и ограничения: [.ai/tools/USAGE.md](.ai/tools/USAGE.md).
 
@@ -87,13 +93,15 @@ Skill `forge-resume-development` определяет:
 
 История сессии необязательна. Если результат агента не сохранён в TASK или plan, соответствующий этап выполняется повторно.
 
+Когда при resume нужен прошлый контекст помимо явных ссылок (как решали похожую проблему, что было в архиве багов), `query` возвращает ранжированные указатели по ADR/INV/INT/TASK и архиву — оркестратор читает только два-три релевантных канонических файла, а не обходит папки.
+
 ## 3A. Локальные интеграции
 
 Чистый Forge не имеет `.ai/integrations/`: никакой connector preflight не запускается, а bootstrap, lifecycle, adapter sync и migration работают без дополнительных требований.
 
 Для локальной capability проект вручную добавляет definition по `.ai/templates/integration.yaml` и отдельно настраивает MCP/API/CLI. Definition содержит profile, semantic operations, scope, access policy, consumers и platform bindings, но не credentials. Интеграция вызывается только явно выбранным совместимым skill.
 
-Для доски задач используется profile `work_source` и skill `forge-intake-external-work`. Запрос может назвать тикет или попросить прочитать configured queue. Агент показывает retrieval boundary, классификацию и split/combine proposal, затем использует обычные feature/bug/Replan/Plan Approval gates. Связи с Epic/Bug/Task записываются только после approval; доска не становится lifecycle authority и не изменяется.
+Для доски задач используется profile `work_source` и skill `forge-intake-external-work`. Запрос может назвать тикет или попросить прочитать configured queue. Агент показывает retrieval boundary, классификацию и split/combine proposal. Каждый product-change кандидат фиксируется intent-записью (`origin: external-work`, source keys в `sources`) до canonical-изменений; отвергнутые кандидаты остаются `rejected` INT с rationale без Epic. Затем используются обычные feature/bug/Replan/Plan Approval gates, а feature intake завершает уже созданную запись вместо новой. Связи с Epic/Bug/Task записываются только после approval; доска не становится lifecycle authority и не изменяется.
 
 Knowledge/data/analysis/custom profiles используют тот же registry, но не получают `EPIC/BUG/TASK` links. Полные примеры: [docs/local-integrations.md](docs/local-integrations.md).
 
@@ -107,12 +115,16 @@ Knowledge/data/analysis/custom profiles используют тот же registr
 
 Skill `forge-intake-feature`:
 
-1. уточняет target behavior;
-2. после подтверждения создаёт `PLANNED/OUTLINE` Epic;
-3. показывает SPEC diff;
-4. при необходимости показывает ARCHITECTURE/ADR diff;
-5. переводит Epic в `READY` только после утверждения requirements, boundaries и dependencies;
-6. не изменяет active work без Replan.
+1. резервирует `INT-NNNN` и пишет черновик `intents/INT-NNNN-<name>.md` первым durable-действием — запрос переживает потерю сессии с первых минут;
+2. дозаполняет шаблон (проблема, outcome, затронутые системы, ограничения, альтернативы, открытые вопросы) через короткое интервью и показывает собранную запись на подтверждение;
+3. уточняет target behavior;
+4. после подтверждения создаёт `PLANNED/OUTLINE` Epic со ссылкой на INT в опциональной колонке `Intent`;
+5. показывает SPEC diff;
+6. при необходимости показывает ARCHITECTURE/ADR diff;
+7. переводит Epic в `READY` только после утверждения requirements, boundaries и dependencies и отсутствия материальных открытых вопросов в INT;
+8. не изменяет active work без Replan.
+
+Отвергнутая или отложенная идея остаётся INT-записью с rationale (`outcome: rejected`/`deferred`) без создания Epic; похожий повторный запрос сначала поднимает прежнюю запись. Записи не удаляются.
 
 Новая функция не добавляется незаметно в TASK, которую пользователь тестирует вручную.
 
@@ -129,7 +141,7 @@ Skill `forge-intake-bug` сначала определяет происхожд�
 - баг в непринятой TASK возвращает ту же TASK в `IN PROGRESS` без нового `BUG-ID`;
 - баг в ранее принятом коде после подтверждения получает `BUG-*` со status `OPEN`.
 
-Пользователь отдельно выбирает severity/priority и способ планирования: Replan активного Epic, новый Bugfix Epic или оставить Bug открытым.
+Пользователь отдельно выбирает severity/priority и способ планирования: Replan активного Epic, новый Bugfix Epic или оставить Bug открытым. Терминальное разрешение (`RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX`) архивирует строку бага той же транзакцией — живой Defect Queue содержит только открытую работу.
 
 ## 6. Переприоритизация
 
@@ -143,6 +155,8 @@ Skill `forge-reprioritize-backlog` строит dependency graph и сравни
 4. меняет порядок только после подтверждения.
 
 Если порядок сохраняется, Epic остаётся `PLANNED` с `Blocked by`. Active work не меняется как побочный эффект.
+
+Отдельной компакции не существует: терминальные строки уходят в архив автоматически. Кандидаты на отмену подсвечиваются механически: `backlog stale-rows --older-than <N>` возвращает read-only отчёт по Git-истории строк (строки без истории — отдельной категорией `unknown`). Это только evidence-вход для разговора; закрытие остаётся явным решением пользователя. Легаси-терминальные строки, оставшиеся в живом файле, переносятся одной транзакцией `backlog archive-all` (или поштучно `backlog archive-row --id <ID>`).
 
 ## 7. Подготовка Epic
 
@@ -232,7 +246,7 @@ Task Acceptance и следующий Task Start — разные gates. Одн�
 
 После любых изменений повторяются structured review, selected Task testing, полный Epic Validation и fuzzing.
 
-Пользователь отдельно выполняет Epic-level manual validation и даёт Epic Acceptance. Только затем Epic становится `COMPLETED` и перемещается в `execution/completed/`. Следующий queued Epic из `execution/planned/` показывается в Backlog order, но не запускается автоматически.
+Пользователь отдельно выполняет Epic-level manual validation и даёт Epic Acceptance. Только затем Epic становится `COMPLETED`, перемещается в `execution/completed/`, а его строка атомарно архивируется в `BACKLOG-ARCHIVE.md` — живой Backlog остаётся размером с активный горизонт. Следующий queued Epic из `execution/planned/` показывается в Backlog order, но не запускается автоматически.
 
 ## 12. Pause и resume
 

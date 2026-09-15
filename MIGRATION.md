@@ -1,5 +1,19 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.11
+
+v4.11 добавляет авто-архивацию терминальных строк Backlog и derived search index. Migration обновляет tools/skills/контракты и валидацию, но ничего не делает принудительно: `BACKLOG-ARCHIVE.md` создаётся первым терминальным переходом, `.ai/local/index.db` — первым `query`.
+
+Существующие терминальные строки (`COMPLETED`/`CANCELLED` Epic, `RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX` Bug) остаются в живом `BACKLOG.md` как легаси и будут отмечены `validate --project` с подсказкой разовой мутации. Одноразовый backfill — одной транзакцией: `python .ai/tools/forge.py backlog archive-all` (preview, затем `--apply TOKEN`) переносит все легаси-терминальные строки дословно в годовые секции архива; поштучная альтернатива — `backlog archive-row --id <ID>`. Обязательного backfill нет — до него аллокация ID продолжает учитывать легаси-строки в живом файле.
+
+Search index — опциональный derived-кэш: пересобирается автоматически, не является evidence и не требует миграции или резервных копий. Отсутствие Python не меняет workflows: `query` просто недоступен, явные ссылки работают как раньше.
+
+## Обновление до v4.10
+
+v4.10 добавляет intent-записи: intake фич, продуктовых изменений и external work фиксирует материальный запрос одним project-owned `intents/INT-NNNN-<short-name>.md` по bounded-шаблону до создания Backlog row. Migration устанавливает contracts/template/skill/router support и валидацию, но не создаёт папку `intents/`, synthetic `INT-*` записи и не изменяет существующие canonical документы.
+
+Backlog получает опциональную колонку `Intent`; существующие Backlogs без колонки остаются валидными, backfill не требуется. Первая material feature/product-change/external-work запись создаст папку и `INT-0001` при явном intake. Отвергнутые и отложенные запросы сохраняются с outcome и rationale; записи не удаляются. Баги и bootstrap intent-записей не создают. Ни один INT outcome сам по себе не меняет Epic/TASK lifecycle, readiness, acceptance или commit permission.
+
 ## Обновление до v4.9
 
 v4.9 добавляет optional Python-инструменты в framework-owned `.ai/tools/`, сокращённый router и metadata-first восстановление. Скопируйте новый bundle, при необходимости настройте Python 3.11+ с pinned requirements, затем выполните preview adapter sync. Bootstrap внутри исходного Forge не требуется.

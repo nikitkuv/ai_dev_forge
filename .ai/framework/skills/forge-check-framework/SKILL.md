@@ -7,7 +7,7 @@ description: Use after bootstrap, resume, adapter synchronization, framework upg
 
 ## Read authoritative inputs
 
-Start with `python .ai/tools/forge.py validate --project --adapters`. It checks source IDs/YAML, lifecycle inventory and generated output drift without a model. Consume its coverage and requires_judgment fields: a mechanical pass is not full conformance. Inspect only reported errors and relevant inputs for the semantic checks below; do not reload all agent/skill bodies just to repeat successful structural checks. When Python is unavailable, perform the same checks manually. Never invoke a local connector or mutation backend during conformance checking.
+Start with `python .ai/tools/forge.py validate --project --adapters`. It checks source IDs/YAML, lifecycle inventory, generated output drift, router shape (`AGENTS.md` line budget, exact `CLAUDE.md` import, generated-agent encoding/frontmatter), ADR index parity, plan-order consistency, Workflow State block shape, investigation record structure, and mutation-registry structure without a model. Consume its coverage and requires_judgment fields: a mechanical pass is not full conformance. Inspect only reported errors and relevant inputs for the semantic checks below; do not reload all agent/skill bodies just to repeat successful structural checks. When Python is unavailable, perform the same checks manually. Never invoke a local connector or mutation backend during conformance checking.
 
 Do not repair files during this check.
 
@@ -26,7 +26,7 @@ Do not repair files during this check.
 - Verify the framework did not create default hooks, MCP configuration, mandatory CLI dependencies, `opencode.json`, or duplicate `.opencode/skills/` during generation. Preserve OpenCode commands, plugins, skills, provider configuration, and unlisted agents as project-owned content. External prerequisites are required only when their mode is selected; `native_subagents` remains dependency-free.
 - Verify `.ai/integrations/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes, and never embedded in generated adapters.
 - Verify `quality/mutation-testing/` is optional and absent in a clean project; when present, it is project-owned, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization.
-- Verify `investigations/` is optional and absent in a clean project; when present, it is project-owned canonical evidence, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization. Verify `forge-investigate` has portable parity and is declared as an orchestrator-only workflow that invokes no generated subagent.
+- Verify `investigations/` and `intents/` are optional and absent in a clean project; when present, they are project-owned canonical evidence, excluded from managed-output hashes and adapter render inputs, and preserved by migration and synchronization. Verify `forge-investigate` has portable parity and is declared as an orchestrator-only workflow that invokes no generated subagent.
 - Verify optional `mutation_testing` configuration is absent, null, or backed by confirmed repository/build/CI evidence. A configured backend requires exact version, baseline, mutation and result-adapter commands plus explicit budgets and constraints; missing setup blocks only a requested mutation run and never bootstrap or development.
 - Verify `mutation-runner` is fast, baseline-first, fingerprinted before/during/after execution, runtime-artifacts-only, network-disabled, and prohibited from installation, tracked edits, remediation, lifecycle changes and spawning. Verify `mutation-analyzer` is strong, explicitly authorized, candidate- and budget-gated, runtime-artifacts-only, network-disabled, and prohibited from remediation, lifecycle changes and spawning. Verify both roles and `forge-mutation-test` have generated parity on every enabled platform, with OpenCode using the shared skill copy.
 - Classify each integration definition/state file as current-supported, older-migratable, malformed, unsupported-future, custom-profile, or ownership collision. Preserve unknown profiles. Treat only ownership collisions and repository-safety violations as global blockers; other findings block only consuming skills.
@@ -60,6 +60,13 @@ Do not repair files during this check.
 - When present, require unique monotonic `INV-NNNN` IDs, matching `investigations/INV-NNNN-<short-name>.md` paths, required frontmatter and sections, and one outcome from `no_action`, `promoted`, `fixed_directly`, or `unresolved`.
 - Require `no_action` to record its reason, `promoted` to have reciprocal approved work references, `fixed_directly` to contain complete added/modified/removed path tables, per-path intent, material effects, verification commands/results, remaining risk, and a final commit/revision or scoped-diff reference, and `unresolved` to preserve remaining hypotheses and next experiments.
 - Validate every `research_refs` target and reciprocal INV Linked Work reference. Treat INV content as evidence rather than product intent or lifecycle state. Report direct-fix paths that make existing TASK/Epic evidence stale.
+
+## Validate intent records
+
+- When intent history is absent, require no directory, record, Backlog `Intent` value, or blocker; existing Backlogs without the `Intent` column remain valid.
+- When present, require unique monotonic `INT-NNNN` IDs, matching `intents/INT-NNNN-<short-name>.md` paths, required frontmatter and sections, `origin` from `conversation` or `external-work`, and one outcome from `draft`, `accepted`, `promoted`, `rejected`, `deferred`, or `superseded`.
+- Require `rejected` records to keep a rationale with no Backlog row, `promoted` records to point at existing approved Epic or Bug work, and `research_refs` to resolve to existing investigations. Flag records far beyond one page as advisory, never as a lifecycle failure.
+- Treat INT content as request evidence rather than requirement criteria, lifecycle state, or approval. Requirement criteria live only in `SPEC.md`; a linked INT never satisfies a gate.
 
 ## Validate independent mutation history
 

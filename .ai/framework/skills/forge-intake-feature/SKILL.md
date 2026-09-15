@@ -7,10 +7,10 @@ description: Add a new feature, product change, or retained future idea to an in
 
 ## Classify the request
 
-1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, all affected planned workspaces, the active Epic plan, current TASK, explicitly referenced `INV-NNNN` records, obviously relevant investigations by subject, area, or relevant paths, and Git state. Confirm uncertain investigation matches with the user. Check their baseline and relevant paths before reusing conclusions; recheck only what changed materially.
+1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, all affected planned workspaces, the active Epic plan, current TASK, explicitly referenced `INV-NNNN` records, obviously relevant investigations by subject, area, or relevant paths, obviously matching prior `INT-NNNN` intent records by subject or area, and Git state. When the Python helpers are present, `python .ai/tools/forge.py query <terms> --kind INT,INV,ADR` gathers these obvious matches mechanically — ranked pointers only, explicit references still first. Confirm uncertain investigation matches with the user. Check their baseline and relevant paths before reusing conclusions; recheck only what changed materially.
 2. Clarify the desired observable outcome, users, scope, exclusions, acceptance direction, constraints, urgency, and dependencies.
 3. Separate confirmed user intent, repository evidence, assumptions, and unresolved decisions. Do not turn an inference into target behavior.
-4. If a material product or design choice remains, present two or three viable approaches with trade-offs and a recommendation. Keep the discussion proportional to the decision; do not create a parallel design artifact.
+4. If a material product or design choice remains, present two or three viable approaches with trade-offs and a recommendation. Keep the discussion proportional to the decision; record it inside the bounded intent record instead of creating a parallel design artifact.
 5. If a TASK is awaiting user acceptance, do not add new scope to it. Ask the user to choose:
    - accept the current TASK and track the feature separately;
    - expand the active Epic through the Replan gate;
@@ -18,11 +18,19 @@ description: Add a new feature, product change, or retained future idea to an in
 
 Discovery ends at the applicable canonical approval gate. Do not invoke implementation planning, create implementation files, activate an Epic, start a TASK, or commit discovery artifacts.
 
+## Record the intent first
+
+1. For a material request — one that may affect SPEC, ARCHITECTURE, or Epic scope — reserve the next global `INT-NNNN` with `next-id --kind int` as the first durable action and write the draft `intents/INT-NNNN-<short-name>.md` from `.ai/templates/INTENT.md` before interviewing further. The draft makes the request survive session loss from its first minutes. A request arriving from approved external-work intake reuses its existing INT record instead of allocating a new one. A request promoted from an investigation derives its intent sections from the INV conclusion and asks only for missing product framing (proposed outcome, affected users, constraints) before confirmation.
+2. Fill the template through a proportionate interview: ask only about missing or ambiguous sections and derive the rest from repository evidence, SPEC, and linked investigations. Keep Problem and Motivation in the user's own words.
+3. Keep the record bounded to one page: reference `FR-*`/`NFR-*`/`BR-*` and the later `EPIC-NNN`/`BUG-NNN` instead of copying approved criteria or implementation strategy. Approved criteria exist only in `SPEC.md`; implementation strategy exists only in the Epic plan.
+4. Present the assembled record and obtain the user's confirmation that it captures the request before Backlog retention. This confirmation fixes the record's content; it is not a lifecycle gate and approves nothing.
+5. If the user rejects or defers the request, keep the record with `outcome: rejected` or `deferred` plus a short rationale in Outcome History and create no Epic. Set `promoted_to` only when the corresponding Epic or Bug is approved. When a new request materially matches a prior rejected, deferred, or superseded record, surface that record and its rationale before allocating a new `INT-NNNN`.
+
 ## Create the Backlog identity first
 
 1. Present the proposed feature candidate and request explicit user approval to retain it.
 2. Allocate the next global `EPIC-NNN`.
-3. Add it to the Epic Roadmap as `PLANNED` with readiness `OUTLINE`, linked requirements marked `TBD` where necessary, compact `Research` references for investigations actually used, user-defined priority, dependencies, and `Blocked by`.
+3. Add it to the Epic Roadmap as `PLANNED` with readiness `OUTLINE`, linked requirements marked `TBD` where necessary, compact `Research` references for investigations actually used, the originating `INT-NNNN` in the optional `Intent` column, user-defined priority, dependencies, and `Blocked by`.
 4. When invoked from approved external-work intake, add the compact provider-neutral `Sources` keys and stage the matching reverse provenance; otherwise use `—` and create no integration state.
 5. Do not activate it or change active work.
 
@@ -36,7 +44,7 @@ Every retained future idea is an Epic; do not create a separate idea list.
 2. Apply it only after explicit user approval and update document approval metadata.
 3. If architecture changes, show the `ARCHITECTURE.md` diff and proposed ADRs. Use the ADR Approval gate for significant decisions.
 4. Regenerate `DECISIONS.md` from ADR frontmatter when ADRs change.
-5. Change Epic readiness from `OUTLINE` to `READY` only after requirements, scope boundaries, acceptance direction, and dependencies are approved.
+5. Change Epic readiness from `OUTLINE` to `READY` only after requirements, scope boundaries, acceptance direction, and dependencies are approved, and the linked intent record carries no material open question. Resolve remaining questions with the user and record the answers in the intent record first.
 
 If the approved product or architecture change affects an existing planned or active workspace, show each affected plan and TASK diff and use the Replan gate before changing scope, order, or composition. Planned workspaces remain under `execution/planned/`; new TASK files remain `TODO` until their Epic passes Epic Start and each Task passes its own Task Start gate.
 

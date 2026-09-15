@@ -5,13 +5,13 @@ description: Prepare one PLANNED and READY Epic as an approved queued workspace 
 
 # Prepare an Epic
 
-Use Python `context`/`validate` for inventory and ID consistency, and `section` for relevant source excerpts; do not delegate mechanical collection to a model. Pass the planner one bounded assignment with authoritative relevant context and the complete role contract. For external routes prefer `python .ai/tools/forge.py role --orchestrator <active> --role epic-planner --prompt-file <path>`; its single internal preflight replaces the separate preflight/legacy-launcher sequence below. Never switch transport after a started failure. Reuse current INV research and avoid duplicating unrelated backlog/task bodies in the prompt.
+Use Python `context`/`validate` for inventory and ID consistency, and `section` for relevant source excerpts; do not delegate mechanical collection to a model. Allocate project-global TASK identifiers with `next-id --kind task`. Pass the planner one bounded assignment with authoritative relevant context; for external routes prefer `python .ai/tools/forge.py role --orchestrator <active> --role epic-planner --assignment-file <path>` — the helper embeds the complete neutral contract itself, so only the assignment passes through orchestrator context. Its single internal preflight replaces the separate preflight/legacy-launcher sequence below. Never switch transport after a started failure. Reuse current INV research and avoid duplicating unrelated backlog/task bodies in the prompt.
 
 ## Verify eligibility
 
 For native_subagents the generated agent already contains the complete neutral role contract: send only the assignment/evidence, not a duplicate of those instructions. For an external CLI concatenate the full neutral contract exactly once. All routes receive the same effective contract and assignment.
 
-1. Read `BACKLOG.md`, approved SPEC and ARCHITECTURE, relevant ADRs, execution state, templates, conventions, framework contracts, explicitly referenced `INV-NNNN` records, obvious investigation matches by subject, area, or relevant paths, and any Backlog source keys plus optional work-source provenance relevant to the selected Epic. Confirm uncertain INV matches with the user. Check each selected investigation's baseline, relevant paths, and material assumptions; reuse applicable research and recheck only doubtful portions.
+1. Read `BACKLOG.md`, approved SPEC and ARCHITECTURE, relevant ADRs, execution state, templates, conventions, framework contracts, explicitly referenced `INV-NNNN` records, obvious investigation matches by subject, area, or relevant paths, the Epic row's linked `INT-NNNN` intent record when the `Intent` column is present, and any Backlog source keys plus optional work-source provenance relevant to the selected Epic. When the Python helpers are present, `python .ai/tools/forge.py query <terms> --kind INV,ADR` gathers the obvious matches mechanically — ranked pointers only, explicit references still first. Treat the linked intent record as a primary input alongside SPEC: its Problem and Motivation, Constraints, and Considered Alternatives explain the request and must not be re-asked when already recorded. Confirm uncertain INV matches with the user. Check each selected investigation's baseline, relevant paths, and material assumptions; reuse applicable research and recheck only doubtful portions.
 2. Require the selected Epic to be `PLANNED + READY` with approved requirements and boundaries and explicitly declared dependencies and blockers.
 3. Allow declared unsatisfied dependencies, `Blocked by`, another active-work Epic, and other planned workspaces during planning. They prevent Epic Start, not Plan Approval.
 4. Require no workspace for the same Epic in another execution state and no conflicting planned directory or global Task ID. An existing planned workspace may change only through Replan.
@@ -22,7 +22,7 @@ For native_subagents the generated agent already contains the complete neutral r
 Follow `.ai/04-prepare-workspace.md`:
 
 1. Read `.ai/project.yaml` and require a valid `role_execution.mode`. Build one assignment from the complete neutral `.ai/framework/agents/epic-planner.yaml` contract plus the canonical, repository, CI, quality-configuration, convention, contract, and template evidence. Route it exactly as configured: `native_subagents` invokes the active Codex, Claude Code, or OpenCode platform's generated planner with no external preflight; `claude_with_codex` requires Claude Code and uses `.claude/forge/codex-role-runner.mjs`; `codex_with_claude` requires Codex and uses `.codex/forge/claude-role-runner.mjs` with `models.claude.strong.model` and effort. OpenCode-led setup proposes the existing `native_subagents` value by default only when no approved route exists; it adds no mode and does not silently rewrite an approved value. For either external route, run preflight, block on unavailability or active-orchestrator mismatch, pass the assignment through a secure temporary prompt file, and always remove the file. There is no fallback before or after execution; a non-zero exit, timeout, permission failure, runtime mismatch, or malformed result blocks planning;
-2. require a proposal containing the Epic strategy, Research Context with every used `INV-NNNN` and its applicability check, requirement coverage, selected quality profiles, risks, ordered Task graph, Task definitions, exactly one delivery track per Task with rationale, Task verification selections, review focus, Epic Verification Plan, and an evidence-based Epic Fuzzing Plan;
+2. require a proposal containing the Epic strategy, Research Context with every used `INV-NNNN` and its applicability check, the linked intent's motivation, constraints, and rejected alternatives reflected in strategy and scope decisions, requirement coverage, selected quality profiles, risks, ordered Task graph, Task definitions, exactly one delivery track per Task with rationale, Task verification selections, review focus, Epic Verification Plan, and an evidence-based Epic Fuzzing Plan;
 3. independently verify the proposal; never treat agent output as approval or canonical truth;
 4. allocate project-global TASK IDs without restarting per Epic or reusing retired IDs;
 5. create each TASK definition with scope, exclusions, constraints, acceptance criteria, affected surface, risk flags, approved delivery track, review focus, selected Task checks, manual verification, applicable `research_refs`, references, and `status: TODO`; require criterion-by-criterion fast eligibility and disqualifier evidence, treat low risk alone as insufficient, and select standard for missing or uncertain evidence;
@@ -43,12 +43,12 @@ Multiple planned workspaces may coexist. Their queue order remains the user-defi
 
 Epic Start may occur immediately or later. Before requesting it, require satisfied dependencies, empty `Blocked by`, no other nonterminal active-work Epic, and an unchanged approved planned workspace.
 
-After explicit Epic Start authorization:
+After explicit Epic Start authorization, execute the whole transition through `python .ai/tools/forge.py epic-start <EPIC-ID>` (preview, then apply the reviewed token). The helper:
 
-1. move `execution/planned/EPIC-NNN-<short-name>/` to `execution/active/`;
-2. transition only that Epic from `PLANNED` to `ACTIVE` in `BACKLOG.md`;
-3. validate the Backlog and execution tree as one logical state transition;
-4. on failure, restore the complete workspace under `execution/planned/` and the Backlog status to `PLANNED`.
+1. moves `execution/planned/EPIC-NNN-<short-name>/` to `execution/active/`;
+2. transitions only that Epic from `PLANNED` to `ACTIVE` in `BACKLOG.md`;
+3. validates the Backlog and execution tree as one logical state transition;
+4. on failure, restores the complete workspace under `execution/planned/` and the Backlog status to `PLANNED`.
 
 Plan Approval and Epic Start are separate gates. One user message may grant both only when it clearly states both decisions.
 

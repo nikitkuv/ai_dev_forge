@@ -2,7 +2,9 @@
 
 ## Экономия токенов и Python-инструменты
 
-Повторяемые операции выполняются локально через `.ai/tools/forge.py`: индекс контекста, извлечение разделов, fingerprints, структурная валидация, генерация адаптеров, запуск утверждённых проверок и агрегация метрик. Модель получает компактные результаты и занимается интерпретацией, реализацией и оценкой качества. При обычном восстановлении сессии `context-collector` не вызывается; он нужен только для неоднозначностей.
+Повторяемые операции выполняются локально через `.ai/tools/forge.py`: индекс контекста, извлечение разделов, fingerprints, структурная валидация и конформанс (line budget роутера, BOM/frontmatter агентов, ADR parity, plan-order, структура INV/mutation-registry), генерация адаптеров, запуск утверждённых проверок и агрегация метрик. Сборка пакетов тоже механическая: `next-id` выделяет TASK/BUG/INV/EPIC/ADR/MUT идентификаторы, `evidence-check` сверяет записанные fingerprint'ы с текущими файлами и возвращает вердикты свежести review/testing/fast-assurance, `review-packet` собирает пакет ревью из записанной классификации путей, `checks-new` пишет packet из явных argv, а `role --assignment-file` подставляет нейтральный контракт сам — тот больше не проходит через контекст оркестратора. Модель получает компактные результаты и занимается интерпретацией, реализацией и оценкой качества. При обычном восстановлении сессии `context-collector` не вызывается; он нужен только для неоднозначностей.
+
+Статусные правки выполняются helpers'ами только по preview/apply: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row`, `inv-create` и `commit-scoped` показывают точные диффы, применяются по токену через journal-транзакцию с откатом и никогда не решают и не выводят переходы — авторизация, семантические gates и приёмка остаются за пользователем и оркестратором.
 
 Python 3.11+ и зависимости устанавливаются в отдельное окружение. Для разработки самого Forge:
 
@@ -41,9 +43,11 @@ CLAUDE.md
 SPEC.md
 ARCHITECTURE.md
 BACKLOG.md
+BACKLOG-ARCHIVE.md
 DECISIONS.md
 decisions/ADR-NNN-<name>.md
 investigations/INV-NNNN-<name>.md
+intents/INT-NNNN-<name>.md
 execution/{planned,active,paused,completed}/
 .ai/
 .codex/agents/
@@ -53,7 +57,7 @@ execution/{planned,active,paused,completed}/
 .opencode/agents/
 ```
 
-`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются target/execution источниками истины; `INV-NNNN` хранит каноническую историю ad hoc исследования. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
+`SPEC`, `ARCHITECTURE`, `BACKLOG`, ADR, Epic plan и TASK являются target/execution источниками истины; `INV-NNNN` хранит каноническую историю ad hoc исследования. Терминальные строки Backlog автоматически архивируются в append-only `BACKLOG-ARCHIVE.md` тем же терминальным переходом — живой Backlog остаётся размером с активный горизонт, а ID-аллокация учитывает архив. Отдельные Markdown-отчёты для review, testing, fuzzing, security или ручной проверки не создаются.
 
 Mutation testing доступен отдельно через `forge-mutation-test` и никогда не является lifecycle gate. Bare-запрос использует fast `mutation-runner` и возвращает metrics; strong `mutation-analyzer` запускается только по отдельному разрешению и только при наличии текущих candidates. История попыток сохраняется как project-owned `MUT-NNNN` records без изменения Backlog, Epic или TASK.
 
@@ -148,6 +152,12 @@ Kaiten — только пример `work_source`. Для такого profile 
 Feature discovery, test-driven implementation и evidence verification встроены в Forge lifecycle skills и agent contracts. Для исследования вне Backlog используется отдельный `forge-investigate`; внешние process skills не управляют lifecycle проекта.
 
 Mutation backend не входит в обязательные зависимости. Проект отдельно настраивает подтверждённую команду для своего языка; отсутствие backend не мешает bootstrap, adapter sync, migration или обычной разработке и даёт `SETUP REQUIRED` только при явном mutation-запросе.
+
+## Intent records
+
+Материальные запросы новых фич, продуктовых изменений и external work фиксируются intent-записью `intents/INT-NNNN-<name>.md` по bounded-шаблону: intake резервирует ID первым durable-действием, дозаполняет шаблон через короткое интервью и подтверждает запись у пользователя до создания Epic. Запись хранит мотивацию словами пользователя, предлагаемый outcome, ограничения, отвергнутые альтернативы и открытые вопросы — утверждённые критерии остаются только в `SPEC.md`.
+
+Каждый INT имеет один текущий outcome (`draft/accepted/promoted/rejected/deferred/superseded`). Отвергнутые и отложенные идеи сохраняются с rationale и не создают Epic; записи не удаляются. Backlog ссылается на исходный INT опциональной колонкой `Intent`, `forge-prepare-epic` читает его как первичный вход вместе со SPEC, а материальные открытые вопросы блокируют `OUTLINE → READY`. Баги и bootstrap intent-записей не создают.
 
 ## Ad hoc исследования
 

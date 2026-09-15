@@ -13,7 +13,7 @@ import tempfile
 import time
 import uuid
 
-from forge_core import ForgeError, canonical, digest, load_yaml, snapshot, within
+from forge_core import ForgeError, atomic_replace, canonical, digest, load_yaml, snapshot, text, within
 
 
 def positive(value, name):
@@ -166,6 +166,59 @@ def checks(root, packet, execute=False, reuse=False):
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(canonical(report), encoding="utf-8")
     return report
+
+
+def checks_new(root, output, stage, inputs, check_id, argv, timeout=60, cacheable=False,
+               inputs_complete=False, cwd="."):
+    """Write (or extend) an approved-checks packet from explicit values; no shell."""
+    if stage not in ("task", "epic"):
+        raise ForgeError("Check packet stage must be task|epic")
+    if not isinstance(check_id, str) or not check_id.strip():
+        raise ForgeError("A check id is required")
+    if not isinstance(argv, list) or not argv or not all(isinstance(a, str) and "\0" not in a and a.strip() for a in argv):
+        raise ForgeError("argv must be a non-empty string array")
+    positive(timeout, "check timeout_seconds")
+    if not isinstance(inputs, list) or not inputs or not all(isinstance(p, str) and p for p in inputs):
+        raise ForgeError("inputs must be explicit non-empty file paths")
+    check = {"id": check_id, "argv": argv, "cwd": cwd, "timeout_seconds": timeout}
+    path = within(root, output)
+    if path.exists():
+        packet = json.loads(path.read_text(encoding="utf-8"))
+        if packet.get("schema_version") != 1 or packet.get("stage") != stage:
+            raise ForgeError("Existing packet schema/stage mismatch")
+        if not isinstance(packet.get("checks"), list) or not isinstance(packet.get("inputs"), list):
+            raise ForgeError("Existing packet is malformed")
+        if any(item.get("id") == check_id for item in packet["checks"]):
+            raise ForgeError(f"Check id already present: {check_id}")
+        for item in inputs:
+            if item not in packet["inputs"]:
+                packet["inputs"].append(item)
+        packet["checks"].append(check)
+    else:
+        packet = {"schema_version": 1, "stage": stage, "inputs": list(inputs),
+                  "inputs_complete": inputs_complete, "cacheable": cacheable, "checks": [check]}
+    atomic_replace(path, (canonical(packet) + "\n").encode())
+    return {"written": path.relative_to(Path(root).resolve()).as_posix(), "checks": len(packet["checks"])}
+
+
+def compose_role_prompt(root, role_name, assignment_path):
+    """Concatenate the neutral role contract and the assignment into one transient
+    prompt file inside the project. The orchestrator never reads the contract."""
+    contract_path = f".ai/framework/agents/{role_name}.yaml"
+    agent = load_yaml(root, contract_path)
+    if agent.get("id") != role_name:
+        raise ForgeError(f"Role contract ID mismatch: {contract_path}")
+    instructions = agent.get("instructions")
+    if not isinstance(instructions, str) or not instructions.strip():
+        raise ForgeError(f"Role contract lacks instructions: {contract_path}")
+    assignment = text(root, assignment_path)
+    if not assignment.strip():
+        raise ForgeError("Empty assignment")
+    prompt = instructions.rstrip() + "\n\n# Assignment\n\n" + assignment
+    transient = within(root, f".ai/local/role-prompt-{uuid.uuid4().hex}.md")
+    transient.parent.mkdir(parents=True, exist_ok=True)
+    transient.write_text(prompt, encoding="utf-8")
+    return transient.relative_to(Path(root).resolve()).as_posix()
 
 
 def metrics_record(root, event):

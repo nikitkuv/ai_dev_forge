@@ -27,8 +27,8 @@ test("manifest and contracts expose a lifecycle-independent orchestrator workflo
     read(".ai/framework/contracts.yaml"),
     read(".ai/templates/project.yaml")
   ]);
-  assert.match(manifest, /version: 4\.9\.0/);
-  assert.match(project, /version: 4\.9\.0/);
+  assert.match(manifest, /version: 4\.11\.0/);
+  assert.match(project, /version: 4\.11\.0/);
   assert.match(manifest, /- investigations\//);
   assert.match(manifest, /- forge-investigate/);
   assert.match(contracts, /investigation_outcomes: \[no_action, promoted, fixed_directly, unresolved\]/);
@@ -113,9 +113,9 @@ test("bootstrap, migration and adapter generation preserve history and distribut
     read(".ai/05-create-platform-adapters.md"),
     read(".ai/templates/adapters/codex/AGENTS.md")
   ]);
-  assert.match(bootstrap, /no synthetic INV records/i);
+  assert.match(bootstrap, /no synthetic INV or INT records/i);
   for (const source of [migration, migrateSkill]) assert.match(source, /investigations\//);
-  assert.match(sync, /Generate no `investigations\/`/);
+  assert.match(sync, /Generate no `investigations\/` or `intents\/`/);
   assert.match(generation, /seventeen portable `SKILL\.md` files/);
   assert.match(router, /Diagnostics: `forge-investigate`/);
   assert.match(router, /invokes no generated subagent/);

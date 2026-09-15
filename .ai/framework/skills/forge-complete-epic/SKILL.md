@@ -5,7 +5,7 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 
 # Complete an Epic
 
-Use Python fingerprints and `checks` with `stage: epic` to execute the approved aggregate commands and return compact evidence. Epic command reuse is disabled even with `--reuse`. The epic-validator still independently assesses requirement/critical-path coverage and profile gates; a mechanical pass alone cannot complete this skill.
+Use Python fingerprints and `checks` with `stage: epic` to execute the approved aggregate commands and return compact evidence. Epic command reuse is disabled even with `--reuse`. Gather gate inputs mechanically: `evidence-check --epic <EPIC-ID>` reports all-DONE coverage, final fuzz evidence presence, and the aggregate fingerprint; `transition epic <EPIC-ID> --to <status>` executes each approved Backlog status edit (preview, then apply); `epic-complete <EPIC-ID>` performs the final atomic move to `execution/completed/` plus the Backlog row's archival to `BACKLOG-ARCHIVE.md`, with rollback. The epic-validator still independently assesses requirement/critical-path coverage and profile gates; a mechanical pass alone cannot complete this skill.
 
 ## Enter Epic Validation
 
@@ -56,10 +56,10 @@ If the user finds a problem, return the Epic to `ACTIVE`, propose a Replan diff,
 
 After explicit Epic Acceptance:
 
-1. transition the Epic to `COMPLETED` in `BACKLOG.md`;
+1. transition the Epic to `COMPLETED` and archive its row to `BACKLOG-ARCHIVE.md` — the live `BACKLOG.md` never retains a terminal row;
 2. record acceptance in `plan.md`;
 3. move its directory from `execution/active/` to `execution/completed/`;
-4. validate Backlog and directory state as one logical transition and roll back partial changes on failure.
+4. validate Backlog, archive, and directory state as one logical transition and roll back partial changes on failure.
 
 Preserve external source identities and canonical mappings throughout completion. Do not move, edit, comment on, or close an external item; bidirectional write-back requires a separate capability and explicit authorization.
 

@@ -3,16 +3,16 @@ from __future__ import annotations
 
 import difflib
 import json
-import os
 from pathlib import Path
 import re
-import tempfile
 import tomllib
 
 from jinja2 import StrictUndefined
 from jinja2.sandbox import SandboxedEnvironment
 
-from forge_core import ForgeError, canonical, digest, frontmatter, load_yaml, snapshot, text, within
+from forge_core import ForgeError, Transaction, atomic_replace, canonical, digest, frontmatter, load_yaml, snapshot, text, within
+
+_replace = atomic_replace
 
 
 def render(root):
@@ -140,28 +140,12 @@ def preview(root, include_diff=False):
 
 
 def _replace(path, data):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=".forge-", dir=path.parent)
-    try:
-        with os.fdopen(descriptor, "wb") as stream:
-            stream.write(data)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temporary, path)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
+    return atomic_replace(path, data)
 
 
 def apply(root, expected_token, approved_collisions=()):
-    guard = within(root, ".ai/local/adapter-transaction")
-    guard.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        guard.mkdir()
-    except FileExistsError as exc:
-        raise ForgeError("Adapter transaction exists; inspect/recover it before retrying") from exc
+    transaction = Transaction(root, "adapter").claim()
     success = False
-    originals = {}
     try:
         result, outputs, inputs, old_lock = preview(root)
         if result["preview_token"] != expected_token:
@@ -176,70 +160,19 @@ def apply(root, expected_token, approved_collisions=()):
         lock_path = within(root, ".ai/framework.lock")
         if not lock_path.exists() or lock_path.read_bytes() != lock_bytes:
             updates[".ai/framework.lock"] = lock_bytes
-        for index, name in enumerate(updates):
-            path = within(root, name)
-            before = path.read_bytes() if path.exists() else None
-            originals[name] = before
-            if before is not None:
-                (guard / f"{index}.bak").write_bytes(before)
-        journal = {"files": [{"path": n, "backup": f"{i}.bak" if b is not None else None,
-                               "after": digest(updates[n])} for i, (n, b) in enumerate(originals.items())]}
-        (guard / "journal.json").write_text(canonical(journal), encoding="utf-8")
-        # Recheck the entire preview after preparing backups, before the first write.
-        if preview(root)[0]["preview_token"] != expected_token:
-            raise ForgeError("Repository changed while preparing transaction")
-        written = []
-        try:
-            for name, data in updates.items():
-                path = within(root, name)
-                if (path.read_bytes() if path.exists() else None) != originals[name]:
-                    raise ForgeError(f"Concurrent edit: {name}")
-                _replace(path, data)
-                written.append(name)
-        except BaseException:
-            for name in reversed(written):
-                path = within(root, name)
-                if path.read_bytes() != updates[name]:
-                    raise ForgeError(f"Concurrent edit during rollback: {name}; backups retained at {guard}")
-                if originals[name] is None:
-                    path.unlink()
-                else:
-                    _replace(path, originals[name])
-            raise
+
+        def recheck():
+            if preview(root)[0]["preview_token"] != expected_token:
+                raise ForgeError("Repository changed while preparing transaction")
+
+        transaction.write(updates, recheck=recheck, replace=_replace)
         success = True
         return {"applied": list(updates), "preserved_retired": result["preserved_retired"]}
     finally:
         # Keep journals on failure for explicit recovery; never recursively remove user paths.
-        if success or not (guard / "journal.json").exists():
-            for path in guard.iterdir():
-                path.unlink()
-            guard.rmdir()
+        transaction.finish(success)
 
 
 def recover(root):
-    guard = within(root, ".ai/local/adapter-transaction")
-    journal = json.loads((guard / "journal.json").read_text(encoding="utf-8"))
-    restored = []
     allowed = set(render(root)[0]) | {".ai/framework.lock"}
-    # Validate all targets first so recovery cannot overwrite a subsequent user edit.
-    for item in journal["files"]:
-        if item["path"] not in allowed:
-            raise ForgeError(f"Unmanaged target in recovery journal: {item['path']}")
-        if item["backup"] is not None and not re.fullmatch(r"\d+\.bak", item["backup"]):
-            raise ForgeError("Invalid backup name in recovery journal")
-        path = within(root, item["path"])
-        before = (guard / item["backup"]).read_bytes() if item["backup"] else None
-        current = path.read_bytes() if path.exists() else None
-        if current != before and (current is None or digest(current) != item["after"]):
-            raise ForgeError(f"Recovery conflicts with later edit: {item['path']}")
-    for item in reversed(journal["files"]):
-        path = within(root, item["path"])
-        if item["backup"]:
-            _replace(path, (guard / item["backup"]).read_bytes())
-        elif path.exists():
-            path.unlink()
-        restored.append(item["path"])
-    for path in guard.iterdir():
-        path.unlink()
-    guard.rmdir()
-    return {"restored": restored}
+    return Transaction(root, "adapter").restore(allowed)

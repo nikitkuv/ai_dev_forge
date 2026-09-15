@@ -30,18 +30,19 @@ description: Read and classify work candidates from an explicitly configured pro
 
 ## Classify and propose decomposition
 
-1. Inspect relevant SPEC, ARCHITECTURE, ADRs, Backlog, planned/active work, repository code/tests, and project-configured label hints.
+1. Inspect relevant SPEC, ARCHITECTURE, ADRs, Backlog, planned/active work, repository code/tests, and project-configured label hints. When the Python helpers are present, `python .ai/tools/forge.py query <terms> --kind INT,BUG,EPIC` may surface similar prior requests and archived rows as duplicate candidates — pointers only, never evidence; verify in the canonical files.
 2. Treat labels only as affected-area or candidate-domain hints. Validate existing paths; do not invent a module or use a label as an automatic Epic boundary.
 3. Classify every item as possible defect, investigation, product change, duplicate, rejected item, or unresolved candidate.
 4. Determine whether each item belongs in existing Epic scope, one new Epic, several independently deliverable Epics, or a coherent Epic combined with related items. An external item never becomes a standalone TASK merely because it is small.
 5. Present one reviewable proposal mapping every selected item to disposition, proposed Epic/Bug/TASK candidates, requirements, affected areas, dependencies, assumptions, unresolved decisions, split/combine rationale, and complete source coverage.
+6. Record one `intents/INT-NNNN-<short-name>.md` per product-change candidate before any canonical change: populate the template sections from the normalized source evidence first, set `origin: external-work` and the provider-neutral source keys in `sources`, and interview the user only for material product decisions the ticket and repository cannot resolve. Keep a rejected or duplicate candidate as `outcome: rejected` with a short rationale and no Epic. An underspecified ticket feeds the interview instead of blocking the record.
 
 Examples: a brief area-cutoff check may route to evidence gathering, existing-Epic Replan, Bug intake, or a new Epic depending on accepted-code and requirement evidence. A drilling-recommendations module may split into several Epics when it contains independent outcomes. Related cards may combine when one coherent outcome and dependency boundary justify it.
 
 ## Use existing canonical gates
 
 - Route accepted-code failures through `forge-intake-bug`.
-- Route product changes and new outcomes through `forge-intake-feature`.
+- Route product changes and new outcomes through `forge-intake-feature`, passing the existing `INT-NNNN` record; the feature intake confirms and completes that record instead of allocating a new one.
 - Route changes to approved planned, active, or paused work through the Replan gate.
 - Use `forge-prepare-epic` for Plan Approval and later Epic Start; use the ordinary Task Start gate for every TASK.
 - External priority, status, assignee, label, or wording is evidence only. It never constitutes Forge approval, priority, readiness, start, acceptance, or completion.
@@ -52,7 +53,8 @@ Before applying an approved canonical diff, re-read every selected item when a v
 
 For approved intake, Plan Approval, or Replan, stage the canonical changes and reverse provenance together:
 
-- Backlog Epic and Bug rows use compact `Sources` keys;
+- Backlog Epic and Bug rows use compact `Sources` keys and the originating `INT-NNNN` in the optional `Intent` column;
+- the originating intent record moves to `outcome: promoted` with `promoted_to` set to the approved Epic or Bug;
 - TASK frontmatter uses `external_sources`;
 - the Epic plan maps every source key to covering TASK IDs;
 - `.ai/integrations/work-items.yaml` maps each external identity back to all canonical IDs.
