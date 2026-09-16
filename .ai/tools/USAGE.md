@@ -91,6 +91,26 @@ Preview is read-only and returns exact diffs, collisions and a token bound to cu
 
 Writes use per-file atomic replacement and a backup journal at `.ai/local/adapter-transaction/`. A caught failure rolls back written files; a crash can leave a partial set and journal, so consumers must not use adapters until recovery completes. Recovery refuses to overwrite subsequent user edits. Never run two syncs concurrently. No multi-file filesystem transaction is claimed. Do not delete a failure journal to bypass recovery.
 
+## Framework migration
+
+Run from the staged new bundle against the active one; the command performs no staging itself.
+
+```text
+python .ai-next/tools/forge.py migrate
+python .ai-next/tools/forge.py migrate --diff
+python .ai-next/tools/forge.py migrate --set role_execution.mode=native_subagents
+python .ai-next/tools/forge.py migrate --router-shared extracted-router.md
+python .ai-next/tools/forge.py migrate --apply PREVIEW_TOKEN --set role_execution.mode=native_subagents
+python .ai-next/tools/forge.py migrate --apply PREVIEW_TOKEN --approve-collision AGENTS.md
+python .ai-next/tools/forge.py migrate --recover
+```
+
+Preview is read-only and computes the complete result as a pure function of repository state: framework replacements, provenance-proven deletions, preserved unknown files, rendered routers and adapters, the version bump and explicit configuration decisions in `.ai/project.yaml`, the offline integration matrix, blocking and advisory findings, and a protected-path fingerprint — all bound to one `preview_token`. Exit code 1 with `passed: false` means blocking findings; inspect `findings.blocking` before applying.
+
+Finding glossary: `router_extraction_required` (no `.ai/custom/router-shared.md`; extract preserved project router content once and pass it via `--router-shared`), `legacy_overlay_present` (reconcile platform-specific overlays first), `config_decision_required` (pass each listed key via `--set`; suggestions are informational), `already_current`/`downgrade_refused`, `unexpected_staged_file`, `render_validation`, `integration_ownership_collision`. Advisory findings include `preserved_unknown` files, `backfill_available` commands (quoted, never executed), `version_note`, `breaking_change`, `terminal_backlog_rows`, `dirty_git_tree`, and isolated integration classes.
+
+Apply executes one guarded transaction over the exact approved scope: bundle replacement, deletions (`--approve-collision` may additionally remove listed `preserved_unknown` files and overwrite manually edited generated outputs listed as `collisions`), router/adapter rendering, and `.ai/framework.lock` written last with the new `bundle_state`. It then validates the result, re-hashes protected paths, and removes `.ai-next/` only on success. Any failure rolls everything back and keeps the staged bundle. `--set` accepts only keys the crossed version range declares as decisions (plus `documentation_language`); approved configuration values are never overwritten silently. The backup journal lives at `.ai/local/migrate-transaction/`; `--recover` restores an interrupted transaction and refuses to overwrite subsequent user edits. A dirty Git tree is reported as a warning — the recoverable baseline remains the user's responsibility.
+
 ## Approved checks and reuse
 
 The check packet is an explicit execution request, not proof of user authorization. Use only exact commands already approved in the Verification Plan. Commands use argument arrays, never an implicit shell. They retain the caller's OS permissions; this helper is not a sandbox. Network and writes still require applicable authority.

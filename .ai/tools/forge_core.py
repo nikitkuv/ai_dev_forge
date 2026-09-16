@@ -111,7 +111,11 @@ class Transaction:
         return self
 
     def write(self, updates, recheck=None, replace=atomic_replace):
-        """Back up, journal, recheck, then atomically write {relative_path: bytes}."""
+        """Back up, journal, recheck, then atomically write {relative_path: bytes or None}.
+
+        A None value deletes an existing file; rollback and recovery restore it
+        from the journaled backup exactly like a content write.
+        """
         if not self.journal_path.parent.exists():
             raise ForgeError("Claim the transaction before writing")
         originals = {}
@@ -122,7 +126,9 @@ class Transaction:
             if before is not None:
                 (self.guard / f"{index}.bak").write_bytes(before)
         journal = {"files": [{"path": n, "backup": f"{i}.bak" if b is not None else None,
-                              "after": digest(updates[n])} for i, (n, b) in enumerate(originals.items())]}
+                              "after": None if updates[n] is None else digest(updates[n]),
+                              "delete": updates[n] is None}
+                             for i, (n, b) in enumerate(originals.items())]}
         self.journal_path.write_text(canonical(journal), encoding="utf-8")
         # Recheck the whole preview after preparing backups, before the first write.
         if recheck is not None:
@@ -133,7 +139,11 @@ class Transaction:
                 path = within(self.root, name)
                 if (path.read_bytes() if path.exists() else None) != originals[name]:
                     raise ForgeError(f"Concurrent edit: {name}")
-                replace(path, data)
+                if data is None:
+                    if path.exists():
+                        path.unlink()
+                else:
+                    replace(path, data)
                 written.append(name)
         except BaseException:
             self._restore(journal, replace)
@@ -146,7 +156,10 @@ class Transaction:
             path = within(self.root, item["path"])
             current = path.read_bytes() if path.exists() else None
             backup = (self.guard / item["backup"]).read_bytes() if item["backup"] else None
-            if current is not None and current != backup and digest(current) != item["after"]:
+            if item.get("delete"):
+                if current is not None and current != backup:
+                    raise ForgeError(f"Concurrent edit during rollback: {item['path']}; backups retained at {self.guard}")
+            elif current is not None and current != backup and digest(current) != item["after"]:
                 raise ForgeError(f"Concurrent edit during rollback: {item['path']}; backups retained at {self.guard}")
             if backup is not None:
                 replace(path, backup)
@@ -166,7 +179,10 @@ class Transaction:
             path = within(self.root, item["path"])
             before = (self.guard / item["backup"]).read_bytes() if item["backup"] else None
             current = path.read_bytes() if path.exists() else None
-            if current != before and (current is None or digest(current) != item["after"]):
+            if item.get("delete"):
+                if current is not None and current != before:
+                    raise ForgeError(f"Recovery conflicts with later edit: {item['path']}")
+            elif current != before and (current is None or digest(current) != item["after"]):
                 raise ForgeError(f"Recovery conflicts with later edit: {item['path']}")
         for item in reversed(journal["files"]):
             path = within(self.root, item["path"])

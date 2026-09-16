@@ -60,6 +60,13 @@ def parser():
     c.add_argument("--apply", metavar="PREVIEW_TOKEN")
     c.add_argument("--approve-collision", action="append", default=[])
     c.add_argument("--recover", action="store_true")
+    migrate = sub.add_parser("migrate", help="Deterministic framework migration; stage .ai-next/ and run from the staged bundle")
+    migrate.add_argument("--diff", action="store_true")
+    migrate.add_argument("--apply", metavar="PREVIEW_TOKEN")
+    migrate.add_argument("--set", dest="sets", action="append", default=[])
+    migrate.add_argument("--router-shared")
+    migrate.add_argument("--approve-collision", action="append", default=[])
+    migrate.add_argument("--recover", action="store_true")
     c = sub.add_parser("checks", help="Execute only an approved JSON check packet")
     c.add_argument("packet")
     c.add_argument("--execute", action="store_true")
@@ -259,6 +266,22 @@ def main(argv=None):
         if args.recover and args.apply:
             raise ForgeError("Choose apply or recovery")
         result = recover(root) if args.recover else apply(root, args.apply, args.approve_collision) if args.apply else preview(root, args.diff)[0]
+    elif args.command == "migrate":
+        from forge_migration import apply_migrate, preview_migrate, recover_migrate
+        if args.recover and (args.apply or args.sets or args.router_shared):
+            raise ForgeError("Choose recovery or a migration operation")
+        sets = {}
+        for item in args.sets:
+            if "=" not in item:
+                raise ForgeError("--set expects key=value")
+            key, value = item.split("=", 1)
+            sets[key.strip()] = value
+        if args.recover:
+            result = recover_migrate(root)
+        elif args.apply:
+            result = apply_migrate(root, args.apply, sets, args.router_shared, args.approve_collision)
+        else:
+            result = preview_migrate(root, args.router_shared, args.diff, sets)[0]
     elif args.command in ("checks", "metrics", "metrics-record"):
         from forge_runtime import checks, metrics, metrics_record
         if args.command == "metrics":
