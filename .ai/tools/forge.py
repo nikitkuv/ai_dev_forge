@@ -71,6 +71,7 @@ def parser():
     c.add_argument("packet")
     c.add_argument("--execute", action="store_true")
     c.add_argument("--reuse", action="store_true")
+    c.add_argument("--task", help="Record observed check metrics for this canonical TASK")
     sub.add_parser("metrics")
     c = sub.add_parser("metrics-record")
     c.add_argument("packet")
@@ -78,6 +79,15 @@ def parser():
     c.add_argument("task")
     c = sub.add_parser("next-id", help="Monotonic max-plus-one identifier allocation")
     c.add_argument("--kind", required=True, choices=["task", "bug", "inv", "int", "epic", "adr", "mut"])
+    c = sub.add_parser("identity-check", help="Compact canonical identity and link diagnostics")
+    c.add_argument("--path", action="append", default=[], help="Include hashes/declarations for these canonical files")
+    c.add_argument("--details", action="store_true", help="Include the full declaration and file-hash maps")
+    c = sub.add_parser("records-write", help="Render ID aliases and write a validated canonical batch")
+    c.add_argument("packet")
+    c.add_argument("--apply", metavar="PREVIEW_TOKEN")
+    c = sub.add_parser("links-repair", help="Preview repairs of uniquely resolvable record links")
+    c.add_argument("--apply", metavar="PREVIEW_TOKEN")
+    sub.add_parser("records-recover", help="Recover the shared lifecycle record transaction")
     c = sub.add_parser("evidence-check", help="Recompute recorded evidence fingerprints; verdicts, not judgments")
     c.add_argument("task", nargs="?")
     c.add_argument("--epic")
@@ -167,12 +177,20 @@ def parser():
     c.add_argument("--assignment-file", help="Assignment only; the helper embeds the neutral contract itself")
     c.add_argument("--preflight", action="store_true")
     c.add_argument("--timeout", type=float, default=900)
+    c.add_argument("--task", help="Record observed role duration, calls and available usage for this TASK")
     return p
 
 
 def main(argv=None):
     args = parser().parse_args(argv)
     root = Path(args.root).resolve()
+    metric_task = None
+    if args.command in ("role", "checks") and args.task:
+        metric_task = frontmatter(text(root, args.task))
+        if metric_task.get("document_type") != "task" or not metric_task.get("id"):
+            raise ForgeError("--task must identify a canonical TASK")
+        if metric_task.get("delivery_track", "standard") not in ("fast", "standard"):
+            raise ForgeError("Invalid metric TASK delivery track")
     if getattr(args, "offset", 0) < 0 or getattr(args, "limit", 1) <= 0:
         raise ForgeError("offset must be non-negative and limit positive")
     if args.command == "context":
@@ -188,6 +206,30 @@ def main(argv=None):
     elif args.command == "next-id":
         from forge_lifecycle import next_id
         result = next_id(root, args.kind)
+    elif args.command == "identity-check":
+        from forge_records import identity_check
+        result = identity_check(root)
+        result["identity_count"] = len(result["declarations"])
+        if args.path:
+            selected = {within(root, name).relative_to(root).as_posix() for name in args.path}
+            unknown = selected - set(result["file_hashes"])
+            if unknown:
+                raise ForgeError("Not an existing canonical record: " + ", ".join(sorted(unknown)))
+            result["file_hashes"] = {p: h for p, h in result["file_hashes"].items() if p in selected}
+            result["declarations"] = {i: paths for i, paths in result["declarations"].items()
+                                      if any(p in selected for p in paths)}
+        elif not args.details:
+            result.pop("file_hashes")
+            result.pop("declarations")
+    elif args.command == "records-write":
+        from forge_records import records_write
+        result = records_write(root, json.loads(text(root, args.packet)), args.apply)
+    elif args.command == "links-repair":
+        from forge_records import links_repair
+        result = links_repair(root, args.apply)
+    elif args.command == "records-recover":
+        from forge_core import Transaction
+        result = Transaction(root, "lifecycle").restore()
     elif args.command == "evidence-check":
         from forge_lifecycle import evidence_check, evidence_check_epic
         if bool(args.task) == bool(args.epic):
@@ -310,6 +352,9 @@ def main(argv=None):
         finally:
             if transient:
                 within(root, transient).unlink(missing_ok=True)
+    if metric_task and not getattr(args, "preflight", False):
+        from forge_runtime import record_observation
+        record_observation(root, metric_task, args.command, result)
     print(canonical(result))
     if result.get("errors") or result.get("passed") is False or result.get("authorized") is False:
         return 1

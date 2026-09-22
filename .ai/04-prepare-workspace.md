@@ -52,9 +52,13 @@ The orchestrator must independently check the proposal against canonical sources
 
 Use the plan template without adding Task lifecycle state or a duplicated execution-status section.
 
+Apply `test_planning` in the framework contracts: populate Planned Epic Scenarios within the Epic Verification Plan and Planned Test Cases within each TASK Verification Plan before Plan Approval. Require criterion/risk coverage, concrete inputs and observable independently sourced expectations, test levels, existing/proposed targets and expected RED reasons or justified non-RED checks. Map cross-Task scenarios to owning Tasks and execution gates, without duplicating Task case lists. Inspect existing tests before proposing new ones. Unknown expectations or material coverage gaps block approval; missing commands, fixtures or harnesses need explicit resolution Tasks before dependent execution. Planning writes scenario lists, not executable tests or claimed test results.
+
 ## Prepare the Initial TASK Definitions
 
 Create one proposed TASK definition per planned unit of work.
+
+Keep proposed bodies in local draft files and use `records-write` with `{{id:alias}}` placeholders to preview the complete related plan/TASK batch. After the existing Plan Approval, apply the exact preview token and run `validate --project` before handoff. The helper assigns project-global IDs consistently across filenames, frontmatter and references; `next-id` alone is not a reservation. A stale preview requires regeneration, not manual renumbering. See `.ai/tools/USAGE.md` Record batches. Manual workflows remain available when Python is unavailable.
 
 For every TASK:
 
@@ -62,6 +66,7 @@ For every TASK:
 - define one clear outcome, context, scope, out of scope, and constraints;
 - add objectively verifiable acceptance criteria;
 - record affected components and contracts, risk level and flags, and review focus;
+- fill the TASK template's `Planned Change Map` under `task_change_map`: inspected repository paths, actions and reasons, proposed new files, indirect impact and verification coverage, and explicit uncertainties with resolution steps; resolve unknown component or contract boundaries before Plan Approval;
 - record `delivery_track: fast|standard` and its rationale; for fast, record bounded scope, reversibility, low risk, unambiguous behavior, deterministic verification, and explicit absence of all disqualifiers; low risk alone is never enough and uncertainty selects standard;
 - add required Task-specific, affected-component, and scoped quality checks;
 - record `Fuzzing impact` as `existing target affected`, `new target`, `harness required`, or `none`, plus a bounded `Task fuzz smoke` command and budget or an explicit not-applicable rationale;
@@ -167,6 +172,7 @@ Before reporting completion, verify:
 - all TASK definitions are approved;
 - all TASK lifecycle values remain `TODO`;
 - Task dependencies reference existing IDs and contain no cycle;
+- every TASK has an evidence-based Planned Change Map; the ordered sequence links to it and shared-component overlap is reflected in sequencing where necessary;
 - requirement, architecture, ADR, defect, plan, and Task links resolve;
 - Backlog source keys, TASK `external_sources`, plan coverage, and work-item reverse mappings agree when `work_source` is configured;
 - no product code, hooks, MCP configuration, or unrelated documentation changed.

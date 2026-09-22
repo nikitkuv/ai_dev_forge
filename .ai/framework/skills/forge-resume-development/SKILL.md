@@ -26,6 +26,8 @@ description: Recover planned, active, or paused Forge development state after in
 
 ## Determine the safe continuation point
 
+- For identity/link failures, use `python .ai/tools/forge.py identity-check` for exact fields, declarations and byte hashes. Do not reread every document to reconstruct the same inventory. `links-repair` previews only uniquely resolvable Markdown target repairs; apply within existing correction authority. Conflicting IDs require an explicit authoritative mapping, not automatic renumbering. Historical archive references are preserved. Re-run `validate --project` after an authorized repair.
+
 - Treat an agent stage as incomplete when its result was not persisted into the applicable TASK or Epic plan.
 - Treat a legacy TASK without `delivery_track` as standard. Never synthesize fast eligibility or assurance from prior implementation, review, testing, risk labels, or session history.
 - Treat an approved `execution/planned/` workspace as pending Epic Start, not as active work. Never start its first Task directly.

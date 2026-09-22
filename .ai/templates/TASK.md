@@ -45,6 +45,21 @@ research_refs: []
 - **Risk flags:** <Public contract, authorization, persistence, migration, concurrency, shared core, dependency/build, frontend critical path, data/ML, operations, or —.>
 - **Failure impact:** <User, data, compatibility, security, availability, cost, or model-quality impact.>
 
+## Planned Change Map
+
+Record this map during Task definition, before Plan Approval. It owns the per-Task implementation forecast; the Epic plan links here. Follow `task_change_map` in `.ai/framework/contracts.yaml`.
+
+| System part | Repository path and symbol or section | Action | Planned change and reason |
+| --- | --- | --- | --- |
+| <Component, service, screen, pipeline, or other unit> | <Repository-relative file; function/class/section when useful> | <modify/create/delete/move> | <What changes here and which Task outcome it supports> |
+
+Include production code and relevant tests, configuration, schemas, migrations, and documentation. Verify existing paths against the repository; label new paths as proposed. For a move, record both paths. A bounded directory is acceptable only with a reason why exact files cannot yet be named and a concrete step to resolve them. Do not present guessed paths as existing files or list line-by-line implementation instructions.
+
+- **Indirect impact:** <Consumers, callers, shared components, data flows, or contracts affected without planned edits; explain the dependency and link each impact to Verification Plan coverage, or explicit none with rationale.>
+- **Uncertainties:** <Unconfirmed path or impact, missing evidence, and resolution step; or none. Unknown component/contract boundaries must be resolved before Plan Approval.>
+
+This is a planning forecast, not the actual changed-file inventory. Recheck it at Task Start. Record justified file-level refinements within approved boundaries; changes to scope, affected components, or contracts require Replan. Keep actual paths and deviations in Implementation Summary.
+
 ## Delivery Track
 
 - **Selected track:** <fast/standard; defaults to standard and remains independent from model tier and risk level.>
@@ -61,6 +76,20 @@ Missing, uncertain, or contradictory fast evidence requires `standard`. `fast ->
 - [ ] <Observable, objectively verifiable condition.>
 
 ## Verification Plan
+
+### Planned Test Cases
+
+Prepare this list before Plan Approval under `test_planning` in `.ai/framework/contracts.yaml`. Give acceptance criteria stable local IDs (for example AC-1) and each case a stable Task-local ID (TC-1). Cover every acceptance criterion and affected risk; include applicable normal, boundary, invalid-input, failure/recovery, state-transition and side-effect scenarios. Keep the list proportional to the Task; do not fill a fixed quota of test categories.
+
+| Case | AC or risk | Scenario and inputs/preconditions | Expected observable result and independent source | Level and target | Existing or new | Expected RED or rationale |
+| --- | --- | --- | --- | --- | --- | --- |
+| TC-1 | AC-1 / <risk> | <Given / when, including relevant boundary values> | <Then; requirement, contract, invariant or approved example> | <unit/integration/E2E/manual; existing test reference or proposed location> | <reuse/extend/new> | <Missing behavior that should fail before the production edit; or why an existing regression/manual check should not start RED> |
+
+Do not derive expected results from current production output or freeze private implementation details. Verify existing test references and label proposed locations. Reuse adequate existing tests; a check already proving unchanged behavior need not be made artificially RED. Documentation-only or other TDD-not-applicable work still names proportionate checks and expected results with a rationale. No executable tests or claimed RED results are required during planning.
+
+Unknown expected behavior or material coverage gaps block Plan Approval. For a missing harness or command, name the missing evidence, owning Task and resolution step before dependent execution; never invent a runnable command. Revalidate cases at Task Start, refine in-scope details with reasons, and use Replan for scope or behavior-contract changes. A planned list is not evidence of execution and does not prohibit discovering additional in-scope cases.
+
+### Check Selection and Execution
 
 - **Approach:** <TDD by default for bug fixes and meaningful business logic, or a recorded reason why it is not applicable.>
 - **Focused behavior tests:** <Tests that directly prove the acceptance criteria and important failure paths.>
@@ -145,12 +174,14 @@ Standard review evidence is current when its production fingerprint equals the c
 - **Fingerprint:** <Git commit, tree, or scoped diff hash>
 - **Production fingerprint:** <Reproducible hash of the production review paths>
 - **Files changed:** <Compact list>
+- **Change-map reconciliation:** <Planned versus actual paths, justified refinements, unused planned paths, and any Replan reference.>
 - **Production review paths:** <Executable or shipped-behavior-affecting paths>
 - **Supporting evidence paths:** <Tests and other non-production paths>
 - **Ambiguous path classification:** <Path, classification, and production-effect rationale, or —>
 - **Affected-surface or risk changes:** <None, or correction to the approved plan>
 - **Behavior delivered:** <Compact summary>
 - **Tests added or changed:** <Compact summary>
+- **Planned-case reconciliation:** <TC IDs mapped to actual test references, commands and results; added, changed or unexecuted cases with reasons and required dispositions.>
 - **RED/GREEN evidence:** <Commands and expected RED/GREEN results, or allowed not-applicable rationale>
 - **Selected checks:** <Focused, affected, and scoped command/result summary>
 - **Early full-suite authorization:** <Explicit user request and result, or —>

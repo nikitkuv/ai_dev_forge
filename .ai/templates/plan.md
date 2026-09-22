@@ -73,6 +73,8 @@ Use this matrix only for configured `work_source` integrations. For an Epic with
 
 ## Ordered Task Sequence
 
+Each Task owns a `Planned Change Map` in its TASK definition: concrete repository paths, intended edits, and indirect impact. Link to that section from the Task entry below rather than duplicating its file inventory. Summarize shared-component overlap and its ordering consequences in Implementation Strategy and the dependency graph.
+
 ### Task Delivery Tracks
 
 Every TASK records exactly one delivery track independently from model tier and risk level. For each proposed `fast` TASK, record criterion-by-criterion evidence for bounded scope, reversibility, low risk, unambiguous expected behavior, deterministic focused verification, and the absence of every framework disqualifier. Missing, uncertain, or contradictory evidence selects `standard`. Record the selected track and rationale beside each Task in the ordered sequence or directly below its row.
@@ -89,6 +91,18 @@ Changing Task scope, order, composition, or weakening its approved delivery trac
 - [ ] <Observable criterion linked to requirements.>
 
 ## Epic Verification Plan
+
+### Planned Epic Scenarios
+
+Prepare this matrix before Plan Approval under `test_planning` in `.ai/framework/contracts.yaml`. Focus on cross-Task contracts, critical user journeys and shared risks. Reference Task-local cases instead of duplicating their detailed lists. Link these scenario IDs from Requirement Coverage; if no cross-Task scenario applies, give a reason and point to Task coverage.
+
+| Scenario | Requirement or risk | Cross-Task scenario | Expected observable result and source | Owning Tasks / case references | Check and execution gate |
+| --- | --- | --- | --- | --- | --- |
+| ES-1 | <FR/NFR/invariant/risk> | <Integration, end-to-end or regression scenario with relevant conditions> | <Expected behavior and independent contract or requirement> | <TASK IDs; owner of test/harness preparation and linked TC IDs> | <Existing or proposed check; focused Task gate or Epic Validation> |
+
+Plan missing fixtures, services and harnesses as owned work with dependencies before the tests that need them. Record unresolved commands honestly with a resolution Task. Unknown expected behavior or material coverage gaps block Plan Approval. Planning defines scenarios; executable tests are written during authorized Task execution, one behavior at a time. Scenario rows are not passing evidence.
+
+### Commands and Constraints
 
 - **Full test suite:** <Exact project-wide command or unresolved blocker. Run only during Epic Validation by default.>
 - **Project-wide lint:** <Exact command, not applicable rationale, or unresolved blocker.>
@@ -132,6 +146,7 @@ Changing Task scope, order, composition, or weakening its approved delivery trac
 - **Full-suite commands and results:** <Compact command/result list.>
 - **Project-wide checks and results:** <Compact lint/typecheck/build/integration/E2E/profile result list.>
 - **Requirement and critical-path coverage:** <Compact evidence summary.>
+- **Planned-scenario reconciliation:** <ES IDs mapped to executed checks/results and linked Task evidence; gaps or changes with reasons and required dispositions.>
 - **Skipped or not-applicable checks:** <Rationale and risk, or —.>
 - **Accepted exceptions:** <User decision and risk, or —.>
 

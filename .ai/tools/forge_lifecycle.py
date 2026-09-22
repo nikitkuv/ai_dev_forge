@@ -50,7 +50,10 @@ def next_id(root, kind):
     found, sources, declared_next = {}, [], [0]
     if kind == "task":
         sources = ["execution/"]
-        for item in inventory(root, include_completed=True)[0]:
+        items, errors = inventory(root, include_completed=True)
+        if errors:
+            raise ForgeError("Cannot allocate TASK ID from incomplete inventory: " + "; ".join(errors))
+        for item in items:
             identity = item["metadata"].get("id")
             if identity and identity.startswith(prefix):
                 found[identity] = item["path"]
@@ -842,9 +845,11 @@ def epic_start(root, epic_id, apply_token=None):
     planned = _workspace_directory(root, "execution/planned", epic_id)
     name = planned.split("/")[-1]
     moves = [(planned, f"execution/active/{name}")]
-    lines = text(root, "BACKLOG.md").splitlines(keepends=True)
+    from forge_records import relocation_links
+    updates = relocation_links(root, *moves[0])
+    lines = updates.get("BACKLOG.md", text(root, "BACKLOG.md").encode()).decode().splitlines(keepends=True)
     _edit_backlog_status(root, lines, epic_id, "ACTIVE")
-    updates = {"BACKLOG.md": "".join(lines).encode()}
+    updates["BACKLOG.md"] = "".join(lines).encode()
     if apply_token is None:
         return mutation_preview(root, "epic-start", updates, moves,
                                 description=f"Move {planned} to active and set {epic_id} ACTIVE")[0]
@@ -859,9 +864,11 @@ def epic_complete(root, epic_id, apply_token=None):
     active = _workspace_directory(root, "execution/active", epic_id)
     name = active.split("/")[-1]
     moves = [(active, f"execution/completed/{name}")]
-    lines = text(root, "BACKLOG.md").splitlines(keepends=True)
+    from forge_records import relocation_links
+    updates = relocation_links(root, *moves[0])
+    lines = updates.get("BACKLOG.md", text(root, "BACKLOG.md").encode()).decode().splitlines(keepends=True)
     backlog_bytes, archive_bytes = _archive_move(root, lines, "Epic Roadmap", epic_id, "COMPLETED")
-    updates = {"BACKLOG.md": backlog_bytes, ARCHIVE_PATH: archive_bytes}
+    updates.update({"BACKLOG.md": backlog_bytes, ARCHIVE_PATH: archive_bytes})
     if apply_token is None:
         return mutation_preview(root, "epic-complete", updates, moves,
                                 description=f"Move {active} to completed and archive {epic_id} COMPLETED")[0]

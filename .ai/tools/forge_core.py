@@ -624,9 +624,11 @@ def record_structure_errors(root, record, contracts):
     if meta.get("document_type") == "epic_plan":
         content = text(root, path)
         if any(value["heading"] == "Ordered Task Sequence" for value in sections(content)):
-            planned = [re.match(r"TASK-\d+", cell.get("Task", "")).group(0)
-                       for cell in table_rows(content, "Ordered Task Sequence", {"Order", "Task"})
-                       if re.match(r"TASK-\d+", cell.get("Task", ""))]
+            from forge_records import cell_id
+            planned = [identity for cell in table_rows(content, "Ordered Task Sequence", {"Order", "Task"})
+                       if (identity := cell_id(cell.get("Task", ""))) and identity.startswith("TASK-")]
+            if len(planned) != len(set(planned)):
+                errors.append(f"Duplicate Task in plan order: {path}")
             task_dir = within(root, str(Path(path).parent / "tasks"))
             if task_dir.exists():
                 on_disk = set()
@@ -686,6 +688,12 @@ def validate(root, project=False):
             except (OSError, ForgeError) as exc:
                 errors.append(f"{path}: {exc}")
     if project:
+        from forge_records import identity_check
+        identity_result = identity_check(root)
+        advisory.extend(identity_result["advisory"])
+        errors.extend(identity_result["errors"])
+        errors.extend(f"{f['code']}: {f['path']} field {f['field']}: {f['actual']}"
+                      for f in identity_result["findings"])
         records, problems = inventory(root, include_completed=True)
         errors.extend(problems)
         errors.extend(conformance_errors(root, contracts))

@@ -51,6 +51,53 @@ python .ai/tools/forge.py next-id --kind task|bug|inv|epic|adr|mut
 
 Returns the max-plus-one identifier for the kind, the scanned canonical locations, and the current maximum. It never fills numbering gaps and never reuses retired identifiers; `mut` honors the registry's declared `next_id` when it exceeds every retained run. Row-declared kinds (`bug`, `epic`) scan the live `BACKLOG.md` and `BACKLOG-ARCHIVE.md` together, so an archived maximum still bounds allocation.
 
+`--kind int` is also supported. `next-id` does not reserve a number: repeated reads before a write return the same ID. For a related set of new records, use `records-write` below instead of copying numeric identifiers between documents manually. An incomplete TASK inventory fails allocation rather than silently reusing an unseen ID.
+
+## Identity and link integrity
+
+```text
+python .ai/tools/forge.py identity-check
+python .ai/tools/forge.py identity-check --path BACKLOG.md --path execution/planned/EPIC-001-example/plan.md
+python .ai/tools/forge.py links-repair
+python .ai/tools/forge.py links-repair --apply PREVIEW_TOKEN
+```
+
+`identity-check` returns compact structured findings (`code`, `path`, `field`, `actual`, `expected`) and counts. Use repeated `--path` to include declarations and `file_hashes` (exact byte SHA256) for only the files about to be edited; `--details` returns all maps when necessary. Findings still cover the whole project. It checks filename/frontmatter/heading identity agreement, workspace Epic identity, duplicate declarations and Backlog rows, numeric aliases such as TASK-001/TASK-0001, recorded `blocked_by`/`research_refs`/`promoted_to`, live Backlog dependency/blocker/scheduled-TASK references and local Markdown links into canonical record directories. `validate --project` includes these checks, plus plan-order membership and duplicate rows. Ordered Task cells accept plain IDs, code spans and Markdown links.
+
+These are structural checks, not proof that a dependency is semantically correct. Arbitrary prose, external integration mappings and historical archive references are not rewritten or treated as live references. Missing links in completed records are historical advisories, not blockers for current work. Fenced Markdown examples are ignored. The link parser supports simple inline Markdown links, including angle-wrapped destinations; reference-style links and destinations with spaces/parentheses require manual inspection. No global text replacement or renumbering is performed.
+
+`links-repair` changes only a missing inline Markdown destination whose record ID resolves to one unambiguous declared file; Epic plan paths resolve by their parent Epic ID. Anchors are preserved. Any identity conflict blocks automatic repair. Unresolvable links remain reported and prevent a successful validated apply; resolve their intended target explicitly. Use the existing correction authorization, inspect the diff, then apply. `epic-start` and `epic-complete` update exact inline Markdown targets pointing into the moved workspace in the same rollback-capable transaction. Previously completed records and the append-only archive are preserved.
+
+## Record batches
+
+```text
+python .ai/tools/forge.py records-write .ai/local/approved-records.json
+python .ai/tools/forge.py records-write .ai/local/approved-records.json --apply PREVIEW_TOKEN
+python .ai/tools/forge.py records-recover
+```
+
+Use this command to save an already-authorized set of plan/TASK definitions or related intake/Replan edits together. It assigns each requested symbolic ID once across every output path and body. It does not write prose, choose scope, approve definitions or advance lifecycle state. Drafts should live in `.ai/local/` until approval. A packet has this shape:
+
+```json
+{
+  "schema_version": 1,
+  "allocations": {"first": "task", "second": "task"},
+  "files": [
+    {"path": "execution/planned/EPIC-001-example/plan.md", "source": ".ai/local/plan-draft.md"},
+    {"path": "execution/planned/EPIC-001-example/tasks/{{id:first}}.md", "source": ".ai/local/first-draft.md"},
+    {"path": "execution/planned/EPIC-001-example/tasks/{{id:second}}.md", "source": ".ai/local/second-draft.md"}
+  ]
+}
+```
+
+Drafts contain the same `{{id:first}}` / `{{id:second}}` placeholders in frontmatter, headings, dependencies, plan rows and links. Each file supplies exactly one of `source` (a project-local draft file) or `content` (the full string). For an existing output, also supply its exact `expected_sha256` from `identity-check.file_hashes`. Aliases accept lowercase letters, digits and underscores and begin with a letter. Allocation kinds: task, epic, bug, adr, inv, int. MUT remains in its separate registry workflow.
+
+Mutable outputs are root SPEC/ARCHITECTURE/BACKLOG/DECISIONS and Markdown records under execution, decisions, investigations and intents; completed work and BACKLOG-ARCHIVE cannot be rewritten. Existing identity and lifecycle status cannot change through this helper; new TASKs must be TODO. Use dedicated lifecycle helpers for transitions and archiving. A new Epic ID must be declared in the supplied Backlog content, and TASK/plan definitions must pass the existing project checks. Content and semantic approval remain the orchestrator's responsibility.
+
+Preview returns the exact rendered diffs, ID mapping and a token bound to all inspected canonical records and rendered outputs. Another session's saved record invalidates the token. Apply uses the shared lifecycle transaction guard, rechecks canonical inputs, validates the resulting project and rolls back all file writes on failure. Concurrent helpers are serialized; direct edits by an unrelated editor are not an OS-wide lock. A failed process leaves a journal; `records-recover` restores it without overwriting later user edits. Recovery is also available for the shared lifecycle journal. Empty directories left by rollback contain no canonical records.
+
+Run `validate --project` after saving related records and before session handoff so mechanical errors are detected in the originating session. An ambiguous old identity requires an explicit mapping and targeted correction, never blanket normalization of all IDs.
+
 ## Evidence freshness and gate inputs
 
 ```text
@@ -138,6 +185,10 @@ Reuse requires both cacheable and inputs_complete explicitly true. Approve that 
 Success returns compact evidence and log references. Inspect warning tails and required log content; raw logs can contain project data and remain local. Failed output is bounded. Copy exact commands/results/fingerprints into the canonical TASK/plan; disposable local logs alone cannot satisfy a durable gate. Reuse only command evidence: reviewer/tester judgment, current fast assurance, acceptance and Epic Validation are unchanged. Never reuse a GREEN result as RED evidence.
 
 ## External roles
+
+Add `--task <canonical-TASK-path>` to `role` or `checks` to record measured metrics without a separate model-authored packet. Checks record actual execution duration and the number of reused checks (reused execution duration is zero); roles record call count, duration and model. Claude usage is copied only from numeric provider-returned usage fields. Codex text output does not provide a reliable usage contract here, so its missing token counts stay unknown. Preflight-only calls do not count as role executions. Telemetry write failures are reported without hiding the tool result.
+
+`metrics-record` also accepts `waiting_seconds`, `role_calls`, boolean-or-null `first_pass` and `post_acceptance_fix`. `metrics` aggregates review iterations, calls, reuse, waiting and escalation reasons; rate fields include their known observation count and missing count. Rates describe supplied observations, not an inferred project-wide acceptance or task-success rate. Record a per-task outcome once when known; do not manufacture first-pass or acceptance facts from a process exit code. Native subagents and work outside these helpers still need explicit measured records.
 
 ```text
 python .ai/tools/forge.py role --orchestrator claude --role reviewer --prompt-file .ai/local/review-prompt.md

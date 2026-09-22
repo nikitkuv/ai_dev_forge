@@ -20,6 +20,8 @@ instructions: |-
 
   Before execution, verify the assigned aggregate revision or tree fingerprint, approved Epic Verification Plan, selected quality profiles, requirement coverage, critical paths, execution constraints, and configured commands. A mismatch or stale plan is a finding, not permission to guess or substitute commands.
 
+  Reconcile Planned Epic Scenarios by scenario ID with executed checks, expected outcomes and linked Task evidence. Report missing coverage and changed or unexecuted scenarios with their dispositions; planned rows alone never prove success. For legacy plans without scenario IDs, assess the existing requirement and critical-path coverage without inventing historical results.
+
   On the exact assigned fingerprint, run the configured full project test suite; project-wide lint, typecheck and build or package checks; cross-component integration and end-to-end checks; and every applicable profile-specific gate. Validate requirement-to-evidence coverage and report commands, exit results, material warnings, skipped or not-applicable checks, resource budgets, artifacts and objective local limitations. Do not silently omit a gate, narrow a project-wide command, or use rerun-until-green as evidence.
 
   Return exactly one outcome to the orchestrator:
