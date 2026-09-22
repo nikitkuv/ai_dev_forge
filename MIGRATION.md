@@ -1,78 +1,5 @@
 # Миграция AI Development Forge
 
-## Обновление до v4.12
-
-v4.12 делает миграцию детерминированной локальной командой. После staging'а `.ai-next/` вся миграция — preview и apply по токену, одна транзакция с журналом и откатом:
-
-```text
-python .ai-next/tools/forge.py migrate            # read-only preview + findings + токен
-python .ai-next/tools/forge.py migrate --apply PREVIEW_TOKEN [--set key=value ...]
-```
-
-Команда сама вычисляет полный дифф (замена bundle, доказанные удалениями устаревшие файлы, рендер роутеров и адаптеров, версия и явные решения в `project.yaml`), офлайн-классифицирует интеграции, хэширует защищённые пути, пишет `.ai/framework.lock` последним и удаляет `.ai-next/` только после успешной валидации. Версионные правила миграции объявлены машинно в `.ai/framework/migrations.yaml`. Нужен Python 3.11+ с зависимостями из `.ai-next/tools/requirements.txt` (удобно — интерпретатор из `.forge-venv` проекта). Проектам без Python остаётся задокументированный ручной путь (`.ai/MIGRATE.md`).
-
-## Обновление до v4.11
-
-v4.11 добавляет авто-архивацию терминальных строк Backlog и derived search index. Migration обновляет tools/skills/контракты и валидацию, но ничего не делает принудительно: `BACKLOG-ARCHIVE.md` создаётся первым терминальным переходом, `.ai/local/index.db` — первым `query`.
-
-Существующие терминальные строки (`COMPLETED`/`CANCELLED` Epic, `RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX` Bug) остаются в живом `BACKLOG.md` как легаси и будут отмечены `validate --project` с подсказкой разовой мутации. Одноразовый backfill — одной транзакцией: `python .ai/tools/forge.py backlog archive-all` (preview, затем `--apply TOKEN`) переносит все легаси-терминальные строки дословно в годовые секции архива; поштучная альтернатива — `backlog archive-row --id <ID>`. Обязательного backfill нет — до него аллокация ID продолжает учитывать легаси-строки в живом файле.
-
-Search index — опциональный derived-кэш: пересобирается автоматически, не является evidence и не требует миграции или резервных копий. Отсутствие Python не меняет workflows: `query` просто недоступен, явные ссылки работают как раньше.
-
-## Обновление до v4.10
-
-v4.10 добавляет intent-записи: intake фич, продуктовых изменений и external work фиксирует материальный запрос одним project-owned `intents/INT-NNNN-<short-name>.md` по bounded-шаблону до создания Backlog row. Migration устанавливает contracts/template/skill/router support и валидацию, но не создаёт папку `intents/`, synthetic `INT-*` записи и не изменяет существующие canonical документы.
-
-Backlog получает опциональную колонку `Intent`; существующие Backlogs без колонки остаются валидными, backfill не требуется. Первая material feature/product-change/external-work запись создаст папку и `INT-0001` при явном intake. Отвергнутые и отложенные запросы сохраняются с outcome и rationale; записи не удаляются. Баги и bootstrap intent-записей не создают. Ни один INT outcome сам по себе не меняет Epic/TASK lifecycle, readiness, acceptance или commit permission.
-
-## Обновление до v4.9
-
-v4.9 добавляет optional Python-инструменты в framework-owned `.ai/tools/`, сокращённый router и metadata-first восстановление. Скопируйте новый bundle, при необходимости настройте Python 3.11+ с pinned requirements, затем выполните preview adapter sync. Bootstrap внутри исходного Forge не требуется.
-
-Добавьте `.ai/local/`, `.forge-venv/` и `__pycache__/` в ignore целевого проекта. Project configuration, local artifacts и неизвестные поля lock сохраняются. Renderer добавляет только `python_adapter_state`; неизвестные старые hashes не разрешают перезапись вручную изменённых файлов. Retired outputs сохраняются для отдельного решения.
-
-При переходе на `forge-files-v1` evidence с несовместимым fingerprint становится stale; не объявляйте его актуальным задним числом. Кэш команд по умолчанию выключен; Epic Validation не кэшируется. Bounded Task Start требует отдельного решения пользователя. Legacy `.mjs` transports продолжают работать; предпочтительный helper transport — Python.
-
-## Изменения v4.8
-
-v4.8 добавляет lifecycle-independent `forge-investigate`: основной агент исследует проблему без субагентов и хранит один project-owned `investigations/INV-NNNN-<short-name>.md`. Migration устанавливает только contracts/template/skill/router support, не создаёт synthetic INV records, сохраняет существующий `investigations/` byte-for-byte и останавливается на несовместимой path collision. Новый INV может завершиться `no_action`, `promoted`, `fixed_directly` или `unresolved`; ни один outcome сам по себе не меняет Epic/TASK lifecycle и не разрешает commit.
-
-## Изменения v4.7
-
-v4.7 добавляет OpenCode как третий native adapter. Корневой `AGENTS.md` остаётся единым router для Codex и OpenCode, `.agents/skills/` переиспользуется обеими платформами, а одиннадцать OpenCode subagents генерируются под `.opencode/agents/`. `.opencode/skills/` и отдельный OpenCode router не создаются.
-
-Enum `role_execution.mode` не меняется. Для OpenCode-led migration без утверждённого route предлагается существующий `native_subagents`; значение записывается только после явного approval. Уже утверждённый режим сохраняется, а несовпадение активного оркестратора блокирует planner/reviewer без fallback.
-
-Включённый OpenCode требует три явно подтверждённых model ID в формате `provider/model-id`; provider-independent defaults нет. Migration не устанавливает и не авторизует OpenCode или provider. `opencode.json`, commands, plugins, skills и unlisted agents остаются project-owned. Все enabled adapters заменяются и откатываются атомарно; удалить можно только OpenCode-файлы, чья Forge ownership доказана старым lock.
-
-## Обновление до v4.6
-
-v4.6 вводит ровно два TASK delivery track: `fast` и `standard`. Migration не угадывает fast eligibility по старым risk flags и не синтезирует fast evidence. Любая legacy TASK без `delivery_track`, включая состояния `TODO`, `IN PROGRESS`, `IN REVIEW`, `IN TESTING` и `AWAITING USER ACCEPTANCE`, трактуется как `standard`; уже начатая standard TASK не понижается до fast.
-
-После обновления новые планы и TASK definitions явно фиксируют track, rationale и verification. Fast TASK использует implementer и orchestrator assurance без reviewer/tester; при неопределённости или провале она повышается до standard. Model tier mapping, Task Acceptance, Epic Validation и fuzzing этой миграцией не меняются.
-
-## Обновление до v4.4
-
-v4.4 добавляет независимый `forge-mutation-test`, fast `mutation-runner`, strong `mutation-analyzer` и project-owned историю `quality/mutation-testing/`. Эти возможности не добавляют Epic/TASK transition или quality gate, не требуют mutation backend по умолчанию и не запускаются во время bootstrap, migration, adapter sync или обычной разработки.
-
-Migration устанавливает новые manifest-declared agent/skill adapters, но не устанавливает `mutmut` или другой backend и не создаёт mutation registry. Существующий `quality/mutation-testing/` сохраняется byte-for-byte, не входит в managed-output hashes и восстанавливается при rollback. Отсутствие каталога — clean baseline и не является blocker.
-
-Если старый проект уже имеет собственный файл или skill с ID `mutation-runner`, `mutation-analyzer` или `forge-mutation-test`, migration показывает same-ID collision и ждёт точного решения пользователя. Неизвестные mutation artifacts вне нового project-owned path остаются защищёнными как unrelated project state.
-
-## Обновление до v4.2
-
-v4.2 добавляет необязательный универсальный registry локальных интеграций и `work_source` intake. Чистый Forge по-прежнему не имеет `.ai/integrations/`, не требует connector runtime и проходит migration по прежнему основному пути.
-
-Если `.ai/integrations/` существует, framework migration сканирует его только offline и сохраняет byte-for-byte. Current definitions продолжают работать; malformed, future-schema и неизвестные custom profiles блокируют только своих consumers. Framework replacement и integration-schema migration имеют разные preview, approval, backup и rollback.
-
-Project-owned definitions/state не включаются в managed-output hashes. Изменение board, knowledge source, dataset или analysis service не считается framework drift и само по себе не требует adapter sync.
-
-## Совместимость v4.1
-
-v4.3 заменяет неявный preferred/fallback route явным `role_execution.mode` для обеих ролей. В актуальном launcher доступны `claude_with_codex` (Claude Code + локально установленный и авторизованный Codex CLI через stable `codex exec`), `codex_with_claude` (Codex + Claude Code CLI 2.1.203+ в headless plan mode) и `native_subagents` (внутренние агенты активной платформы). Начиная с v4.7.1, Claude-to-Codex route не зависит от `codex-plugin-cc`, App Server, shared broker или pipe.
-
-Для проекта v4.2 миграция показывает прежнее эффективное поведение и предлагает `claude_with_codex` как совместимый вариант, но записывает его только после подтверждения. Она генерирует оба launcher и сохраняет native agents, не устанавливая и не авторизуя внешние runtimes. Недоступный выбранный route блокирует роль без fallback; откат восстанавливает прежнюю конфигурацию, adapters и lock одной транзакцией.
-
 Эта инструкция обновляет проект, где уже используется старая версия Forge. Канонические документы, `.ai/integrations/`, `quality/mutation-testing/`, project-owned consumers, `decisions/`, `execution/`, код и тесты проекта не изменяются framework-транзакцией.
 
 ## Что получится
@@ -94,11 +21,33 @@ v4.3 заменяет неявный preferred/fallback route явным `role_e
 
 Для проекта с work-source links миграция отдельно проверяет совместимость Backlog `Sources`, TASK `external_sources`, Epic coverage matrix и reverse provenance, но не исправляет их без отдельного canonical/Replan или integration-schema approval.
 
-## Перед началом
+## Рекомендуемый вариант: миграцией управляет агент
+
+Команда миграции остаётся детерминированной и транзакционной, но работать с ней вручную не нужно. Клонируйте или обновите AI Development Forge, откройте **этот клон** в Codex, Claude Code или OpenCode и отправьте короткий запрос с путём к обновляемому проекту:
+
+```text
+Обнови AI Development Forge в проекте D:\work\my_project, используя текущий клон Forge.
+Прочитай .ai\MIGRATE.md и сам проведи миграцию.
+Сам подготовь и проверь .ai-next, спроси только необходимые решения и финальное подтверждение,
+после подтверждения сам примени миграцию. Не проси меня переносить preview_token или собирать команды.
+```
+
+Для POSIX-систем укажите соответствующий путь к проекту. Можно работать и наоборот: открыть обновляемый проект, указать путь к клону Forge и попросить прочитать `<путь-к-клону>/.ai/MIGRATE.md`. Этого запроса достаточно, чтобы агент:
+
+1. проверил версии активного bundle и указанного клона;
+2. сам подготовил `.ai-next/`, не затрагивая активную `.ai/`;
+3. запустил read-only preview и объяснил изменения обычным языком;
+4. запросил только содержательные решения, если они действительно нужны;
+5. показал итоговый scope для одного финального подтверждения;
+6. сам передал сохранённый `preview_token` в apply, выполнил проверку и сообщил результат.
+
+Пользователь не копирует token, не собирает `--set`/`--router-shared`/`--approve-collision` и не вычитывает JSON команды. Эти детали обслуживает агент. Ручной режим ниже нужен для CI, диагностики или осознанного самостоятельного запуска.
+
+## Перед ручным запуском
 
 Запускайте команды из корня мигрируемого проекта. Убедитесь, что старая `.ai/` существует, сохраните текущее состояние в Git или сделайте резервную копию. Если `.ai-next/` уже существует, не перезаписывайте её: удалите или переименуйте только после проверки её происхождения. Нужен Python 3.11+ с зависимостями из `.ai-next/tools/requirements.txt`; например, интерпретатор из `.forge-venv` проекта.
 
-## Вариант 1: копирование локальной версии
+## Ручной вариант 1: копирование локальной версии
 
 Скопируйте `.ai/` нового релиза в мигрируемый проект под именем `.ai-next/` (без `project.yaml`, `custom/`, `local/` и `framework.lock`, которых в релизном bundle нет). Старая `.ai/` должна остаться на месте. Затем запустите preview:
 
@@ -106,7 +55,7 @@ v4.3 заменяет неявный preferred/fallback route явным `role_e
 python .ai-next/tools/forge.py migrate
 ```
 
-## Вариант 2: последняя версия из GitHub `main`
+## Ручной вариант 2: последняя версия из GitHub `main`
 
 Скрипт клонирует bundle, кладёт его в `.ai-next/` и сразу запускает preview миграции.
 
@@ -165,9 +114,9 @@ python .ai-next/tools/forge.py migrate
 
 Sparse checkout загружает рабочую копию только папки `.ai/`; временный Git-каталог создаётся за пределами проекта и удаляется после копирования. Preview не изменяет репозиторий: он лишь печатает полный план миграции в компактном JSON с `preview_token`.
 
-## Запуск
+## Продолжение в ручном режиме
 
-Preview уже запущен одним из вариантов выше (или повторите `python .ai-next/tools/forge.py migrate --diff`). Дальше:
+Этот раздел нужен только если вы сознательно не передали миграцию агенту. Preview уже запущен одним из вариантов выше (или повторите `python .ai-next/tools/forge.py migrate --diff`). Дальше:
 
 1. Разберите findings. Блокирующие (`router_extraction_required`, `legacy_overlay_present`, `config_decision_required`, `unexpected_staged_file`, `downgrade_refused`, `already_current`, `render_validation`, `integration_ownership_collision`) требуют решения до apply; глоссарий — в `.ai/tools/USAGE.md`.
 2. Для legacy-проекта без `.ai/custom/router-shared.md` один раз вычлените сохраняемый проектный контент старых роутеров в файл и передайте его: `--router-shared <path>`. Альтернатива всему циклу — вызвать скилл `forge-migrate-framework`: он прогонит команды и соберёт решения.

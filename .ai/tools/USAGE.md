@@ -140,7 +140,9 @@ Writes use per-file atomic replacement and a backup journal at `.ai/local/adapte
 
 ## Framework migration
 
-Run from the staged new bundle against the active one; the command performs no staging itself.
+This is the low-level interface used by the migration agent/skill. In the normal user workflow, the user names a local Forge clone (or approves a remote release), and the agent stages `.ai-next/`, runs preview, retains the token, asks for actual decisions and final approval, and invokes apply. Do not require the user to copy `PREVIEW_TOKEN` or assemble these commands.
+
+Run from the staged new bundle against the active one; the command itself performs no staging.
 
 ```text
 python .ai-next/tools/forge.py migrate

@@ -106,13 +106,18 @@ The staged bundle SHALL carry a structured migration contract declaring, per fra
 - **WHEN** the live Backlog contains terminal rows and the crossed version range introduced automatic archiving
 - **THEN** the preview reports the rows as an advisory finding together with the exact available backfill command.
 
-### Requirement: The migration entry point needs no long prompt
+### Requirement: The migration entry point is agent-first and needs no long prompt
 
-A consumer SHALL be able to run the entire migration as one shell command from the project root: staging remains a documented copy or sparse-clone one-liner without network access inside the Python tools, immediately followed by the migration preview and apply. The bundled migration skill SHALL act as a thin wrapper that stages the bundle, invokes the command, relays findings, collects the explicit decisions, and reports the result — performing judgment work only for legacy router extraction and collision decisions. Projects without Python SHALL retain the documented manual migration path.
+A consumer SHALL be able to request the migration from either an agent session opened in the local Forge clone with a named consumer path, or an agent session opened in the consumer with a named Forge clone (or an explicitly approved remote release), without manually staging `.ai-next/`, copying a preview token, composing flags, or reading command JSON. Staging remains a documented copy or sparse-clone operation without network access inside the Python tools. The bundled migration skill SHALL act as a thin wrapper that stages the bundle, invokes the command, explains findings, collects the explicit decisions, retains the preview token as agent working data, applies the approved preview, and reports the result — performing judgment work only for legacy router extraction, configuration choices, and collision decisions. Projects without Python SHALL retain the documented manual agent-driven migration path.
+
+#### Scenario: Local clone request drives the whole workflow
+- **WHEN** the user asks an agent to update a consumer repository from a named local Forge clone
+- **THEN** the agent stages that clone's release bundle, runs preview, asks only for unresolved decisions and final approval, and applies the reviewed token itself
+- **AND** the user is not asked to copy a token or assemble a migration command.
 
 #### Scenario: Skill drives the command
 - **WHEN** the user invokes the bundled migration skill in a project with Python available
-- **THEN** the skill runs the command's preview, surfaces its findings for decision, and applies with the returned token instead of performing the migration steps itself.
+- **THEN** the skill stages the selected release when needed, runs the command's preview, surfaces its findings for decision, and applies with the returned token instead of performing the migration mechanics itself.
 
 #### Scenario: No-Python fallback preserved
 - **WHEN** the consumer project cannot run the Python tools

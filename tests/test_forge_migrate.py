@@ -105,6 +105,26 @@ class ContractTests(Repository):
                 self.assertIn(key, {"notes", "config_additions", "config_decisions", "breaking", "backfill_commands"})
         self.assertEqual(core.yaml_value(core.text(ROOT, ".ai/framework/migrations.yaml")), data)
 
+    def test_agent_first_entry_points_keep_cli_details_out_of_user_workflow(self):
+        skill = core.text(ROOT, ".ai/framework/skills/forge-migrate-framework/SKILL.md")
+        router = core.text(ROOT, ".ai/MIGRATE.md")
+        specification = core.text(ROOT, "openspec/specs/framework-migration/spec.md")
+
+        for document in (skill, router, specification):
+            self.assertIn("local Forge clone", document)
+            self.assertIn("preview token", document.lower())
+        self.assertIn("stage the resolved release yourself", skill)
+        self.assertIn("never ask the user to copy or re-enter the token", skill)
+        self.assertIn("Do not ask the user to perform these staging steps", router)
+        self.assertIn("the user is not asked to copy a token", specification)
+
+    def test_maintained_user_docs_describe_current_behavior_not_release_history(self):
+        for path in ("README.md", "MIGRATION.md", "FRAMEWORK.md", "RUNBOOK.md"):
+            document = core.text(ROOT, path)
+            self.assertNotRegex(document, r"(?i)\bv\d+\.\d+(?:\.\d+)?\b", path)
+            for heading in ("Обновление до v", "Изменения v", "Совместимость v"):
+                self.assertNotIn(heading, document, path)
+
     def test_range_filter_is_exclusive_lower_and_inclusive_upper(self):
         self.assertEqual([name for name, _ in migration.migration_entries(ROOT / ".ai", "4.10", "4.11.0")], ["4.11"])
         self.assertEqual([name for name, _ in migration.migration_entries(ROOT / ".ai", "4.2", "4.7.1")],
