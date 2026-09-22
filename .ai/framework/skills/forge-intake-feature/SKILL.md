@@ -5,6 +5,8 @@ description: Add a new feature, product change, or retained future idea to an in
 
 # Intake a Feature or Product Change
 
+For authorized related INT/ADR/Backlog/plan edits, prefer `records-write` with symbolic ID aliases and an exact preview/apply token. It saves the prepared content together and checks structural consistency; it never grants intake/Replan approval or changes existing lifecycle status. Use `identity-check` for existing byte hashes and conflict diagnostics. Do not reserve IDs by repeatedly calling `next-id` or normalize historic IDs to a preferred padding width.
+
 ## Classify the request
 
 1. Read the relevant SPEC, ARCHITECTURE, BACKLOG, ADRs, all affected planned workspaces, the active Epic plan, current TASK, explicitly referenced `INV-NNNN` records, obviously relevant investigations by subject, area, or relevant paths, obviously matching prior `INT-NNNN` intent records by subject or area, and Git state. When the Python helpers are present, `python .ai/tools/forge.py query <terms> --kind INT,INV,ADR` gathers these obvious matches mechanically — ranked pointers only, explicit references still first. Confirm uncertain investigation matches with the user. Check their baseline and relevant paths before reusing conclusions; recheck only what changed materially.

@@ -1,5 +1,11 @@
 # AI Development Forge v4.11 — Architecture
 
+## План тестов до реализации
+
+При планировании эпика и задач обязателен предварительный план тестов (`test_planning` в `.ai/framework/contracts.yaml`). В `plan.md` внутри Epic Verification Plan записываются сквозные сценарии, ожидаемые результаты, ответственные TASK и этап проверки. В TASK внутри Verification Plan записываются конкретные сценарии с ID, связью с критериями приёмки и рисками, входными условиями, независимым источником ожидаемого результата, уровнем проверки, существующим или новым тестом и ожидаемой причиной RED либо обоснованием неприменимости.
+
+План составляется до Plan Approval; код тестов появляется при выполнении разрешённой задачи по циклу RED → GREEN → REFACTOR, по одному поведению за раз. Существующие регрессионные проверки не нужно искусственно делать красными. План допускает обоснованные уточнения в пределах задачи; неизвестные ожидания и существенные пробелы покрытия устраняются до утверждения. Отсутствующие команды и тестовая инфраструктура получают задачу-владельца и зависимость до использования. При проверке результата ID сценариев сопоставляются с фактическими тестами и результатами запуска; сам список не является доказательством прохождения. Новые отдельные документы и lifecycle-gates не вводятся; для старых задач список дополняется перед выполнением без переписывания принятой истории.
+
 ## Configurable planner/reviewer routing
 
 `epic-planner` and `reviewer` keep neutral definitions and native agents on Codex, Claude Code, and enabled OpenCode. One required `.ai/project.yaml` value selects both roles: `claude_with_codex` means Claude Code orchestration plus the managed stable `codex exec` route; `codex_with_claude` means Codex orchestration plus managed headless Claude Code; `native_subagents` uses the active platform's internal agents. OpenCode-led setup proposes the existing `native_subagents` value by default when no approved route exists; it adds no new mode and still requires explicit approval. Cross-provider preflight or runtime failure never switches provider implicitly.
@@ -274,6 +280,10 @@ Harness или remediation создаются как новые TASK через 
 ## Quality gates и project profiles
 
 Universal Task baseline требует approved definition и boundaries, выбранный delivery track, objectively verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected affected/scoped checks, актуальный fast assurance либо standard review/testing, reproducible manual verification и explicit Task Acceptance.
+
+При составлении каждой новой или перепланированной TASK до Plan Approval заполняется `Planned Change Map`: часть системы, конкретный путь от корня репозитория, при необходимости функция/класс/раздел, действие (изменить, создать, удалить, переместить) и суть изменения. Карта включает необходимые тесты, конфигурацию, схемы, миграции и документацию. Отдельно фиксируются косвенно затронутые потребители и контракты, даже если их код не меняется, и проверки этого влияния. Существующие пути подтверждаются по коду, новые помечаются как предлагаемые; неизвестные детали получают шаг уточнения. Неизвестные границы компонентов или контрактов устраняются до Plan Approval. План эпика ссылается на карты TASK и учитывает пересечения компонентов при определении порядка задач.
+
+На Task Start карта сверяется с текущим кодом. Уточнение файлов внутри согласованных границ фиксируется с причиной; расширение scope, компонентов или контрактов требует Replan. Implementation Summary сопоставляет прогноз с фактическими изменениями. Для старых TASK карта уточняется перед исполнением без массовой перезаписи принятой истории.
 
 Universal Epic baseline требует `DONE` для всех planned TASK, requirement-to-evidence coverage, полный project suite, project-wide lint/typecheck/build, cross-component и critical-path validation, applicable profile gates, current documentation/operational evidence, допустимый fuzzing outcome, отсутствие непринятых blocking risks и explicit Epic Acceptance.
 

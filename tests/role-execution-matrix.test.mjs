@@ -41,22 +41,30 @@ test("planner and reviewer use one exact assignment across every route", async (
 });
 
 test("generation and migration retain both launchers and all native agents", async () => {
-  const [generation, sync, migration, validation] = await Promise.all([
+  const [generation, sync, migration, validation, contract] = await Promise.all([
     read(".ai/05-create-platform-adapters.md"),
     read(".ai/framework/skills/forge-sync-adapters/SKILL.md"),
     read(".ai/framework/skills/forge-migrate-framework/SKILL.md"),
-    read(".ai/06-final-validation.md")
+    read(".ai/06-final-validation.md"),
+    read(".ai/framework/migrations.yaml")
   ]);
-  for (const source of [generation, sync, migration, validation]) {
+  for (const source of [generation, sync, validation]) {
     assert.match(source, /codex-role-runner\.mjs/);
     assert.match(source, /claude-role-runner\.mjs/);
     assert.match(source, /native/i);
   }
-  assert.match(migration, /compatibility-preserving suggestion/);
-  assert.match(migration, /Never write (?:it|a suggestion) without approval/i);
-  assert.match(validation, /No route implicitly falls back/);
+  // The migration skill is a thin wrapper over the deterministic command and keeps the route guardrails.
+  assert.match(migration, /forge\.py migrate/);
+  assert.match(migration, /never performing mechanical migration steps yourself/i);
+  assert.match(migration, /--router-shared/);
+  assert.match(migration, /config_decision_required/);
+  assert.match(migration, /Never write a suggestion without approval/i);
   assert.match(migration, /OpenCode-led project[\s\S]*?existing `native_subagents` value by default/i);
-  assert.match(migration, /add a new mode|adds no mode/i);
+  assert.match(migration, /adds? no new mode/i);
+  assert.match(validation, /No route implicitly falls back/);
+  // Route decisions come from the machine-readable migration contract, not prose interpretation.
+  assert.match(contract, /compatibility-preserving|preserves the effective behavior/);
+  assert.match(contract, /role_execution\.mode/);
 });
 
 test("canonical router contains the complete no-fallback matrix and Claude imports it", async () => {

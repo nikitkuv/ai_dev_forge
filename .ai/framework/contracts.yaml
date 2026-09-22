@@ -196,6 +196,49 @@ machine_tokens:
   AWAITING_EPIC_ACCEPTANCE: "AWAITING EPIC ACCEPTANCE"
   AWAITING_USER_ACCEPTANCE: "AWAITING USER ACCEPTANCE"
 
+test_planning:
+  prepared_at: task_definition_before_plan_approval
+  required_for: [new_task_definitions, replanned_task_definitions]
+  applies_to_tracks: [fast, standard]
+  task_owner: TASK.Verification_Plan.Planned_Test_Cases
+  task_case_fields: [case_id, acceptance_criterion_or_risk, scenario_and_inputs, expected_result_and_independent_source, level_and_target, existing_or_new, expected_red_or_rationale]
+  coverage: [every_acceptance_criterion, affected_risks, applicable_normal_boundary_invalid_failure_recovery_state_and_side_effect_cases]
+  epic_owner: plan.Epic_Verification_Plan.Planned_Epic_Scenarios
+  epic_case_fields: [scenario_id, requirement_or_risk, cross_task_scenario, expected_result_and_source, owning_tasks, check_and_execution_gate]
+  no_separate_test_plan_artifact: true
+  planning_creates_executable_tests: false
+  unresolved_expectations_or_material_coverage_gaps: block_plan_approval
+  unavailable_commands_or_harnesses_require: [missing_evidence, resolution_task, resolve_before_dependent_execution]
+  revalidate_at: task_start
+  legacy_tasks: fill_missing_cases_before_execution_without_bulk_rewriting_accepted_history
+  in_scope_case_refinements: record_reason_without_replan
+  scope_or_behavior_contract_changes: requires_replan
+  removed_or_weakened_cases: test_integrity_weakening_rules_apply
+  execution: one_behavior_at_a_time_red_green_refactor
+  evidence: case_ids_to_actual_tests_commands_results_and_explicit_gap_dispositions
+  plan_is_execution_evidence: false
+
+task_change_map:
+  owner: TASK
+  section: Planned Change Map
+  prepared_at: task_definition_before_plan_approval
+  required_for: [new_task_definitions, replanned_task_definitions]
+  row_fields: [system_part, repository_relative_path, action, planned_change_and_reason]
+  actions: [modify, create, delete, move]
+  existing_paths_require: repository_evidence
+  new_paths: explicitly_proposed
+  symbols_or_sections: when_useful
+  bounded_directory_requires: [reason_exact_files_unknown, resolution_step]
+  indirect_impact_requires: [affected_consumers_or_contracts, dependency_reason, verification_coverage_or_explicit_none_rationale]
+  unresolved_details_require: [missing_evidence, resolution_step]
+  unresolved_component_or_contract_boundaries: block_plan_approval
+  epic_plan: link_task_maps_and_summarize_overlap_dependencies
+  revalidate_at: task_start
+  in_scope_file_refinement: record_reason_without_replan
+  scope_component_or_contract_expansion: requires_replan
+  actual_paths_and_deviations: implementation_summary
+  legacy_tasks: assess_before_execution_without_bulk_rewriting_accepted_history
+
 delivery_tracks:
   default: standard
   legacy_missing_delivery_track: standard

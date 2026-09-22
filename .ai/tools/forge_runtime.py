@@ -223,13 +223,20 @@ def compose_role_prompt(root, role_name, assignment_path):
 
 def metrics_record(root, event):
     allowed = {"task", "track", "stage", "model", "duration_seconds", "input_tokens", "output_tokens",
-               "cached_input_tokens", "reused_checks", "review_iterations", "escalation_reason", "post_acceptance_fix"}
+               "cached_input_tokens", "reused_checks", "review_iterations", "escalation_reason", "post_acceptance_fix",
+               "waiting_seconds", "first_pass", "role_calls"}
     if set(event) - allowed or event.get("track") not in ("fast", "standard"):
         raise ForgeError("Unknown metrics fields or invalid track")
-    for key in ("duration_seconds", "input_tokens", "output_tokens", "cached_input_tokens", "reused_checks", "review_iterations"):
+    for key in ("duration_seconds", "input_tokens", "output_tokens", "cached_input_tokens", "reused_checks", "review_iterations",
+                "waiting_seconds", "role_calls"):
         value = event.get(key)
         if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0):
             raise ForgeError(f"Invalid metric: {key}")
+    for key in ("first_pass", "post_acceptance_fix"):
+        if event.get(key) is not None and not isinstance(event[key], bool):
+            raise ForgeError(f"{key} must be boolean or null")
+    if event.get("escalation_reason") is not None and not isinstance(event["escalation_reason"], str):
+        raise ForgeError("escalation_reason must be a string or null")
     event = dict(event, recorded_at=time.time())
     path = within(root, f".ai/local/metrics/{uuid.uuid4().hex}.json")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -249,7 +256,55 @@ def metrics(root):
         group["known_output_tokens"] += event.get("output_tokens") or 0
         group["duration_seconds"] += event.get("duration_seconds") or 0
         group["events_missing_usage"] += event.get("input_tokens") is None or event.get("output_tokens") is None
+        for field in ("waiting_seconds", "review_iterations", "role_calls", "reused_checks", "cached_input_tokens"):
+            entry = group.setdefault(field, {"known_total": 0, "observations": 0, "missing": 0})
+            value = event.get(field)
+            entry["missing"] += value is None
+            if value is not None:
+                entry["known_total"] += value
+                entry["observations"] += 1
+        for field in ("first_pass", "post_acceptance_fix"):
+            entry = group.setdefault(field, {"true": 0, "observations": 0, "missing": 0})
+            value = event.get(field)
+            entry["missing"] += value is None
+            if isinstance(value, bool):
+                entry["observations"] += 1
+                entry["true"] += value
+            entry["rate"] = entry["true"] / entry["observations"] if entry["observations"] else None
+        reasons = group.setdefault("escalation_reasons", {})
+        if event.get("escalation_reason"):
+            reason = event["escalation_reason"]
+            reasons[reason] = reasons.get(reason, 0) + 1
     return {"groups": groups, "note": "Observed usage only; missing usage is unknown, not zero cost. Compare similar tasks."}
+
+
+def record_observation(root, task, operation, result):
+    """Attach measured tool metrics; never infer acceptance or unavailable usage."""
+    event = {"task": task["id"], "track": task.get("delivery_track", "standard")}
+    if operation == "checks":
+        event.update(stage="checks", reused_checks=len(result.get("results", [])) if result.get("reused") else 0,
+                     duration_seconds=0 if result.get("reused") else sum(
+                         r["duration_seconds"] for r in result.get("results", [])))
+    else:
+        event.update(stage=result["role"], model=result["model"], role_calls=1,
+                     duration_seconds=result.get("duration_seconds"))
+        if result.get("provider") == "claude":
+            try:
+                usage = json.loads(result.get("stdout", "")).get("usage", {})
+                for name in ("input_tokens", "output_tokens"):
+                    value = usage.get(name)
+                    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                        event[name] = value
+                cached = usage.get("cache_read_input_tokens")
+                if isinstance(cached, int) and not isinstance(cached, bool) and cached >= 0:
+                    event["cached_input_tokens"] = cached
+            except (ValueError, AttributeError):
+                pass
+    try:
+        result["metrics"] = metrics_record(root, event)
+    except (OSError, ForgeError) as exc:
+        # An optional telemetry failure must not hide successful verification/role output.
+        result["metrics_warning"] = str(exc)
 
 
 def role(root, provider, role_name, prompt, model, effort, timeout=900, preflight_only=False):

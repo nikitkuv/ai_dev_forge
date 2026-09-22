@@ -2,149 +2,51 @@
 
 ## Purpose
 
-Upgrade a consumer repository that already contains an older `.ai/` bundle. The new release must be staged at `.ai-next/`; never copy it over the active `.ai/` before preview and approval.
-
-Migration updates only Forge-owned release files, mixed-ownership root routers, and manifest-declared local Forge agents and skills. It does not bootstrap the product again.
+Upgrade a consumer repository from an active `.ai/` bundle to a staged `.ai-next/` bundle. The migration itself is deterministic local tooling; this router only verifies layout, drives the command, and interprets its findings.
 
 ## Required Layout
-
-Require both directories:
 
 ```text
 .ai/       # active old release
 .ai-next/  # staged new release containing this file
 ```
 
-Stop if the directories resolve to the same path, the staged manifest is incomplete, or `.ai-next/` contains anything other than one staged Forge bundle.
+The staged bundle must contain only files under its manifest's framework-owned paths. Do not copy the staged release over the active `.ai/` before preview and approval.
 
-## Read-only Discovery
+## Run the Command
 
-Before writing:
+```text
+python .ai-next/tools/forge.py migrate --diff
+```
 
-1. read both manifests, contracts, workflows, templates, neutral agents, and portable skills;
-2. read the optional old `.ai/framework.lock`, `.ai/project.yaml`, `.ai/custom/`, project-owned `investigations/`, `.ai/integrations/`, and `quality/mutation-testing/`; read old and staged investigation, integration and mutation-testing contracts when present;
-3. inspect Git status and identify a recoverable baseline;
-4. inspect `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, `.claude/`, `opencode.json`, and `.opencode/`;
-5. inventory recognized legacy Forge IDs, manifest-declared new IDs, unlisted project files, manual changes, and same-ID collisions;
-6. hash every protected project path before proposing changes;
-7. without invoking MCP, API, CLI, or other connectors, classify each integration definition/state file as `absent`, `current_supported`, `older_migratable`, `malformed`, `unsupported_future`, `custom_profile`, or `ownership_collision`.
-8. inspect `role_execution.mode`; when absent, show the old effective provider behavior and require an explicit selection. For a 4.2 project, offer `claude_with_codex` only as the compatibility-preserving suggestion; for an OpenCode-led project with no approved route, offer the existing `native_subagents` value by default. Never write either suggestion without approval, add a new mode, or silently replace an approved value.
-9. inspect `platforms.opencode.enabled` and `models.opencode`. Preserve an explicit disabled choice. When enabled, require user-supplied or locally evidenced non-empty `provider/model-id` mappings for all three tiers; never invent, install, authenticate, or configure an OpenCode provider.
+Preview is read-only. It computes the complete change set as a pure function of repository state — framework replacements, provenance-proven deletions, preserved unknown files, rendered routers and adapters, the version bump and explicit configuration decisions, the offline integration matrix, and a protected-path fingerprint — bound to one preview token. Execute the command; do not re-derive its results by reading and comparing files yourself.
 
-Absence of `investigations/`, `.ai/integrations/`, and `quality/mutation-testing/` is the clean Forge baseline. None of those absences adds a migration step, preflight, file, or blocker. Preserve existing investigation and mutation history byte-for-byte and never use it as managed render input. Report an incompatible existing `investigations/` layout as a project-owned collision instead of overwriting it. A malformed, future-version, custom, or offline integration blocks only its consumers; only an ownership/path collision or repository-safety violation blocks the framework migration itself.
+## Interpret Findings
 
-For upgrades to v4 or later, also inspect:
+- `router_extraction_required`: no `.ai/custom/router-shared.md` exists. Perform the one judgment task — extract preserved project-owned router content from the old `AGENTS.md`/`CLAUDE.md` (title, overview, project map, confirmed commands, domain constraints, protected directories; never legacy Forge lifecycle rules, routing, or agent/skill lists), get user approval, and pass the file via `--router-shared`. The command writes it to `.ai/custom/router-shared.md`.
+- `legacy_overlay_present`: reconcile `.ai/custom/codex-router.md`/`claude-router.md` into the extracted shared overlay first.
+- `config_decision_required`: collect one explicit `--set key=value` per listed key from the user; suggestions are informational and are never written without approval. Approved values are never overwritten silently.
+- `unexpected_staged_file`, `downgrade_refused`, `already_current`, `render_validation`, `integration_ownership_collision`: report and stop; do not work around the gate.
+- Advisory findings (`backfill_available`, `version_note`, `breaking_change`, `terminal_backlog_rows`, `preserved_unknown`, `dirty_git_tree`, isolated integration classes): relay them; backfill commands run later as separate user decisions, never inside the migration.
 
-- whether `.ai/project.yaml` has approved `quality.profiles`, Task-scoped command catalogs, Epic-wide commands, and selection rules;
-- whether planned, active, or paused Epic plans contain requirement coverage, quality profiles, an Epic Verification Plan, an Epic Fuzzing Plan, and appropriate evidence;
-- whether any existing `execution/planned/` directory maps to exactly one `PLANNED + READY` Backlog Epic and contains only approved `TODO` definitions;
-- whether TASK files contain affected surfaces, risk flags, review focus, Verification Plans with fuzzing impact and Task smoke, Review Packets with production/supporting path classification and both whole-implementation and production-surface fingerprints, and structured review evidence; legacy clean review without a production fingerprint is not reusable and requires a fresh review;
-- whether TASK files contain an approved `delivery_track`, rationale, and the matching Fast Assurance Summary or standard review/testing evidence. Treat a missing legacy track as `standard`; never synthesize fast eligibility or assurance. Already-started legacy TASKs remain standard, while a pre-start downgrade to fast requires Replan and complete evidence;
-- whether an Epic already in `FUZZING` or `AWAITING EPIC ACCEPTANCE` has a current passing Epic Validation result on the same aggregate fingerprint.
+## Apply
 
-A legacy project may be without `.ai/framework.lock`. In that case use the old bundle, known legacy IDs, content comparison, Git history, and explicit user decisions as evidence. Do not infer permission to delete an ambiguous file.
+After the user approves the exact preview, apply the same reviewed token:
+
+```text
+python .ai-next/tools/forge.py migrate --apply PREVIEW_TOKEN [--set ...] [--router-shared path] [--approve-collision path ...]
+```
+
+`--approve-collision` requires explicit user authority for that exact path (a manually edited generated output or a preserved unknown file slated for deletion). Apply runs one guarded transaction: backup journal, atomic writes with the lock last, validation, protected-path re-hash, and `.ai-next/` removal on success. Any failure rolls everything back and keeps the staged bundle; report the failed stage and re-preview. An interrupted transaction recovers only through `migrate --recover`, which refuses to overwrite later user edits.
+
+## Offline and Adapter Scope
+
+The migration runs entirely offline, without invoking MCP, API, CLI, or other connectors; integration classification is structural. Adapter changes stay within the manifest-declared local set: `.codex/agents/`, `.claude/agents/`, `.opencode/agents/`, `.agents/skills/`, and both managed launchers, rendered deterministically from the staged templates. Remove only OpenCode files proven by the prior lock to be Forge-managed; `opencode.json`, commands, plugins, skills, and unlisted agents remain project-owned. New managed IDs (including the fast `mutation-runner` and strong `mutation-analyzer`) replace recognized legacy Forge entries while unlisted files are preserved.
 
 ## Protected Project State
 
-Treat all paths outside the approved framework and adapter allowlist as read-only. Never modify canonical or product state during migration, including:
+All project-owned and canonical paths pass through byte-for-byte: `SPEC.md`, `ARCHITECTURE.md`, `BACKLOG.md`, `DECISIONS.md`, `decisions/`, `execution/`, `investigations/`, `intents/`, `.ai/integrations/`, `quality/mutation-testing/` (the exact mutation history), project configuration beyond the declared migration keys, code, tests, and unrelated configuration. Integration definitions are classified offline and block only their consumers. Framework migration and integration-schema migration are separate approvals and transactions. Report canonical contradictions as compatibility findings; never edit canonical content here. Post-migration compatibility findings are resolved through `forge-resume-development` and the required user gates; a pre-v4 Epic cannot finish fuzzing or Epic Acceptance without current v4 Epic Validation evidence.
 
-- `SPEC.md`;
-- `ARCHITECTURE.md`;
-- `BACKLOG.md`;
-- `DECISIONS.md`;
-- `decisions/`;
-- `execution/`;
-- project source code, tests, data, and unrelated configuration.
-- `.ai/integrations/`, project-owned integration consumers, and connector configuration.
-- `quality/mutation-testing/` registry, runs, retained artifacts, and dispositions.
-- `investigations/INV-*.md` records and any project-owned investigation layout.
+## Manual Fallback (no Python)
 
-Report a canonical schema difference as a compatibility finding. Do not edit, rename, reformat, or migrate canonical content in this workflow.
-
-Framework migration and integration-schema migration are separate approvals and transactions. Preserve every integration definition, unknown profile, state file, and custom consumer byte-for-byte while replacing the framework bundle. Do not downgrade, normalize, or silently rewrite an unsupported or malformed file.
-
-A pre-v4 planned, active, or paused plan is not silently upgraded or moved. After the framework migration, use `forge-resume-development` and present the exact plan/TASK compatibility diff. Changes to approved Task scope, order, or composition still require Replan; adding or correcting in-scope verification evidence requires an explicit rationale and may not remove or weaken an approved check. A pre-v4 Epic in `FUZZING` or `AWAITING EPIC ACCEPTANCE` cannot continue to Epic Acceptance until current Epic Validation passes under the new contract.
-
-For every legacy planned, active, reviewed, testing, or awaiting-acceptance TASK without delivery-track data, report the compatibility finding and interpret it as standard. Framework migration may add the explicit standard default only in a separately approved canonical compatibility diff; it never fabricates fast evidence or converts current standard review/testing evidence into Fast Assurance.
-
-Migration never infers that a `PLANNED` Backlog Epic already has approved Task definitions. It does not create `execution/planned/` from Backlog rows or move active/paused/completed workspaces. Future Plan Approval creates the new planned workspace; an existing project-owned planned directory is preserved and validated as a compatibility finding.
-
-## Root Router Merge
-
-Treat `AGENTS.md` and `CLAUDE.md` as mixed-ownership files. OpenCode shares root `AGENTS.md`; do not create or merge an OpenCode-only router.
-
-Preserve project title, overview, project map, confirmed commands, domain constraints, protected directories, and applicable platform guidance. Check preserved statements against canonical state, especially `BACKLOG.md`, and report contradictions without modifying canonical files. Do not preserve legacy Forge lifecycle rules, routing, agent lists, skill lists, or generic process instructions.
-
-Merge preserved project content from both routers and from any legacy `.ai/custom/router-shared.md`, `.ai/custom/codex-router.md`, or `.ai/custom/claude-router.md`, then preview it before storing it as:
-
-```text
-.ai/custom/router-shared.md
-```
-
-If old routers or overlays contain conflicting project rules, stop for an explicit reconciliation decision. Back up legacy platform-specific overlays and remove them only as part of the exact approved migration scope after their preserved content is present in the shared overlay. Render the final `AGENTS.md` from its staged template plus the shared overlay, render `CLAUDE.md` as the exact `@AGENTS.md` import, and show their complete diff before replacement.
-
-## Local Adapter Update
-
-Install no global agent or skill. Manage only IDs declared by the staged manifest at:
-
-```text
-.codex/agents/
-.codex/forge/claude-role-runner.mjs
-.agents/skills/
-.claude/agents/
-.claude/skills/
-.claude/forge/codex-role-runner.mjs
-.opencode/agents/
-```
-
-Keep all eleven generated agents on Codex and Claude and, when enabled, OpenCode, including the fast `mutation-runner` and strong `mutation-analyzer`. OpenCode reuses root `AGENTS.md` and `.agents/skills/`; do not generate `.opencode/skills/`. Copy both managed launchers and the unchanged three-mode metadata, but do not install, authenticate, preflight, or invoke any external provider or a mutation backend during migration. An unavailable explicitly selected external route blocks its role stage and never falls back; `native_subagents` is the explicit dependency-free mode and the default proposal for an OpenCode-led project with no approved route. Roll back configuration, both launchers, route metadata, all adapters, and lock as one unit while retaining project-owned state.
-
-Remove or replace recognized legacy Forge entries, install the complete staged Forge set, and preserve unlisted project-owned entries. Preserve `.codex/config.toml`, Claude settings, `opencode.json`, OpenCode commands/plugins/skills/unlisted agents, commands, hooks, and other adjacent platform configuration. Stop on a same-ID collision until the user chooses the exact replacement.
-
-## Preview and Approval
-
-Show one complete migration preview containing:
-
-- old and new framework versions and the rollback source;
-- every framework replacement and obsolete recognized Forge path;
-- extracted shared router overlay, the final `AGENTS.md` diff, and the `CLAUDE.md` import diff;
-- adapter additions, replacements, preserved files, and collisions;
-- protected-path hashes and canonical schema findings;
-- `.ai/project.yaml` values that must be confirmed when absent;
-- the explicit `role_execution.mode`, old effective behavior, and compatibility-preserving suggestion when applicable;
-- v4 quality-profile, verification-plan, Review-Packet, `VALIDATING`, and Epic Validation compatibility findings;
-- delivery-track compatibility findings, including standard defaults for missing legacy fields, stale fast fingerprints, and any forbidden attempt to downgrade already-started standard work;
-- exact paths that will be backed up.
-- the offline integration compatibility matrix, including the clean absent case, isolated consumer blockers, ownership collisions, and any separately available schema migrations.
-
-Request explicit approval for this exact scope. Approval of migration never authorizes canonical edits, product changes, commits, or pushes.
-
-## Apply, Validate, and Roll Back
-
-After approval:
-
-1. create a temporary recoverable backup of the active `.ai/`, root routers, affected adapter files, existing lock, project-owned mutation history, and any project-owned integration paths that the staged operation references;
-2. build staged candidate outputs without changing active targets;
-3. compose the new `.ai/` from the staged release plus approved `.ai/project.yaml` (including one explicit role-execution mode) and `.ai/custom/` project state while preserving optional `.ai/integrations/`, `quality/mutation-testing/`, and project-owned consumers byte-for-byte; add missing quality or mutation configuration only from explicit user decisions and confirmed repository or CI evidence, and never install a mutation backend;
-4. replace recognized Forge adapter IDs on every enabled platform while preserving unlisted files;
-5. replace the active bundle, full `AGENTS.md`, and importing `CLAUDE.md` as one logical operation;
-6. run `forge-check-framework` against the candidate result;
-7. re-hash protected paths and fail on any unauthorized difference; validate integration files structurally but do not include their contents in managed-output lock hashes;
-8. create or update `.ai/framework.lock` only after every validation passes;
-9. remove `.ai-next/` only after success and keep the backup until the user acknowledges the result.
-
-On any framework-migration failure, perform rollback: restore the old `.ai/`, prior project role and OpenCode model configuration, routers, all adapter sets, both launchers, lock, and exact integration bytes; verify protected hashes again; report the failed stage. Remove only OpenCode files proven by the prior lock to be Forge-managed. Create no migration report Markdown file and require no framework CLI.
-
-## Optional Integration-Schema Migration
-
-After a compatible framework upgrade, an `older_migratable` integration may be migrated through a separate gate:
-
-1. show the exact definition, state, Backlog source-field, plan coverage, and TASK frontmatter diff;
-2. identify the supported source/target schema versions and every affected consumer;
-3. create a recoverable pre-migration copy outside the replacement targets;
-4. request explicit approval for only this project-owned migration;
-5. stage all related files, validate schemas, unique identities, consumer compatibility, and bidirectional work-source references offline;
-6. atomically replace only the approved integration and relationship files;
-7. on failure, restore the complete pre-migration representation without rolling back an otherwise valid framework install.
-
-Framework rollback never deletes project-owned integrations. Before re-enabling an affected consumer, select the newest representation supported by the restored framework or report an explicit compatibility blocker. External identities and canonical Epic, Bug, and Task records are never deleted as rollback cleanup.
+When Python or the pinned dependencies are unavailable, perform the migration manually under the same contract: read both manifests, contracts and project state; hash protected paths; show the complete diff (bundle replacement, shared-overlay extraction, rendered routers, adapter changes, deletions with provenance, integration matrix); get explicit approval; back up; apply atomically; validate; write `.ai/framework.lock` last; roll back completely on any failure. The command remains the canonical path; treat manual results as needing the same evidence.

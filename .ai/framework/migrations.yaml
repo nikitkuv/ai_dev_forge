@@ -1,0 +1,63 @@
+schema_version: 1
+
+# Per-version migration semantics consumed by `forge.py migrate`. Entries apply
+# strictly for versions in (active, staged]. config_additions are mechanical
+# defaults written only when the key is absent; config_decisions block apply
+# until resolved (by an approved value already present or an explicit --set)
+# and define the keys --set may write; backfill_commands are advisory and never
+# executed by the migration; notes are quoted verbatim in findings. Human
+# documentation remains in MIGRATION.md; this contract is the machine truth.
+versions:
+  "4.2":
+    notes:
+      - Optional local integration registry and work_source intake; a clean Forge project needs no .ai/integrations/ and no connector runtime.
+  "4.3":
+    config_decisions:
+      - key: role_execution.mode
+        suggest: claude_with_codex
+        note: Replaces the implicit preferred/fallback route; claude_with_codex preserves the effective behavior of a 4.2 project.
+    breaking:
+      - An explicit role_execution.mode is required for both planner and reviewer; an unavailable selected route blocks the role without fallback.
+  "4.4":
+    notes:
+      - Independent forge-mutation-test and project-owned quality/mutation-testing/ are optional; no backend is installed and no registry is created.
+  "4.6":
+    notes:
+      - Exactly two TASK delivery tracks exist; a legacy TASK without delivery_track is interpreted as standard and an already-started standard TASK never downgrades.
+  "4.7":
+    config_decisions:
+      - key: platforms.opencode.enabled
+        suggest: "false"
+        note: OpenCode is opt-in; an explicit boolean is required and a disabled choice is preserved.
+      - key: models.opencode.strong.model
+        suggest: ""
+        note: Required only when OpenCode is enabled; must be a user-supplied or locally evidenced provider/model-id value, never invented.
+      - key: models.opencode.balanced.model
+        suggest: ""
+        note: Required only when OpenCode is enabled; must be a user-supplied or locally evidenced provider/model-id value, never invented.
+      - key: models.opencode.fast.model
+        suggest: ""
+        note: Required only when OpenCode is enabled; must be a user-supplied or locally evidenced provider/model-id value, never invented.
+    notes:
+      - OpenCode becomes the third native adapter sharing root AGENTS.md and .agents/skills/; .opencode/skills/ and an OpenCode-only router are never generated.
+  "4.7.1":
+    notes:
+      - The Claude-to-Codex route no longer depends on codex-plugin-cc, an App Server, a shared broker, or a pipe.
+  "4.8":
+    notes:
+      - Lifecycle-independent forge-investigate keeps one project-owned investigations/INV-NNNN record; existing investigation history is preserved byte-for-byte.
+  "4.9":
+    notes:
+      - Optional Python tooling under .ai/tools/ requires Python 3.11+ with pinned requirements in a separate environment; add .ai/local/, .forge-venv/, and __pycache__/ to ignore. Evidence recorded under an incompatible fingerprint becomes stale and must not be relabeled.
+  "4.10":
+    notes:
+      - Intent records introduce the optional Backlog Intent column; existing Backlogs without it remain valid and no backfill is required.
+  "4.11":
+    notes:
+      - Terminal Backlog rows auto-archive into BACKLOG-ARCHIVE.md; legacy terminal rows remain valid in the live file until a one-time backfill. The search index is a derived cache rebuilt automatically and needs no migration.
+    backfill_commands:
+      - description: Archive every legacy terminal Backlog row in one transaction (preview, then --apply TOKEN)
+        command: python .ai/tools/forge.py backlog archive-all
+  "4.12":
+    notes:
+      - Framework migration becomes a deterministic local command; stage the new bundle at .ai-next/ and run python .ai-next/tools/forge.py migrate. The manual agent-driven path remains the documented fallback when Python is unavailable.

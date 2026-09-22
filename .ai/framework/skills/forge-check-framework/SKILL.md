@@ -7,6 +7,8 @@ description: Use after bootstrap, resume, adapter synchronization, framework upg
 
 ## Read authoritative inputs
 
+Use `identity-check` for structured identity/reference findings before investigating them manually. When the same agent error recurs, report a reproducible cause and a proposed correction: prefer a deterministic helper plus regression test for mechanical errors, or a focused neutral-instruction correction for judgment errors. Do not append every observation to the router or create an automatic growing memory. Changes are a separate authorized action; this check remains read-only.
+
 Start with `python .ai/tools/forge.py validate --project --adapters`. It checks source IDs/YAML, lifecycle inventory, generated output drift, router shape (`AGENTS.md` line budget, exact `CLAUDE.md` import, generated-agent encoding/frontmatter), ADR index parity, plan-order consistency, Workflow State block shape, investigation record structure, and mutation-registry structure without a model. Consume its coverage and requires_judgment fields: a mechanical pass is not full conformance. Inspect only reported errors and relevant inputs for the semantic checks below; do not reload all agent/skill bodies just to repeat successful structural checks. When Python is unavailable, perform the same checks manually. Never invoke a local connector or mutation backend during conformance checking.
 
 Do not repair files during this check.

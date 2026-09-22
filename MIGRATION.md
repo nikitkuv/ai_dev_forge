@@ -1,5 +1,16 @@
 # Миграция AI Development Forge
 
+## Обновление до v4.12
+
+v4.12 делает миграцию детерминированной локальной командой. После staging'а `.ai-next/` вся миграция — preview и apply по токену, одна транзакция с журналом и откатом:
+
+```text
+python .ai-next/tools/forge.py migrate            # read-only preview + findings + токен
+python .ai-next/tools/forge.py migrate --apply PREVIEW_TOKEN [--set key=value ...]
+```
+
+Команда сама вычисляет полный дифф (замена bundle, доказанные удалениями устаревшие файлы, рендер роутеров и адаптеров, версия и явные решения в `project.yaml`), офлайн-классифицирует интеграции, хэширует защищённые пути, пишет `.ai/framework.lock` последним и удаляет `.ai-next/` только после успешной валидации. Версионные правила миграции объявлены машинно в `.ai/framework/migrations.yaml`. Нужен Python 3.11+ с зависимостями из `.ai-next/tools/requirements.txt` (удобно — интерпретатор из `.forge-venv` проекта). Проектам без Python остаётся задокументированный ручной путь (`.ai/MIGRATE.md`).
+
 ## Обновление до v4.11
 
 v4.11 добавляет авто-архивацию терминальных строк Backlog и derived search index. Migration обновляет tools/skills/контракты и валидацию, но ничего не делает принудительно: `BACKLOG-ARCHIVE.md` создаётся первым терминальным переходом, `.ai/local/index.db` — первым `query`.
@@ -79,21 +90,25 @@ v4.3 заменяет неявный preferred/fallback route явным `role_e
 .ai/       новая активная версия
 ```
 
-`AGENTS.md` получает новые framework-инструкции, сохраняя описание, карту и правила проекта; `CLAUDE.md` заменяется импортом `@AGENTS.md`. Старые Forge agents и skills заменяются новыми локальными версиями; посторонние пользовательские файлы сохраняются.
+`AGENTS.md` рендерится из нового шаблона с существующим `.ai/custom/router-shared.md` байт-в-байт; `CLAUDE.md` заменяется импортом `@AGENTS.md`. Адаптеры Forge заменяются новыми локальными версиями; посторонние пользовательские файлы сохраняются. Устаревшие файлы bundle удаляются только при доказанном провенансе (hash в `bundle_state` lock); неизвестные файлы в framework-пространстве сохраняются и показываются advisory-находкой.
 
-При переходе на v4 добавляются `epic-planner`, `epic-validator`, lifecycle state `VALIDATING`, selective Task testing, обязательный Review Packet, quality profiles и полный Epic Validation перед fuzzing. Миграция фреймворка не переписывает существующие plan/TASK-файлы автоматически.
-
-Для проекта с work-source links она отдельно проверяет совместимость Backlog `Sources`, TASK `external_sources`, Epic coverage matrix и reverse provenance, но не исправляет их без отдельного canonical/Replan или integration-schema approval.
+Для проекта с work-source links миграция отдельно проверяет совместимость Backlog `Sources`, TASK `external_sources`, Epic coverage matrix и reverse provenance, но не исправляет их без отдельного canonical/Replan или integration-schema approval.
 
 ## Перед началом
 
-Запускайте команды из корня мигрируемого проекта. Убедитесь, что старая `.ai/` существует, сохраните текущее состояние в Git или сделайте резервную копию. Если `.ai-next/` уже существует, не перезаписывайте её: удалите или переименуйте только после проверки её происхождения.
+Запускайте команды из корня мигрируемого проекта. Убедитесь, что старая `.ai/` существует, сохраните текущее состояние в Git или сделайте резервную копию. Если `.ai-next/` уже существует, не перезаписывайте её: удалите или переименуйте только после проверки её происхождения. Нужен Python 3.11+ с зависимостями из `.ai-next/tools/requirements.txt`; например, интерпретатор из `.forge-venv` проекта.
 
 ## Вариант 1: копирование локальной версии
 
-Скопируйте `.ai/` нового релиза в мигрируемый проект под именем `.ai-next/`. Старая `.ai/` должна остаться на месте.
+Скопируйте `.ai/` нового релиза в мигрируемый проект под именем `.ai-next/` (без `project.yaml`, `custom/`, `local/` и `framework.lock`, которых в релизном bundle нет). Старая `.ai/` должна остаться на месте. Затем запустите preview:
+
+```text
+python .ai-next/tools/forge.py migrate
+```
 
 ## Вариант 2: последняя версия из GitHub `main`
+
+Скрипт клонирует bundle, кладёт его в `.ai-next/` и сразу запускает preview миграции.
 
 ### PowerShell
 
@@ -115,6 +130,7 @@ try {
 
     git -C $forgeStage sparse-checkout set .ai
     Copy-Item -LiteralPath (Join-Path $forgeStage ".ai") -Destination ".ai-next" -Recurse
+    python .ai-next/tools/forge.py migrate
 }
 finally {
     if (Test-Path -LiteralPath $forgeStage) {
@@ -144,32 +160,27 @@ git clone \
 
 git -C "$forge_stage" sparse-checkout set .ai
 cp -R "$forge_stage/.ai" .ai-next
+python .ai-next/tools/forge.py migrate
 ```
 
-Sparse checkout загружает рабочую копию только папки `.ai/`; временный Git-каталог создаётся за пределами проекта и удаляется после копирования.
+Sparse checkout загружает рабочую копию только папки `.ai/`; временный Git-каталог создаётся за пределами проекта и удаляется после копирования. Preview не изменяет репозиторий: он лишь печатает полный план миграции в компактном JSON с `preview_token`.
 
 ## Запуск
 
-Откройте мигрируемый проект в Codex или Claude Code и отправьте:
+Preview уже запущен одним из вариантов выше (или повторите `python .ai-next/tools/forge.py migrate --diff`). Дальше:
+
+1. Разберите findings. Блокирующие (`router_extraction_required`, `legacy_overlay_present`, `config_decision_required`, `unexpected_staged_file`, `downgrade_refused`, `already_current`, `render_validation`, `integration_ownership_collision`) требуют решения до apply; глоссарий — в `.ai/tools/USAGE.md`.
+2. Для legacy-проекта без `.ai/custom/router-shared.md` один раз вычлените сохраняемый проектный контент старых роутеров в файл и передайте его: `--router-shared <path>`. Альтернатива всему циклу — вызвать скилл `forge-migrate-framework`: он прогонит команды и соберёт решения.
+3. Явные решения конфигурации передавайте по одному: `--set role_execution.mode=native_subagents`. Утверждённые значения никогда не перезаписываются молча.
+4. Утвердите точный preview и примените тот же токен:
 
 ```text
-Read .ai-next/MIGRATE.md and migrate the framework from .ai/ to .ai-next/.
-The legacy project may not have .ai/framework.lock.
-Do not modify canonical documents, decisions/, execution/, project code, or tests.
-Preserve optional .ai/integrations/ and project-owned integration consumers byte-for-byte.
-Classify integration compatibility offline and do not invoke connectors.
-Preserve project-specific content from AGENTS.md and CLAUDE.md in one shared overlay rendered into AGENTS.md.
-Reconcile it with canonical state from BACKLOG.md and report contradictions without editing BACKLOG.md.
-Render the final AGENTS.md as the full router and CLAUDE.md as the exact `@AGENTS.md` import.
-Replace legacy Forge agents and skills with the bundled local versions.
-Show the complete migration diff before writing.
-Communicate with me in Russian.
+python .ai-next/tools/forge.py migrate --apply PREVIEW_TOKEN \
+  [--set key=value ...] [--router-shared path] [--approve-collision path ...]
 ```
 
-Сначала агент работает read-only и показывает полный diff: замену `.ai/`, объединение проектного содержимого routers и legacy platform-specific overlays в shared overlay, два идентичных итоговых router-файла, удаляемые старые Forge adapters, устанавливаемые локальные adapters, integration compatibility matrix, collisions и rollback source. Legacy `.ai/custom/codex-router.md` и `.ai/custom/claude-router.md` удаляются только после backup и явного подтверждения их merge. Противоречия с `BACKLOG.md` агент сообщает, но сам `BACKLOG.md` не изменяет. Ничего не подтверждайте, пока в framework diff присутствует canonical, integration или product path.
+Apply выполняет одну охраняемую транзакцию: backup-журнал, атомарные записи с lock последним, валидация, повторное хэширование защищённых путей и удаление `.ai-next/` только после успеха. Любой провал полностью откатывает репозиторий и сохраняет staged bundle; прерванная транзакция восстанавливается только через `migrate --recover`. Dirty Git tree — warning: recoverable baseline остаётся ответственностью пользователя.
 
-Для проекта со старым planned/active/paused Epic агент отдельно покажет compatibility findings: отсутствующие quality profiles, Epic Verification Plan, Epic Fuzzing Plan, Task fuzzing impact/smoke, Review Packets, planned-workspace mapping и Epic Validation evidence. Миграция не создаёт `execution/planned/` из строк Backlog и не перемещает execution-каталоги автоматически. После миграции findings исправляются через `forge-resume-development` и требуемые user gates. Старый Epic в `FUZZING` или `AWAITING EPIC ACCEPTANCE` нельзя завершить, пока полный Epic Validation не пройдёт на текущем aggregate fingerprint и fuzzing gate не получит актуальный outcome.
+После миграции advisory-находки (например, терминальные строки живого Backlog) исправляются отдельными командами backfill по явному решению. Для проекта со старым planned/active/paused Epic команда отдельно покажет compatibility findings: отсутствующие quality profiles, Epic Verification/Fuzzing Plans, Review Packets, planned-workspace mapping и Epic Validation evidence. Они исправляются через `forge-resume-development` и требуемые user gates; миграция не создаёт `execution/planned/` из строк Backlog и не перемещает execution-каталоги. Старый Epic в `FUZZING` или `AWAITING EPIC ACCEPTANCE` нельзя завершить, пока полный Epic Validation не пройдёт на текущем aggregate fingerprint.
 
-После подтверждения агент создаёт backup, применяет staged-кандидаты, проверяет защищённые пути и точное сохранение `.ai/integrations/`, и только затем создаёт `.ai/framework.lock`. При ошибке он восстанавливает старую `.ai/`, адаптеры и project-owned integration bytes. После успеха `.ai-next/` удаляется.
-
-Старая поддерживаемая integration schema мигрируется только отдельным действием после framework upgrade: агент показывает exact diff всех definition/state/reference файлов, создаёт recoverable backup, просит отдельное подтверждение, валидирует staged result offline и применяет его атомарно. Ошибка откатывает только integration migration и не ломает установленный Forge. Framework rollback не удаляет external identities или canonical Epic/Task records.
+Старая поддерживаемая integration schema мигрируется только отдельным действием после framework upgrade: `older_migratable` classification показывает точный diff, recoverable backup и отдельное подтверждение; ошибка откатывает только integration migration. Framework rollback не удаляет external identities или canonical Epic/Task records.

@@ -234,6 +234,41 @@ class AdapterTests(Repository):
         self.assertEqual(core.text(self.root, ".agents/skills/forge-run-task/references/example.md"), "detail")
         self.assertEqual(core.load_yaml(self.root, ".ai/framework.lock")["project_field"], "preserve")
 
+    def test_apply_records_bundle_state_for_framework_files(self):
+        self.consumer(False)
+        adapters.apply(self.root, adapters.preview(self.root)[0]["preview_token"])
+        lock = core.load_yaml(self.root, ".ai/framework.lock")
+        state = lock["bundle_state"]
+        self.assertEqual(state["schema_version"], 1)
+        self.assertIn(".ai/framework/manifest.yaml", state["files"])
+        self.assertIn(".ai/tools/forge.py", state["files"])
+        self.assertNotIn(".ai/project.yaml", state["files"])
+        self.assertEqual(state["files"][".ai/framework/manifest.yaml"],
+                         core.digest((self.root / ".ai/framework/manifest.yaml").read_bytes()))
+
+    def test_render_splits_bundle_sources_from_project_state(self):
+        self.consumer(False)
+        self.write(".ai/custom/router-shared.md", "Project router rule\n")
+        staged = self.root / ".ai-next"
+        shutil.copytree(self.root / ".ai", staged, ignore=shutil.ignore_patterns("__pycache__"))
+        template = staged / "templates/adapters/codex/AGENTS.md"
+        template.write_text(template.read_text(encoding="utf-8").replace(
+            "# AI Development Forge — Project Router", "# AI Development Forge — Project Router (staged)"),
+            encoding="utf-8")
+        staged_outputs, staged_inputs = adapters.render(staged, self.root)
+        active_outputs, _ = adapters.render(self.root / ".ai", self.root)
+        self.assertEqual(set(staged_outputs), set(active_outputs))
+        differing = [name for name, data in staged_outputs.items() if active_outputs[name] != data]
+        self.assertEqual(differing, ["AGENTS.md"])
+        self.assertIn(b"(staged)", staged_outputs["AGENTS.md"])
+        self.assertNotIn(b"(staged)", active_outputs["AGENTS.md"])
+        # Project state flows from root in both renders; bundle sources carry the staged label.
+        for outputs in (staged_outputs, active_outputs):
+            self.assertIn(b"Project router rule", outputs["AGENTS.md"])
+        labels = [item["path"] for item in staged_inputs["files"]]
+        self.assertTrue(any(label.startswith(".ai-next/") for label in labels))
+        self.assertIn(".ai/custom/router-shared.md", labels)
+
 
 class RuntimeTests(Repository):
     def test_windows_npm_wrapper_uses_entrypoint_and_preserves_prompt(self):
@@ -339,6 +374,28 @@ else console.log(JSON.stringify({result: fs.readFileSync(0, 'utf8'), args}));
 
 
 class TransactionTests(Repository):
+    def test_none_value_deletes_and_rollback_recovers(self):
+        self.write("keep.txt", "kept")
+        self.write("drop.txt", "dropped")
+        transaction = core.Transaction(self.root, "test").claim()
+        transaction.write({"keep.txt": b"updated", "drop.txt": None})
+        self.assertEqual(core.text(self.root, "keep.txt"), "updated")
+        self.assertFalse((self.root / "drop.txt").exists())
+        transaction.rollback()
+        self.assertEqual(core.text(self.root, "keep.txt"), "kept")
+        self.assertEqual(core.text(self.root, "drop.txt"), "dropped")
+
+    def test_delete_recovery_refuses_recreated_content(self):
+        self.write("drop.txt", "original")
+        transaction = core.Transaction(self.root, "test").claim()
+        transaction.write({"drop.txt": None})
+        self.write("drop.txt", "recreated differently")
+        with self.assertRaisesRegex(core.ForgeError, "later edit"):
+            core.Transaction(self.root, "test").restore()
+        self.write("drop.txt", "original")
+        core.Transaction(self.root, "test").restore()
+        self.assertEqual(core.text(self.root, "drop.txt"), "original")
+
     def test_rollback_on_caught_failure_keeps_journal_for_recovery(self):
         self.write("a.txt", "old-a")
         self.write("b.txt", "old-b")

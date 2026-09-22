@@ -14,7 +14,7 @@ Use Python fingerprints and `checks` with `stage: epic` to execute the approved 
 3. Transition the Epic from `ACTIVE` to `VALIDATING` in `BACKLOG.md`.
 4. Invoke `epic-validator` automatically for the exact fingerprint. No extra confirmation is required because the role makes no source changes.
 5. Require the configured full project test suite; project-wide lint, typecheck and build or package checks; cross-component integration and end-to-end checks; requirement and critical-path coverage; and applicable quality-profile gates.
-6. Record the compact reproducible Epic Validation Summary in `plan.md`; never create a separate validation report.
+6. Record the compact reproducible Epic Validation Summary in `plan.md`, including Planned Epic Scenarios reconciled by ID to actual checks/results and linked Task evidence, with explicit dispositions for gaps or changes. Legacy plans without scenario IDs still require requirement and critical-path coverage without fabricated historical evidence. Never create a separate validation report.
 
 ## Handle Epic Validation outcome
 

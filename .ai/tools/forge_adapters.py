@@ -10,14 +10,34 @@ import tomllib
 from jinja2 import StrictUndefined
 from jinja2.sandbox import SandboxedEnvironment
 
-from forge_core import ForgeError, Transaction, atomic_replace, canonical, digest, frontmatter, load_yaml, snapshot, text, within
+from forge_core import ForgeError, Transaction, atomic_replace, canonical, digest, frontmatter, load_yaml, text, within, yaml_value
 
 _replace = atomic_replace
 
 
-def render(root):
-    manifest = load_yaml(root, ".ai/framework/manifest.yaml")
-    config = load_yaml(root, ".ai/project.yaml")
+def render(bundle_root, root, config=None, overlay=None):
+    """Render adapter outputs from one bundle directory against project state.
+
+    Framework sources (manifest, templates, neutral agents, skills, launchers)
+    are read from bundle_root (.ai or a staged .ai-next); project configuration
+    and the router overlay come from root. Migration callers may pass the
+    reconciled config dict and overlay content directly; the adapters command
+    passes neither and keeps reading them from disk.
+    """
+    sources = []  # (label, absolute path) of every render input actually read
+
+    def bundle_source(relative):
+        label = f"{Path(bundle_root).name}/{relative}"
+        sources.append((label, within(bundle_root, relative)))
+        return text(bundle_root, relative)
+
+    def project_source(name):
+        sources.append((name, within(root, name)))
+        return text(root, name)
+
+    manifest = load_yaml(bundle_root, "framework/manifest.yaml")
+    if config is None:
+        config = yaml_value(project_source(".ai/project.yaml"))
     if config.get("version") != manifest["framework"]["version"]:
         raise ForgeError("Project/framework versions differ; reconcile migration first")
     mode = config.get("role_execution", {}).get("mode")
@@ -48,38 +68,35 @@ def render(root):
             raise ForgeError("Reconcile legacy overlays into router-shared.md first")
     env = SandboxedEnvironment(undefined=StrictUndefined, keep_trailing_newline=True)
     env.filters["tojson"] = lambda value: json.dumps(value, ensure_ascii=False)
-    inputs = [".ai/framework/manifest.yaml", ".ai/project.yaml", ".ai/tools/forge_adapters.py",
-              ".ai/tools/forge_core.py", ".ai/tools/requirements.txt"]
+    for name in ("tools/forge_adapters.py", "tools/forge_core.py", "tools/requirements.txt"):
+        bundle_source(name)
     outputs = {}
 
-    def source(path):
-        inputs.append(path)
-        return text(root, path)
-
     overlay_path = ".ai/custom/router-shared.md"
-    inputs.append(overlay_path)
-    overlay = text(root, overlay_path) if within(root, overlay_path).exists() else ""
-    router = env.from_string(source(".ai/templates/adapters/codex/AGENTS.md")).render(custom={"router_shared": overlay})
+    if overlay is None:
+        overlay = project_source(overlay_path) if within(root, overlay_path).exists() else ""
+    router = env.from_string(bundle_source("templates/adapters/codex/AGENTS.md")).render(custom={"router_shared": overlay})
     if len(router.splitlines()) > 150 or "{{" in router:
         raise ForgeError("Router exceeds 150 lines or contains unresolved placeholders")
     outputs["AGENTS.md"] = router.encode()
-    claude = source(".ai/templates/adapters/claude/CLAUDE.md")
+    claude = bundle_source("templates/adapters/claude/CLAUDE.md")
     if claude.strip() != "@AGENTS.md":
         raise ForgeError("CLAUDE.md must import AGENTS.md exactly")
     outputs["CLAUDE.md"] = b"@AGENTS.md\n"
     for identity in manifest["subagents"]:
         if not re.fullmatch(r"[a-z0-9-]+", identity):
             raise ForgeError("Unsafe agent ID")
-        path = f".ai/framework/agents/{identity}.yaml"
-        inputs.append(path)
-        agent = load_yaml(root, path)
+        relative = f"framework/agents/{identity}.yaml"
+        agent = yaml_value(bundle_source(relative))
+        if not isinstance(agent, dict):
+            raise ForgeError(f"Expected mapping: {relative}")
         if agent["id"] != identity:
-            raise ForgeError(f"Agent ID mismatch: {path}")
+            raise ForgeError(f"Agent ID mismatch: {relative}")
         for platform in ("codex", "claude", "opencode"):
             if not platforms[platform]["enabled"]:
                 continue
             extension = "toml" if platform == "codex" else "md"
-            template = source(f".ai/templates/adapters/{platform}/agent.{extension}")
+            template = bundle_source(f"templates/adapters/{platform}/agent.{extension}")
             rendered = env.from_string(template).render(agent=agent, **config)
             if platform == "codex":
                 parsed = tomllib.loads(rendered)
@@ -94,24 +111,60 @@ def render(root):
         if not re.fullmatch(r"[a-z0-9-]+", identity):
             raise ForgeError("Unsafe skill ID")
         # Copy supporting resources too: skills may disclose detail progressively.
-        base = within(root, f".ai/framework/skills/{identity}")
+        base = within(bundle_root, f"framework/skills/{identity}")
         for path in sorted(base.rglob("*")):
-            within(root, path)
+            within(bundle_root, path)
             if not path.is_file():
                 continue
             relative = path.relative_to(base).as_posix()
-            original = path.relative_to(root).as_posix()
-            inputs.append(original)
+            label = f"{Path(bundle_root).name}/framework/skills/{identity}/{relative}"
+            sources.append((label, path))
             data = path.read_bytes()
             for directory in (".agents", ".claude"):
                 outputs[f"{directory}/skills/{identity}/{relative}"] = data
     for platform, launcher in (("claude", "codex-role-runner.mjs"), ("codex", "claude-role-runner.mjs")):
-        outputs[f".{platform}/forge/{launcher}"] = source(f".ai/templates/adapters/{platform}/{launcher}").encode()
-    return outputs, snapshot(root, inputs)
+        outputs[f".{platform}/forge/{launcher}"] = bundle_source(f"templates/adapters/{platform}/{launcher}").encode()
+    return outputs, _input_state(sources)
+
+
+def _input_state(sources):
+    """Fingerprint every actually-read render input across bundle and project roots."""
+    files = []
+    for label, path in sources:
+        data = path.read_bytes() if path.exists() else None
+        files.append({"path": label, "sha256": digest(data) if data is not None else None,
+                      "bytes": len(data) if data is not None else 0})
+    files.sort(key=lambda item: item["path"])
+    return {"algorithm": "forge-render-inputs-v1", "fingerprint": digest(canonical(files).encode()), "files": files}
+
+
+def bundle_state(bundle_root, root):
+    """Hash every file under the bundle manifest's declared framework-owned paths.
+
+    Labels are project-relative `.ai/...` paths regardless of which bundle
+    directory is read, so a staged bundle describes the state it will occupy
+    after installation and an active bundle describes what is installed.
+    """
+    manifest = load_yaml(bundle_root, "framework/manifest.yaml")
+    files = {}
+    for declared in manifest["ownership"]["framework_owned_paths"]:
+        relative = declared[len(".ai/"):] if declared.startswith(".ai/") else declared
+        relative = relative.rstrip("/")
+        base = within(bundle_root, relative)
+        if not base.exists():
+            continue
+        if base.is_file():
+            files[f".ai/{relative}"] = digest(base.read_bytes())
+            continue
+        for path in sorted(base.rglob("*")):
+            within(bundle_root, path)
+            if path.is_file() and "__pycache__" not in path.parts:
+                files[f".ai/{relative}/{path.relative_to(base).as_posix()}"] = digest(path.read_bytes())
+    return {"schema_version": 1, "files": files}
 
 
 def preview(root, include_diff=False):
-    outputs, inputs = render(root)
+    outputs, inputs = render(within(root, ".ai"), root)
     lock_path = within(root, ".ai/framework.lock")
     old_lock = load_yaml(root, ".ai/framework.lock") if lock_path.exists() else {}
     known = old_lock.get("python_adapter_state", {}).get("outputs", {})
@@ -155,6 +208,7 @@ def apply(root, expected_token, approved_collisions=()):
         lock = dict(old_lock)
         lock["python_adapter_state"] = {"schema_version": 1, "input_fingerprint": inputs["fingerprint"],
                                          "outputs": {p: digest(v) for p, v in outputs.items()}}
+        lock["bundle_state"] = bundle_state(within(root, ".ai"), root)
         updates = {c["path"]: outputs[c["path"]] for c in result["changes"]}
         lock_bytes = (canonical(lock) + "\n").encode()
         lock_path = within(root, ".ai/framework.lock")
@@ -174,5 +228,5 @@ def apply(root, expected_token, approved_collisions=()):
 
 
 def recover(root):
-    allowed = set(render(root)[0]) | {".ai/framework.lock"}
+    allowed = set(render(within(root, ".ai"), root)[0]) | {".ai/framework.lock"}
     return Transaction(root, "adapter").restore(allowed)
