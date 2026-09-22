@@ -2,20 +2,19 @@
 
 ## Purpose
 
-Upgrade a consumer repository from an active `.ai/` bundle using a local Forge clone, an already staged `.ai-next/`, or an explicitly approved remote release. The migration itself is deterministic local tooling; this router tells the agent how to stage the release, drive the command, and interpret its findings. The user does not operate preview tokens or compose apply commands.
+Upgrade a consumer repository from an active `.ai/` bundle using an already staged `.ai-next/`, a local Forge clone, or an explicitly approved remote release. The default user workflow stages `.ai-next/` directly inside the consumer repository with the documented clone-and-copy command and then hands the rest to the agent. The migration itself is deterministic local tooling; this router tells the agent how to drive the command and interpret its findings. The user does not operate preview tokens or compose apply commands.
 
 ## Agent-First Entry Point
 
-The normal request is short. When the Forge clone is open in the agent session:
+The normal request is made from the consumer repository after the staging command has created `.ai-next/`:
 
 ```text
-Update AI Development Forge in the project at <path-to-consumer> using this Forge clone.
-Read .ai/MIGRATE.md and run the migration for me.
-Stage and preview it yourself, ask only for real decisions and final approval, then apply it yourself.
+Read .ai-next/MIGRATE.md and migrate AI Development Forge in this repository.
+Preview it yourself, ask only for real decisions and final approval, then apply it yourself.
 Do not ask me to copy preview tokens or assemble commands.
 ```
 
-The reverse layout is equally valid: when the consumer repository is open, the user may name `<path-to-ai_dev_forge>` and ask the agent to read `<path-to-ai_dev_forge>/.ai/MIGRATE.md`. Resolve source and target from those explicit paths: this file's `.ai/` is the release source, while the named consumer project is the target; or the open consumer is the target while the named Forge clone is the source. Never assume the Forge clone itself is the target unless the user explicitly says so. The user's request naming local source and target is sufficient authority to read and stage them. If the user requests a remote/latest release instead, clone or download only with the applicable explicit authority.
+No separate persistent Forge clone is required for this path: the staging command uses a temporary sparse clone and leaves only `.ai-next/` in the consumer. A local clone remains an alternative. In that layout the user may open either repository and explicitly name the other path; never assume the Forge clone itself is the target unless the user says so. The user's request naming local source and target is sufficient authority to read and stage them. If the user asks the agent itself to fetch a remote/latest release, clone or download only with the applicable explicit authority.
 
 ## Prepare the Layout
 
@@ -23,10 +22,10 @@ The target starts with an active old release and must be staged as follows:
 
 ```text
 .ai/       # active old release
-.ai-next/  # staged new release copied by the agent
+.ai-next/  # staged new release bundle
 ```
 
-If `.ai-next/` does not exist, the agent copies the release clone's `.ai/` directory to `.ai-next/` using the platform-specific local-copy procedure in `MIGRATION.md`. Before copying, verify both manifests and require the source version to be newer. The staged bundle must contain only release/framework-owned content: never import `project.yaml`, `framework.lock`, `custom/`, `integrations/`, `local/`, or any other project-owned state from a source consumer. Do not copy the release over the active `.ai/` before preview and approval.
+In the default workflow `.ai-next/` already exists because the user ran the documented staging command. If it does not exist and the user instead named a local release clone, the agent copies that clone's `.ai/` directory to `.ai-next/` using the platform-specific local-copy procedure in `MIGRATION.md`. Before copying, verify both manifests and require the source version to be newer. The staged bundle must contain only release/framework-owned content: never import `project.yaml`, `framework.lock`, `custom/`, `integrations/`, `local/`, or any other project-owned state from a source consumer. Do not copy the release over the active `.ai/` before preview and approval.
 
 If `.ai-next/` already exists, inspect its manifest and origin instead of overwriting it. Stop on a source or version mismatch. Do not ask the user to perform these staging steps.
 
