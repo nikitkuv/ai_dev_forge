@@ -1,4 +1,4 @@
-# AI Development Forge v4.11 — Architecture
+# AI Development Forge — Architecture
 
 ## План тестов до реализации
 

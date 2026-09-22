@@ -1,4 +1,4 @@
-# AI Development Forge v4.9 — Runbook
+# AI Development Forge — Runbook
 
 ## Локальные операции без вызова модели
 
