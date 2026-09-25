@@ -339,7 +339,7 @@ def main(argv=None):
         if mode != expected:
             raise ForgeError("Active-orchestrator/route mismatch; native mode must use native subagents")
         provider = "codex" if args.orchestrator == "claude" else "claude"
-        mapping = {"model": "gpt-5.6-sol", "effort": "medium"} if provider == "codex" else config["models"]["claude"]["strong"]
+        mapping = {"model": "gpt-6-sol", "effort": "high"} if provider == "codex" else config["models"]["claude"]["strong"]
         transient = None
         if args.assignment_file:
             transient = compose_role_prompt(root, args.role, args.assignment_file)

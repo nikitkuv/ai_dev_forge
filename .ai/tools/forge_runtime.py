@@ -330,8 +330,8 @@ def role(root, provider, role_name, prompt, model, effort, timeout=900, prefligh
         except (ValueError, AttributeError):
             authenticated = False
     else:
-        if model != "gpt-5.6-sol" or effort != "medium":
-            raise ForgeError("Configured claude_with_codex route requires gpt-5.6-sol/medium")
+        if model != "gpt-6-sol" or effort != "high":
+            raise ForgeError("Configured claude_with_codex route requires gpt-6-sol/high")
         help_result = run([command, "exec", "--help"], root, 15, env=env)
         if help_result["exit_code"]:
             raise ForgeError("codex exec unavailable")

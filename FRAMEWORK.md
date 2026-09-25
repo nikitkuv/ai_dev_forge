@@ -168,8 +168,8 @@ Framework control layer написан на английском. Канонич
 
 | Tier | Codex | Claude Code |
 | --- | --- | --- |
-| `strong` | `gpt-5.6-sol`, `medium` | `opus`, `medium` |
-| `balanced` | `gpt-5.6-terra`, `medium` | `sonnet`, `medium` |
+| `strong` | `gpt-6-sol`, `high` | `opus`, `medium` |
+| `balanced` | `gpt-6-luna`, `high` | `sonnet`, `medium` |
 | `fast` | `gpt-5.6-luna`, `medium` | `haiku`, `medium` |
 
 Проект может явно переопределить defaults. Aliases и полные model IDs поддерживаются; скрытая замена tier запрещена.

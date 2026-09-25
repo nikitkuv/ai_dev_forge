@@ -29,7 +29,7 @@ Forge SHALL require one project-owned `role_execution.mode` value applying toget
 
 ### Requirement: Claude-to-Codex mode uses the managed Codex CLI route
 
-When `role_execution.mode` is `claude_with_codex`, Forge SHALL require Claude Code as the active orchestrator and SHALL execute both selected roles through the managed launcher using stable non-interactive `codex exec`, an ephemeral foreground read-only Codex task pinned to `gpt-5.6-sol` with `medium` reasoning, and prompt input over stdin. The launcher SHALL resolve and validate a local authenticated Codex CLI without using plugin broker state, app-server pipes, `BASH_ENV`, or persistent user-directory wrappers.
+When `role_execution.mode` is `claude_with_codex`, Forge SHALL require Claude Code as the active orchestrator and SHALL execute both selected roles through the managed launcher using stable non-interactive `codex exec`, an ephemeral foreground read-only Codex task pinned to `gpt-6-sol` with `high` reasoning, and prompt input over stdin. The launcher SHALL resolve and validate a local authenticated Codex CLI without using plugin broker state, app-server pipes, `BASH_ENV`, or persistent user-directory wrappers.
 
 #### Scenario: Claude plans an Epic
 - **WHEN** Claude Code reaches Epic planning in `claude_with_codex` mode and preflight succeeds

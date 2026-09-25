@@ -18,7 +18,7 @@ if (args[0] === "exec") {
   process.stdin.setEncoding("utf8");
   process.stdin.on("data", (chunk) => { prompt += chunk; });
   process.stdin.on("end", () => {
-    const required = ["--ephemeral", "--sandbox", "read-only", "--model", "gpt-5.6-sol", "--config", "model_reasoning_effort='medium'", "--color", "never", "-"];
+    const required = ["--ephemeral", "--sandbox", "read-only", "--model", "gpt-6-sol", "--config", "model_reasoning_effort='high'", "--color", "never", "-"];
     if (!required.every((value) => args.includes(value))) process.exit(8);
     if (process.env.FAKE_EXPECT_PROMPT && prompt !== process.env.FAKE_EXPECT_PROMPT) process.exit(9);
     if (process.env.BASH_ENV || process.env.CLAUDE_PLUGIN_DATA || process.env.CODEX_COMPANION_APP_SERVER_ENDPOINT) process.exit(10);
@@ -131,7 +131,7 @@ test("runner source pins stable fresh read-only Codex exec settings", async () =
   const source = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("../.ai/templates/adapters/claude/codex-role-runner.mjs", import.meta.url), "utf8"));
   assert.match(source, /\["exec", "--ephemeral", "--sandbox", "read-only"/);
   assert.match(source, /model_reasoning_effort='\$\{REQUIRED_EFFORT\}'/);
-  assert.match(source, /REQUIRED_EFFORT = "medium"/);
+  assert.match(source, /REQUIRED_EFFORT = "high"/);
   assert.doesNotMatch(source, /codex-companion|app-server|CLAUDE_PLUGIN_DATA.*=/);
   assert.doesNotMatch(source, /--resume|--background|--write/);
   assert.match(source, /fallback: "forbidden"/);

@@ -47,8 +47,8 @@ Model mappings must provide:
 ```yaml
 models:
   codex:
-    strong: {model: gpt-5.6-sol, reasoning_effort: medium}
-    balanced: {model: gpt-5.6-terra, reasoning_effort: medium}
+    strong: {model: gpt-6-sol, reasoning_effort: high}
+    balanced: {model: gpt-6-luna, reasoning_effort: high}
     fast: {model: gpt-5.6-luna, reasoning_effort: medium}
   claude:
     strong: {model: opus, effort: medium}
@@ -180,7 +180,7 @@ Verify the staged outputs:
 - `CLAUDE.md` contains exactly `@AGENTS.md`, so Claude Code imports the complete `AGENTS.md` router without duplication;
 - the imported router contains the complete Common Engineering Prohibitions without project-specific weakening;
 - Codex and Claude contain every declared agent and skill ID; enabled OpenCode contains every declared agent ID and discovers every declared skill through the shared `.agents/skills/` set;
-- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Claude-to-Codex route uses stable `codex exec` with stdin prompt transport, pins fresh ephemeral read-only `gpt-5.6-sol/medium`, and contains no plugin/app-server/broker dependency; the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
+- `role_execution.mode` is valid and applies to both selected roles; both managed launchers and all three manifest routes exist; the Claude-to-Codex route uses stable `codex exec` with stdin prompt transport, pins fresh ephemeral read-only `gpt-6-sol/high`, and contains no plugin/app-server/broker dependency; the Claude route uses fresh non-persistent plan mode with restricted tools and the configured Claude strong mapping, native mode performs no external preflight, and every route forbids fallback;
 - additional project-owned agents and skills remain present and are excluded from Forge parity counts;
 - IDs, descriptions, tiers, role instructions, write/network/spawn boundaries, effective permissions, and skill bodies have cross-platform parity;
 - fast/standard delivery-track routing is identical on all enabled platforms, fast assurance remains orchestrator-owned, standard retains reviewer/tester, and no delivery track silently changes an agent model tier;

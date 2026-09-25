@@ -673,6 +673,7 @@ class LifecycleTests(Repository):
         prompt = fake.call_args[0][3]
         self.assertEqual(prompt.count(instructions), 1)
         self.assertIn("Assignment text", prompt)
+        self.assertEqual(fake.call_args[0][4:6], ("gpt-6-sol", "high"))
         self.assertEqual(list((self.root / ".ai/local").glob("role-prompt-*.md")), [])
 
     def test_cli_next_id_json(self):
