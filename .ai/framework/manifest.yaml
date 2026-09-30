@@ -85,7 +85,7 @@ role_execution:
       provider: codex-cli
       transport: exec
       launcher: .claude/forge/codex-role-runner.mjs
-      model: gpt-6-sol
+      model: gpt-6.1-sol
       reasoning_effort: high
       permission_mode: read_only
       fresh: true

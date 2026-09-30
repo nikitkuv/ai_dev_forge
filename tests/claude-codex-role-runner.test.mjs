@@ -18,7 +18,7 @@ if (args[0] === "exec") {
   process.stdin.setEncoding("utf8");
   process.stdin.on("data", (chunk) => { prompt += chunk; });
   process.stdin.on("end", () => {
-    const required = ["--ephemeral", "--sandbox", "read-only", "--model", "gpt-6-sol", "--config", "model_reasoning_effort='high'", "--color", "never", "-"];
+    const required = ["--ephemeral", "--sandbox", "read-only", "--model", "gpt-6.1-sol", "--config", "model_reasoning_effort='high'", "--color", "never", "-"];
     if (!required.every((value) => args.includes(value))) process.exit(8);
     if (process.env.FAKE_EXPECT_PROMPT && prompt !== process.env.FAKE_EXPECT_PROMPT) process.exit(9);
     if (process.env.BASH_ENV || process.env.CLAUDE_PLUGIN_DATA || process.env.CODEX_COMPANION_APP_SERVER_ENDPOINT) process.exit(10);

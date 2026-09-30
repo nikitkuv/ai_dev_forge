@@ -168,7 +168,7 @@ Framework control layer написан на английском. Канонич
 
 | Tier | Codex | Claude Code |
 | --- | --- | --- |
-| `strong` | `gpt-6-sol`, `high` | `opus`, `medium` |
+| `strong` | `gpt-6.1-sol`, `high` | `opus`, `medium` |
 | `balanced` | `gpt-6-luna`, `high` | `sonnet`, `medium` |
 | `fast` | `gpt-5.6-luna`, `medium` | `haiku`, `medium` |
 
