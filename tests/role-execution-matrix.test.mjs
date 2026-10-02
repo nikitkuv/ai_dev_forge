@@ -55,7 +55,7 @@ test("generation and migration retain both launchers and all native agents", asy
   }
   // The migration skill is a thin wrapper over the deterministic command and keeps the route guardrails.
   assert.match(migration, /forge\.py migrate/);
-  assert.match(migration, /never performing mechanical migration steps yourself/i);
+  assert.match(migration, /never reimplementing discovery, hashing, diffing, rendering, replacement, validation, locking, or rollback by hand/i);
   assert.match(migration, /--router-shared/);
   assert.match(migration, /config_decision_required/);
   assert.match(migration, /Never write a suggestion without approval/i);
