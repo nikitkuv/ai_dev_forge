@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { constants, existsSync, readFileSync, accessSync } from "node:fs";
-import { delimiter, dirname, extname, isAbsolute, join, normalize, resolve } from "node:path";
+import { delimiter, dirname, extname, isAbsolute, join, normalize, posix, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -28,13 +28,19 @@ function pathValue(env) {
   return key ? env[key] ?? "" : "";
 }
 
+// Path semantics must follow the declared platform, not the host that runs this
+// module: the platform argument is injectable, so POSIX hosts still have to build
+// Windows-shaped paths when platform is "win32".
+const pathFlavor = (platform) => (platform === "win32" ? win32 : posix);
+
 function uniquePaths(paths, platform) {
+  const flavor = pathFlavor(platform);
   const seen = new Set();
   const result = [];
   for (const value of paths) {
     if (!value) continue;
-    const absolute = resolve(value);
-    const key = platform === "win32" ? normalize(absolute).toLowerCase() : normalize(absolute);
+    const absolute = flavor.resolve(value);
+    const key = platform === "win32" ? flavor.normalize(absolute).toLowerCase() : flavor.normalize(absolute);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(absolute);
@@ -48,9 +54,10 @@ export function buildRuntimeEnv(env = process.env, platform = process.platform, 
     delete runtimeEnv[key];
   }
 
-  const preferred = [dirname(execPath)];
-  if (platform === "win32" && env.APPDATA) preferred.unshift(join(env.APPDATA, "npm"));
-  const merged = uniquePaths([...preferred, ...pathValue(env).split(delimiter)], platform).join(delimiter);
+  const flavor = pathFlavor(platform);
+  const preferred = [flavor.dirname(execPath)];
+  if (platform === "win32" && env.APPDATA) preferred.unshift(flavor.join(env.APPDATA, "npm"));
+  const merged = uniquePaths([...preferred, ...pathValue(env).split(flavor.delimiter)], platform).join(flavor.delimiter);
   const existingPathKey = Object.keys(runtimeEnv).find((candidate) => candidate.toLowerCase() === "path");
   runtimeEnv[existingPathKey ?? (platform === "win32" ? "Path" : "PATH")] = merged;
   return runtimeEnv;
