@@ -2,36 +2,30 @@
 
 ## Локальные операции без вызова модели
 
-Начинайте восстановление с `python .ai/tools/forge.py context`: прочитайте все страницы metadata, затем Backlog и выбранные текущие evidence. `section` извлекает нужные разделы, `fingerprint` хеширует явный scope, `validate --project --adapters` проверяет структуру, drift и конформанс (line budget роутера, BOM/frontmatter агентов, ADR parity, plan-order, Workflow State, структуру INV и mutation registry, инвариант архива Backlog). Не вызывайте context-collector для успешной механической инвентаризации.
+Восстановление начинайте с `python .ai/tools/forge.py context`: прочитайте metadata, затем Backlog и текущие evidence. `section` извлекает разделы, `fingerprint` хеширует scope, `validate --project --adapters` проверяет структуру, drift и конформанс. `evidence-check <TASK-path>` возвращает вердикты review-freshness/testing/fast-assurance; `evidence-check --epic <EPIC-ID>` — готовность Epic gate. `next-id --kind <task|bug|inv|epic|adr|mut>` выделяет идентификаторы.
 
-Свежесть evidence не пересчитывается вручную: `evidence-check <TASK-path>` возвращает вердикты review-freshness/testing/fast-assurance и механическую eligibility приёмки, `evidence-check --epic <EPIC-ID>` — готовность Epic gate (all DONE, fuzz evidence, агрегатный fingerprint). `next-id --kind <task|bug|inv|epic|adr|mut>` выделяет идентификаторы без заполнения пробелов (для `bug`/`epic` сканируются Backlog и архив вместе).
+Поиск: `query "<термины>" [--kind ...] [--area ...] [--since YYYY-MM]` — ранжированные указатели по durable-записям, включая `execution/completed/` и архив Backlog. Индекс `.ai/local/index.db` пересобирается автоматически и не является evidence.
 
-Поиск по накопленным записям — `query "<термины>" [--kind ADR,INV,INT,TASK,PLAN,EPIC,BUG] [--area <area>] [--since YYYY-MM]`: возвращает ранжированные указатели (ID, kind, путь, score, сниппет) по всем durable-записям, включая `execution/completed/` и архив Backlog, без загрузки тел. Индекс — derived-кэш `.ai/local/index.db`: пересобирается автоматически при каждом запросе, никогда не является evidence; перед опорой на результат читается канонический файл. `index rebuild|status` — явное обслуживание, не обязательное.
+Для sync используйте `adapters --diff` и утверждённый preview token. Для проверок — `checks <packet.json> --execute`. `role --assignment-file` подставляет нейтральный контракт и выполняет bounded preflight. Нельзя автоматически сменить provider после ошибки.
 
-Для sync используйте `adapters --diff`, затем применяйте утверждённый preview token. Для проверок — `checks <packet.json> --execute` (packet собирается `checks-new`); reuse требует явного полного dependency scope и не применяется к Epic Validation. `role --assignment-file` подставляет нейтральный контракт сам и выполняет один bounded preflight внутри вызова. Нельзя автоматически сменить provider после ошибки.
+Статусные правки идут через helpers: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row|archive-row|archive-all`, `inv-create`, `commit-scoped`. Мутирующие команды показывают preview и применяются по `--apply TOKEN` с journal-откатом. Терминальные переходы переносят строку в `BACKLOG-ARCHIVE.md` той же транзакцией. `backlog stale-rows --older-than <N>` — read-only отчёт об устаревших строках. Форматы команд: [.ai/tools/USAGE.md](.ai/tools/USAGE.md).
 
-Статусные правки после принятых решений идут через helpers: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row|archive-row|archive-all`, `inv-create`, `commit-scoped`; read-only `backlog stale-rows` возвращает механический отчёт об устаревших строках из их Git-истории. Мутирующие команды по умолчанию показывают preview и применяются только по `--apply TOKEN` с journal-откатом; авторизация и приёмка остаются явными решениями пользователя. Терминальные переходы (Epic `COMPLETED`/`CANCELLED`, Bug `RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX`) переносят строку в `BACKLOG-ARCHIVE.md` той же транзакцией; `archive-all` — разовый батч-backfill легаси-строк.
-
-При уже выданном bounded Task Start grant выполните `task-start-check <TASK-path>` и проверьте eligibility; повторное согласование той же неизменной задачи не требуется. Приёмка результата и Git gates остаются отдельными. Форматы команд и ограничения: [.ai/tools/USAGE.md](.ai/tools/USAGE.md).
+При bounded Task Start grant выполните `task-start-check <TASK-path>`. Приёмка и Git gates остаются отдельными.
 
 ## Режим выполнения planner и reviewer
 
-Перед Epic planning и независимым review оркестратор читает `.ai/project.yaml`: `claude_with_codex` требует работу из Claude Code и локально установленный/авторизованный Codex CLI с `codex exec`; `codex_with_claude` требует работу из Codex и установленный/авторизованный Claude Code CLI 2.1.203+; `native_subagents` запускает одноимённые внутренние агенты Codex, Claude Code или OpenCode без внешней проверки. Для OpenCode-led setup при отсутствии утверждённого route предлагается существующий `native_subagents`, но записывается только после approval; новых режимов и fallback нет. Обе роли всегда получают полный neutral contract и тот же Epic assignment или Review Packet.
+`.ai/project.yaml` хранит `role_execution.mode`: `claude_with_codex` (Claude Code + Codex CLI через `codex exec`), `codex_with_claude` (Codex + Claude Code 2.1.203+), `native_subagents` (внутренние агенты платформы). Для OpenCode-led setup при отсутствии route предлагается `native_subagents`; запись только после approval. Обе роли получают полный neutral contract и тот же Epic assignment или Review Packet.
 
-Выбранный внешний route не имеет fallback: недоступный preflight, несовпадение оркестратора, permission failure, timeout, malformed result или ошибка после старта блокирует стадию. Для переключения измените `role_execution.mode` с явным подтверждением и выполните adapter sync.
+Выбранный внешний route не имеет fallback: preflight failure, несовпадение оркестратора, timeout, malformed result блокирует стадию. Для переключения измените `role_execution.mode` с подтверждением и выполните adapter sync.
 
-Для `claude_with_codex` агент выполняет только managed launcher:
+Для `claude_with_codex` используйте managed launcher:
 
 ```text
 node .claude/forge/codex-role-runner.mjs --preflight
 node .claude/forge/codex-role-runner.mjs --role <epic-planner|reviewer> --prompt-file <temporary-file>
 ```
 
-Launcher сам ищет Codex: сначала явный абсолютный `FORGE_CODEX_BIN`, затем на Windows `%APPDATA%\npm\codex.exe|cmd|bat`, каталог текущего `node.exe` и только потом inherited PATH. Каждый кандидат реально проверяется командами `codex --version`, `codex exec --help` и `codex login status`; сломанный wrapper пропускается в пользу следующего кандидата. Prompt читается из временного файла и передаётся через stdin в `codex exec --ephemeral --sandbox read-only`. Launcher удаляет из child environment `BASH_ENV`, `CLAUDE_PLUGIN_DATA`, `CODEX_COMPANION_APP_SERVER_ENDPOINT` и `CODEX_COMPANION_SESSION_ID`, поэтому соседний Codex, stale plugin broker и его named pipe не участвуют в запуске.
-
-Если preflight недоступен, агент сообщает точную диагностику и останавливает роль. Он не копирует `codex`, `codex.cmd`, `codex.ps1`, `node.exe` или другие wrappers в `~/bin`, не создаёт постоянный либо временный `BASH_ENV`, не удаляет и не перенаправляет plugin state, не завершает чужие процессы и не трогает pipe. Разрешённые исправления со стороны пользователя: установить/обновить `@openai/codex`, выполнить `codex login`, перезапустить Claude Code после изменения PATH либо однократно задать `FORGE_CODEX_BIN` абсолютным путём к настоящему executable. `codex-plugin-cc` можно оставить для его slash-команд, но Forge planner/reviewer его runtime не используют.
-
-Этот runbook описывает повседневные действия. Детальные алгоритмы находятся в skills; основной агент должен явно выбрать нужный skill и сохранить результат в canonical файлах.
+Launcher ищет Codex: `FORGE_CODEX_BIN`, `%APPDATA%\npm\`, каталог `node.exe`, затем PATH. Каждый кандидат проверяется через `codex --version`, `codex exec --help`, `codex login status`. Prompt передаётся через stdin в `codex exec --ephemeral --sandbox read-only`. Из child environment удаляются `BASH_ENV`, `CLAUDE_PLUGIN_DATA`, `CODEX_COMPANION_*`. Разрешённые исправления: установить `@openai/codex`, `codex login`, перезапустить Claude Code или задать `FORGE_CODEX_BIN`.
 
 ## Вызов skills
 
@@ -40,7 +34,7 @@ Launcher сам ищет Codex: сначала явный абсолютный `
 | Явный skill | `$forge-skill-name` | `/forge-skill-name` |
 | Root router | `AGENTS.md` | `CLAUDE.md` |
 
-Можно формулировать запрос обычным языком. Оркестратор всё равно должен явно маршрутизировать обязательный lifecycle через соответствующий Forge skill.
+Обычный запрос допустим, но обязательный lifecycle маршрутизируется через Forge skill.
 
 ## 1. Новый проект
 
@@ -53,14 +47,12 @@ Create Codex, Claude Code, and OpenCode adapters.
 Communicate with me in Russian and start the product interview.
 ```
 
-3. Утверждайте отдельно SPEC, архитектуру/ADR, Backlog, Epic plan, optional Epic Start, adapters и final validation.
+3. Утверждайте SPEC, архитектуру/ADR, Backlog, Epic plan, optional Epic Start, adapters и final validation отдельно.
 4. После bootstrap первая TASK остаётся `TODO`.
 
 Skill: `forge-bootstrap-new`.
 
 ## 2. Существующий проект
-
-После копирования `.ai/` отправьте:
 
 ```text
 Read .ai/BOOTSTRAP.md and initialize this existing repository.
@@ -69,45 +61,25 @@ Create Codex, Claude Code, and OpenCode adapters.
 Communicate with me in Russian.
 ```
 
-Агент сначала собирает evidence из кода, тестов, документов и Git. Он показывает конфликты с намерением пользователя до создания canonical target state. Найденные проблемы остаются кандидатами, пока пользователь не решит добавить их в Backlog.
+Агент собирает evidence из кода, тестов, документов и Git, показывает конфликты до создания canonical target state. Найденные проблемы попадают в Backlog после решения пользователя.
 
 Skill: `forge-bootstrap-existing`.
 
 ## 3. Продолжение разработки
 
-Пример запроса:
-
 ```text
 Read the project router, recover development state from canonical files and Git, and report the current gate.
 ```
 
-Skill `forge-resume-development` определяет:
-
-- ordered `execution/planned/` queue и Epic Start eligibility;
-- active/paused Epic;
-- TASK statuses и blockers;
-- текущий gate;
-- актуальность implementation/review/test/fuzz fingerprints;
-- актуальность Epic Validation fingerprint и выбранных quality profiles;
-- незавершённый Git diff.
-
-История сессии необязательна. Если результат агента не сохранён в TASK или plan, соответствующий этап выполняется повторно.
-
-Когда при resume нужен прошлый контекст помимо явных ссылок (как решали похожую проблему, что было в архиве багов), `query` возвращает ранжированные указатели по ADR/INV/INT/TASK и архиву — оркестратор читает только два-три релевантных канонических файла, а не обходит папки.
+Skill `forge-resume-development` определяет ordered `execution/planned/` queue, active/paused Epic, TASK statuses, текущий gate, актуальность fingerprints и незавершённый Git diff. Если результат не сохранён в TASK или plan, этап выполняется повторно. `query` помогает найти прошлый контекст по ADR/INV/INT/TASK.
 
 ## 3A. Локальные интеграции
 
-Чистый Forge не имеет `.ai/integrations/`: никакой connector preflight не запускается, а bootstrap, lifecycle, adapter sync и migration работают без дополнительных требований.
+Чистый Forge не имеет `.ai/integrations/`. Проект добавляет definition по `.ai/templates/integration.yaml` и настраивает MCP/API/CLI отдельно. Definition содержит profile, operations, scope, access policy, consumers и bindings, но не credentials. Вызов — только явно выбранным совместимым skill.
 
-Для локальной capability проект вручную добавляет definition по `.ai/templates/integration.yaml` и отдельно настраивает MCP/API/CLI. Definition содержит profile, semantic operations, scope, access policy, consumers и platform bindings, но не credentials. Интеграция вызывается только явно выбранным совместимым skill.
-
-Для доски задач используется profile `work_source` и skill `forge-intake-external-work`. Запрос может назвать тикет или попросить прочитать configured queue. Агент показывает retrieval boundary, классификацию и split/combine proposal. Каждый product-change кандидат фиксируется intent-записью (`origin: external-work`, source keys в `sources`) до canonical-изменений; отвергнутые кандидаты остаются `rejected` INT с rationale без Epic. Затем используются обычные feature/bug/Replan/Plan Approval gates, а feature intake завершает уже созданную запись вместо новой. Связи с Epic/Bug/Task записываются только после approval; доска не становится lifecycle authority и не изменяется.
-
-Knowledge/data/analysis/custom profiles используют тот же registry, но не получают `EPIC/BUG/TASK` links. Полные примеры: [docs/local-integrations.md](docs/local-integrations.md).
+Для доски задач используется `work_source` и `forge-intake-external-work`. Product-change кандидаты фиксируются intent-записью (`origin: external-work`) до canonical-изменений; отвергнутые остаются `rejected` INT. Связи с Epic/Bug/Task записываются после approval; доска не становится lifecycle authority. Примеры: [docs/local-integrations.md](docs/local-integrations.md).
 
 ## 4. Новая feature или идея
-
-Запрос:
 
 ```text
 Добавь новую фичу: <описание>.
@@ -115,68 +87,35 @@ Knowledge/data/analysis/custom profiles используют тот же registr
 
 Skill `forge-intake-feature`:
 
-1. резервирует `INT-NNNN` и пишет черновик `intents/INT-NNNN-<name>.md` первым durable-действием — запрос переживает потерю сессии с первых минут;
-2. дозаполняет шаблон (проблема, outcome, затронутые системы, ограничения, альтернативы, открытые вопросы) через короткое интервью и показывает собранную запись на подтверждение;
+1. резервирует `INT-NNNN` и пишет черновик `intents/INT-NNNN-<name>.md`;
+2. дозаполняет шаблон через интервью и показывает запись на подтверждение;
 3. уточняет target behavior;
-4. после подтверждения создаёт `PLANNED/OUTLINE` Epic со ссылкой на INT в опциональной колонке `Intent`;
-5. показывает SPEC diff;
-6. при необходимости показывает ARCHITECTURE/ADR diff;
-7. переводит Epic в `READY` только после утверждения requirements, boundaries и dependencies и отсутствия материальных открытых вопросов в INT;
-8. не изменяет active work без Replan.
+4. создаёт `PLANNED/OUTLINE` Epic со ссылкой на INT;
+5. показывает SPEC diff и при необходимости ARCHITECTURE/ADR diff;
+6. переводит Epic в `READY` после утверждения requirements, boundaries и dependencies;
+7. не изменяет active work без Replan.
 
-Отвергнутая или отложенная идея остаётся INT-записью с rationale (`outcome: rejected`/`deferred`) без создания Epic; похожий повторный запрос сначала поднимает прежнюю запись. Записи не удаляются.
-
-Новая функция не добавляется незаметно в TASK, которую пользователь тестирует вручную.
+Отвергнутая или отложенная идея остаётся INT-записью (`outcome: rejected`/`deferred`) без Epic.
 
 ## 5. Новый баг
-
-Запрос:
 
 ```text
 Зафиксируй баг: <ожидаемое и фактическое поведение>.
 ```
 
-Skill `forge-intake-bug` сначала определяет происхождение:
-
-- баг в непринятой TASK возвращает ту же TASK в `IN PROGRESS` без нового `BUG-ID`;
-- баг в ранее принятом коде после подтверждения получает `BUG-*` со status `OPEN`.
-
-Пользователь отдельно выбирает severity/priority и способ планирования: Replan активного Epic, новый Bugfix Epic или оставить Bug открытым. Терминальное разрешение (`RESOLVED`/`REJECTED`/`DUPLICATE`/`WONT_FIX`) архивирует строку бага той же транзакцией — живой Defect Queue содержит только открытую работу.
+Skill `forge-intake-bug` определяет происхождение: баг в непринятой TASK возвращает ту же TASK в `IN PROGRESS`; баг в принятом коде получает `BUG-*` со status `OPEN`. Пользователь выбирает severity/priority и способ планирования. Терминальное разрешение архивирует строку той же транзакцией.
 
 ## 6. Переприоритизация
 
-Skill `forge-reprioritize-backlog` строит dependency graph и сравнивает его с пользовательским порядком.
-
-Если более поздний Epic блокирует более ранний, оркестратор:
-
-1. объясняет конфликт;
-2. предлагает перестановку;
-3. спрашивает пользователя;
-4. меняет порядок только после подтверждения.
-
-Если порядок сохраняется, Epic остаётся `PLANNED` с `Blocked by`. Active work не меняется как побочный эффект.
-
-Отдельной компакции не существует: терминальные строки уходят в архив автоматически. Кандидаты на отмену подсвечиваются механически: `backlog stale-rows --older-than <N>` возвращает read-only отчёт по Git-истории строк (строки без истории — отдельной категорией `unknown`). Это только evidence-вход для разговора; закрытие остаётся явным решением пользователя. Легаси-терминальные строки, оставшиеся в живом файле, переносятся одной транзакцией `backlog archive-all` (или поштучно `backlog archive-row --id <ID>`).
+Skill `forge-reprioritize-backlog` строит dependency graph и сравнивает его с пользовательским порядком. Конфликтующий порядок объясняется и меняется только после подтверждения. `backlog stale-rows --older-than <N>` подсвечивает кандидатов на отмену; закрытие остаётся явным решением. Легаси-терминальные строки переносятся `backlog archive-all` или `archive-row --id <ID>`.
 
 ## 7. Подготовка Epic
 
-Skill `forge-prepare-epic` для Plan Approval требует:
-
-- status `PLANNED`;
-- readiness `READY`;
-- approved requirements и boundaries;
-- явно объявленные dependencies и blockers;
-- отсутствие другого workspace для того же Epic.
-
-Unsatisfied dependencies, blockers или другой active Epic не мешают подготовить очередь, но блокируют Epic Start. Оркестратор вызывает strong read-only `epic-planner`, независимо проверяет его предложение и показывает plan и все TASK definitions. После Plan Approval создаётся `execution/planned/EPIC-*` с approved plan и `TODO` TASK-файлами; Backlog status остаётся `PLANNED`.
-
-Несколько planned workspaces могут сосуществовать, но их порядок определяется только Backlog. Отдельный Epic Start повторно проверяет dependencies, `Blocked by` и отсутствие другого active-work Epic, затем атомарно перемещает один каталог `execution/planned/ → execution/active/` и меняет status `PLANNED → ACTIVE`. Первая TASK всё равно требует отдельного Task Start.
+Skill `forge-prepare-epic` для Plan Approval требует status `PLANNED`, readiness `READY`, approved requirements и boundaries, явные dependencies/blockers, отсутствие другого workspace для того же Epic. Unsatisfied dependencies блокируют Epic Start, но не подготовку очереди. Оркестратор вызывает `epic-planner`, проверяет предложение и показывает plan и TASK definitions. После Plan Approval создаётся `execution/planned/EPIC-*`; Backlog status остаётся `PLANNED`. Epic Start отдельно проверяет зависимости и перемещает workspace в `execution/active/`.
 
 ## 8. Запуск и выполнение TASK
 
-Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus и выбранный delivery track с rationale.
-
-Skill `forge-run-task` запускает цикл:
+Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus и delivery track с rationale.
 
 ```text
 Task Start
@@ -186,170 +125,89 @@ Task Start
 → AWAITING USER ACCEPTANCE
 ```
 
-Delivery track — отдельная ось от model tier и `risk level`. `fast` разрешён только для ограниченной, обратимой, однозначной TASK с детерминированной локальной проверкой. Публичный контракт, auth/security/privacy, persistence/data format/schema/migration, concurrency/shared core, dependency/build/package/deploy/runtime infrastructure, внешняя интеграция, critical path, ослабление тестов или неопределённость требуют `standard`. Legacy TASK без track также получает `standard`.
+Delivery track — отдельная ось от model tier и `risk level`. `fast` разрешён только для ограниченной, обратимой, однозначной TASK с детерминированной проверкой. Public contract, auth/security/privacy, persistence/data format/schema/migration, concurrency/shared core, dependency/build/package/deploy/runtime infrastructure, внешняя интеграция, critical path, ослабление тестов или неопределённость требуют `standard`. Оба track используют implementer и TDD.
 
-Оба track используют implementer и TDD. На fast track оркестратор без reviewer и tester независимо сверяет scope и fingerprint, проверяет test integrity и повторяет approved focused checks. Успех разрешает прямой переход `IN PROGRESS → AWAITING USER ACCEPTANCE`. Провал, дрейф eligibility или сомнение повышает TASK `fast → standard`; обратный переход после Task Start запрещён. Standard track использует обычные Review Packet, strong reviewer и tester, описанные ниже.
-
-Implementer пишет production-код и focused tests. Review Packet разделяет production paths и supporting evidence и фиксирует отдельный production fingerprint. Reviewer не исправляет код и выполняет ordered adversarial review protocol для production surface. Только production findings влияют на outcome; дефекты тестов, fixtures, snapshots и dev-only artifacts идут отдельными advisory observations и совместимы с `CLEAN`. Runtime configuration, schemas, migrations, packaging, production build и deployment artifacts считаются production, если могут изменить shipped behavior. Canonical-документы остаются контекстом. Tester получает observations, не пишет тесты и запускает:
+На fast track оркестратор без reviewer и tester проверяет scope, fingerprint, test integrity и повторяет approved focused checks. Standard track использует Review Packet, strong reviewer и tester. Reviewer выполняет adversarial review production surface; дефекты тестов и dev-only artifacts — advisory observations. Tester запускает:
 
 1. новые/изменённые тесты;
-2. выбранные affected-component tests;
-3. bounded `Task fuzz smoke`, если итоговый fuzzing impact затрагивает target или готовый harness; для `none` сверяет rationale с actual surface;
-4. scoped lint, typecheck, build и применимые profile-specific checks.
+2. affected-component tests;
+3. bounded `Task fuzz smoke` при итоговом fuzzing impact;
+4. scoped lint, typecheck, build и profile-specific checks.
 
-Полный project test suite и unscoped project-wide checks не являются Task gate и по умолчанию запрещены implementer, reviewer и tester. Ранний полный прогон допустим только по явному запросу пользователя и не заменяет Epic Validation. После production-исправления заново выполняются strong review и selected testing. После supporting-only исправления clean review сохраняется при совпадающем production fingerprint, а selected testing выполняется заново без вызова strong reviewer.
+Полный project test suite и unscoped project-wide checks не являются Task gate. После production-исправления заново выполняются strong review и testing; после supporting-only — только selected testing.
 
 ## 9. Ручная проверка и Task Acceptance
 
-Пока пользователь тестирует, TASK остаётся `AWAITING USER ACCEPTANCE` без таймаута.
-
-Возможные ответы:
-
-- принять TASK;
-- запросить исправления;
-- продолжить ручную проверку.
-
-Skill `forge-complete-task` переводит TASK в `DONE` только после явного Task Acceptance и записывает решение в тот же TASK-файл.
-
-Task Acceptance и следующий Task Start — разные gates. Одно сообщение может разрешить оба действия только если явно содержит оба решения.
+Пока пользователь тестирует, TASK остаётся `AWAITING USER ACCEPTANCE`. Возможные ответы: принять TASK, запросить исправления, продолжить проверку. Skill `forge-complete-task` переводит TASK в `DONE` после явного Task Acceptance. Task Acceptance и следующий Task Start — разные gates.
 
 ## 10. Replan
 
-Изменение scope, порядка или состава TASK активного Epic требует:
-
-1. причины;
-2. точного diff plan/TASK;
-3. подтверждения пользователя;
-4. только затем изменения файлов.
-
-Опечатки и исправления ссылок Replan не требуют. Новая или изменённая TASK всё равно требует собственного Task Start.
+Изменение scope, порядка или состава TASK активного Epic требует причины, точного diff plan/TASK, подтверждения пользователя. Опечатки и исправления ссылок Replan не требуют. Новая или изменённая TASK требует собственного Task Start.
 
 ## 11. Завершение Epic, validation и fuzzing
 
-После принятия последней TASK skill `forge-complete-epic` переводит Epic в `VALIDATING` и автоматически вызывает `epic-validator` для exact aggregate fingerprint. Он запускает полный regression suite, project-wide lint/typecheck/build, integration/E2E, critical paths и применимые quality-profile gates.
+Skill `forge-complete-epic` переводит Epic в `VALIDATING` и вызывает `epic-validator` для exact aggregate fingerprint: полный regression suite, project-wide lint/typecheck/build, integration/E2E, critical paths и quality-profile gates.
 
-Результаты Epic Validation:
+Результаты Epic Validation: `PASSED` → `FUZZING`; `PASSED WITH ACCEPTED EXCEPTIONS` → `FUZZING` после принятия рисков; `FAILED` → `ACTIVE` и Replan; `BLOCKED` → `ACTIVE` и решение по отсутствующей capability.
 
-- `PASSED` → `FUZZING`;
-- `PASSED WITH ACCEPTED EXCEPTIONS` → `FUZZING` только после явного принятия точных рисков пользователем;
-- `FAILED` → `ACTIVE`, Replan и remediation TASK;
-- `BLOCKED` → `ACTIVE` и явное решение по отсутствующей capability или environment.
-
-После passing Epic Validation Epic входит в обязательный fuzzing gate. Для approved `not applicable` оркестратор не вызывает fuzzer, только если все итоговые Task fuzzing impacts равны `none`, actual affected surface совпадает с approved Epic Fuzzing Plan, alternative risk coverage прошёл и fingerprint совпадает с Epic Validation. В этом случае он записывает `NOT APPLICABLE` с freshness evidence. Для `applicable`, `unresolved` или противоречащих итоговых evidence автоматически вызывается read-only fuzzer.
-
-Результаты:
-
-- `PASSED` → ожидание Epic Acceptance;
-- `NOT APPLICABLE` → требуются rationale, passing alternative risk coverage и текущий fingerprint; outcome может записать оркестратор по skip-условиям или вернуть вызванный fuzzer;
-- `HARNESS REQUIRED` → Replan и отдельная harness TASK;
-- `FINDINGS` → Replan и remediation TASK.
-
-После любых изменений повторяются structured review, selected Task testing, полный Epic Validation и fuzzing.
-
-Пользователь отдельно выполняет Epic-level manual validation и даёт Epic Acceptance. Только затем Epic становится `COMPLETED`, перемещается в `execution/completed/`, а его строка атомарно архивируется в `BACKLOG-ARCHIVE.md` — живой Backlog остаётся размером с активный горизонт. Следующий queued Epic из `execution/planned/` показывается в Backlog order, но не запускается автоматически.
+После passing Epic Validation выполняется fuzzing gate. При approved `not applicable` оркестратор не вызывает fuzzer, если все итоговые Task impacts `none`, surface совпадает с планом, alternative risk coverage прошёл и fingerprint актуален; иначе вызывается read-only fuzzer. Результаты: `PASSED`, `NOT APPLICABLE`, `HARNESS REQUIRED`, `FINDINGS`. После изменений повторяются review, testing, Epic Validation и fuzzing. Epic Acceptance завершает Epic; следующий queued Epic не запускается автоматически.
 
 ## 12. Pause и resume
 
-Приостановка active work требует подтверждения пользователя. Соответствующие Epic/TASK получают `PAUSED`, а Epic directory перемещается согласованно с Backlog.
-
-Для продолжения используйте `forge-resume-development`. Возврат к работе также требует явного разрешения; статус не восстанавливается по догадке.
+Приостановка требует подтверждения: Epic/TASK получают `PAUSED`, каталог перемещается согласованно с Backlog. Продолжение — через `forge-resume-development` с явным разрешением.
 
 ## 13. Security audit
 
-Запускайте `forge-security-audit` только явным запросом с точным scope.
-
-По умолчанию strong security auditor:
-
-- local и read-only;
-- без установки инструментов;
-- без network;
-- без production/external scanning.
-
-Расширение каждого ограничения требует отдельного разрешения. Пользователь решает, какие findings превратить в Bug, TASK или Epic. Отдельный security report не создаётся.
+`forge-security-audit` запускается явным запросом с точным scope. По умолчанию strong security auditor local, read-only, без установки инструментов, network и production/external scanning. Findings превращаются в Bug, TASK или Epic по решению пользователя.
 
 ## 13A. Ad hoc investigation
-
-Для свободного исследования вне Backlog явно вызовите `forge-investigate`:
 
 ```text
 Исследуй, почему алгоритм расчёта работает медленно.
 ```
 
-Основной агент создаёт `investigations/INV-NNNN-<name>.md`, не вызывает субагентов и сам выбирает подходящие локальные проверки, experiments, benchmarks или profiling. Если запрос содержит «исследуй и исправь», он также разрешает прямое исправление в пределах этой проблемы; иначе код и тесты не меняются до отдельного разрешения.
+`forge-investigate` создаёт `investigations/INV-NNNN-<name>.md`, не вызывает субагентов и сам выбирает проверки, experiments, benchmarks или profiling. «Исследуй и исправь» разрешает прямое исправление в пределах проблемы. Outcomes:
 
-После исследования выберите исход:
+- `no_action` — сохранить выводы;
+- `promoted` — оформить Bug, Epic или Replan через существующий approval;
+- `fixed_directly` — исправить и проверить без TASK workflow;
+- `unresolved` — сохранить гипотезы и следующие эксперименты.
 
-- `no_action` — сохранить выводы и ничего не делать;
-- `promoted` — оформить обычный Bug, Epic или Replan через его существующий approval;
-- `fixed_directly` — основной агент исправляет и проверяет проблему без TASK workflow;
-- `unresolved` — сохранить гипотезы, blocker и следующие эксперименты.
-
-При прямом исправлении INV перечисляет added/modified/removed paths, объясняет изменения, фиксирует verification commands/results, риски и revision/commit либо scoped-diff fingerprint. Commit не выполняется автоматически. При promotion обе стороны получают ссылку `INV-NNNN`; поздний Epic planner проверяет baseline и relevant paths и использует актуальные выводы вместо полного повторного исследования.
+При `fixed_directly` INV перечисляет added, modified и removed paths, verification commands/results и fingerprint. Commit не выполняется автоматически. При promotion Epic planner проверяет baseline и использует актуальные выводы через `research_refs`.
 
 ## 13B. Standalone mutation testing
 
-Mutation testing не является частью Task/Epic lifecycle и может запускаться в любой момент, включая отсутствие active work:
+Mutation testing не зависит от Task/Epic lifecycle:
 
 ```text
 Проведи mutation testing для src/billing с тестами tests/billing.
 ```
 
-Skill `forge-mutation-test` требует exact scope, fingerprint, подтверждённые baseline/backend commands и resource budget. Bare-запрос запускает только fast `mutation-runner`: ordinary baseline, затем mutation backend, normalized metrics и запись `quality/mutation-testing/runs/MUT-NNNN.yaml`. Он не устанавливает backend; отсутствие настройки даёт сохранённый `SETUP REQUIRED`.
-
-Для немедленного strong analysis укажите его явно:
+Skill `forge-mutation-test` требует exact scope, fingerprint, команды и budget. Bare-запуск — fast `mutation-runner`: baseline, mutation backend, normalized metrics и запись `quality/mutation-testing/runs/MUT-NNNN.yaml`. Forge не устанавливает backend; отсутствие настройки даёт `SETUP REQUIRED`. Strong `mutation-analyzer` — только по явному разрешению при наличии candidates:
 
 ```text
 Проведи mutation testing для src/billing и проанализируй выжившие мутанты, максимум 20 candidates.
 ```
 
-Даже после разрешения `mutation-analyzer` пропускается, если candidates нет, baseline упал, setup отсутствует, artifacts stale или budget равен нулю. Если candidates больше budget, record получает `analysis.status: partial` и remaining count.
-
-Можно сначала получить дешёвые metrics, а позже проанализировать тот же результат без повторного campaign:
-
-```text
-Проанализируй mutation run MUT-0007, максимум 20 candidates.
-```
-
-Deferred analysis требует current fingerprint и artifact checksum. Mutation run никогда не меняет Backlog, Epic/TASK status, gates или development evidence и ничего не создаёт автоматически. Если пользователь решит улучшить тесты или исправить вероятный product defect, он отдельно запускает существующий feature/bug/Replan workflow; `MUT-*` хранит только informational disposition references.
+Отложенный анализ того же `MUT-0007` не повторяет campaign. Mutation run не меняет Backlog, Epic/TASK status, gates или development evidence.
 
 ## 14. Adapter sync
 
-Используйте `forge-sync-adapters` после изменения:
-
-- neutral agents или skills;
-- model mappings;
-- `.ai/custom/router-shared.md`;
-- framework release.
-
-Skill показывает collision diff, затем атомарно пересоздаёт Codex, Claude и enabled OpenCode adapters, проверяет полный shared `AGENTS.md`, точный импорт `@AGENTS.md` в `CLAUDE.md`, OpenCode agents в `.opencode/agents/`, shared skill discovery из `.agents/skills/`, parity и обновляет `.ai/framework.lock`. Он не создаёт `opencode.json` или `.opencode/skills/` и сохраняет project-owned OpenCode commands, plugins и unlisted agents.
-
-Project-owned `.ai/integrations/` не является render input и не попадает в managed-output hashes. Изменение board scope или другого локального definition не требует adapter sync само по себе.
+Используйте `forge-sync-adapters` после изменения neutral agents/skills, model mappings, `.ai/custom/router-shared.md` или framework release. Skill показывает collision diff, пересоздаёт adapters, проверяет `AGENTS.md`, `@AGENTS.md` импорт, OpenCode agents, skills parity и обновляет `.ai/framework.lock`. `.ai/integrations/` не является render input.
 
 ## 14A. Framework upgrade с локальными интеграциями
 
-`forge-migrate-framework` offline классифицирует integration files как absent/current/older-migratable/malformed/future/custom/collision. Отсутствие — обычный clean path. Framework bundle обновляется отдельно и сохраняет integrations byte-for-byte; unavailable connector не блокирует upgrade.
-
-Older-migratable schema изменяется только отдельным diff и approval с recoverable backup, staged validation и rollback. Malformed/future/custom profile блокирует только свой consumer. Ownership collision блокирует migration до решения. Rollback framework не удаляет external identities или canonical work links.
+`forge-migrate-framework` классифицирует integration files как absent/current/older-migratable/malformed/future/custom/collision. Framework bundle обновляется offline и сохраняет integrations byte-for-byte. Older-migratable schema меняется отдельным diff и approval с backup. Malformed/future/custom profile блокирует только свой consumer.
 
 ## 15. Git policy
 
-`.ai/project.yaml` поддерживает:
+- `role_execution.mode` — `claude_with_codex`, `codex_with_claude` или `native_subagents`;
+- `platforms.opencode.enabled` и три явных OpenCode model ID формата `provider/model-id`;
+- `manual` — commit после Task Acceptance требует отдельного разрешения;
+- `auto_commit_after_acceptance` — commit разрешён после clean review, testing, Task Acceptance и `DONE`.
 
-- `role_execution.mode` — один из `claude_with_codex`, `codex_with_claude`, `native_subagents` для обеих read-only ролей;
-- `platforms.opencode.enabled` и, когда он `true`, три явных OpenCode model ID формата `provider/model-id`; provider и credentials Forge не настраивает;
-- `manual` — после Task Acceptance и перехода TASK в `DONE` оркестратор предлагает commit, но ждёт отдельного явного разрешения;
-- `auto_commit_after_acceptance` — commit разрешён только после clean review, testing, Task Acceptance и перехода TASK в `DONE`.
-
-До явного Task Acceptance commit запрещён. Commit не заменяет acceptance. В commit нельзя включать посторонние пользовательские изменения.
+До Task Acceptance commit запрещён. В commit нельзя включать посторонние изменения.
 
 ## 16. Проверка фреймворка
 
-`forge-check-framework` выполняет read-only проверку:
-
-- ownership и hashes;
-- IDs, frontmatter, links и transitions;
-- Backlog/execution alignment;
-- adapter parity и лимит routers;
-- восстановимость текущего gate без истории сессии.
-
-Исправления выполняются отдельным подходящим skill и через необходимые user gates.
+`forge-check-framework` выполняет read-only проверку: ownership и hashes, IDs, frontmatter, links и transitions, Backlog/execution alignment, adapter parity и лимит routers, восстановимость текущего gate без истории сессии. Исправления — отдельным skill через необходимые user gates.

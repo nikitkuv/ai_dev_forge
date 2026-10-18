@@ -21,7 +21,7 @@ test("project template requires an explicit valid role mode", async () => {
   assert.match(project, /schema_version: 2/);
   assert.match(project, /role_execution:\n  mode: null/);
   assert.match(project, /strong: \{model: gpt-6.1-sol, reasoning_effort: high\}/);
-  assert.match(project, /balanced: \{model: gpt-6-luna, reasoning_effort: high\}/);
+  assert.match(project, /balanced: \{model: gpt-6-luna, reasoning_effort: xhigh\}/);
   assert.match(project, /fast: \{model: gpt-5\.6-luna, reasoning_effort: medium\}/);
   const valid = new Set(["claude_with_codex", "codex_with_claude", "native_subagents"]);
   for (const mode of valid) assert.equal(valid.has(mode), true);
@@ -35,7 +35,7 @@ test("Claude native subagents use high effort without changing other route defau
     read(".ai/05-create-platform-adapters.md")
   ]);
   assert.match(agent, /'high' if role_execution\.mode == 'native_subagents' else/);
-  assert.match(project, /claude:\n    strong: \{model: opus, effort: medium\}/);
+  assert.match(project, /claude:\n    strong: \{model: opus, effort: high\}/);
   assert.match(generation, /`effort: high` for every generated Claude agent when `role_execution\.mode` is `native_subagents`/);
   assert.match(generation, /native-only override does not change the managed `codex_with_claude` route/);
 });
