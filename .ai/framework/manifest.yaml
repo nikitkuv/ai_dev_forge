@@ -12,8 +12,8 @@ ownership:
     - .ai/01-product-discovery.md
     - .ai/02-system-design.md
     - .ai/03-release-planning.md
-    - .ai/04-prepare-workspace.md
-    - .ai/05-create-platform-adapters.md
+    - .ai/04-create-platform-adapters.md
+    - .ai/05-prepare-workspace.md
     - .ai/06-final-validation.md
     - .ai/CONVENTIONS.md
     - .ai/framework/

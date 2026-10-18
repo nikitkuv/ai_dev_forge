@@ -60,8 +60,8 @@ Communicate with me in Russian.
 1. Product Discovery → утверждённый `SPEC.md`.
 2. System Design → `ARCHITECTURE.md`, ADR и генерируемый `DECISIONS.md`.
 3. Release Planning → `BACKLOG.md` с Epic Roadmap и Defect Queue.
-4. Prepare Workspace → `epic-planner`, approved queued workspace under `execution/planned/`, optional Epic Start.
-5. Create Platform Adapters → enabled native adapter-наборы и `.ai/framework.lock`.
+4. Create Platform Adapters → enabled native adapter-наборы и `.ai/framework.lock`.
+5. Prepare Workspace → `epic-planner`, approved queued workspace under `execution/planned/`, optional Epic Start.
 6. Final Validation → проверка структуры, lifecycle, ownership, parity и восстановления без истории сессии.
 
 Первая TASK после bootstrap остаётся `TODO` и требует отдельного Task Start.

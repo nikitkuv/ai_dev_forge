@@ -62,7 +62,7 @@ If no Epic was activated, report all approved planned workspaces in Backlog orde
 - `.ai/project.yaml`, `.ai/framework.lock`, `.ai/custom/`, optional `investigations/`, optional `.ai/integrations/`, optional `quality/mutation-testing/`, canonical documents, ADRs, and execution state were not overwritten as framework release content.
 - Lock source hashes match actual managed-output inputs: neutral sources, renderers, configuration, and custom overlays. Local integration definitions/state are validated separately and do not create framework drift.
 - Generated adapter hashes match current outputs or the collision is explicitly reported.
-- Obsolete framework-owned files, including the former Step 05, are absent.
+- Obsolete framework-owned files, including any pre-rename step file names, are absent.
 
 ## Validate Platform Adapters
 

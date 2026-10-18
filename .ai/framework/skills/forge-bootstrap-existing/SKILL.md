@@ -23,8 +23,8 @@ Follow all six numbered workflows:
 1. Use `.ai/01-product-discovery.md` to interview from the evidence and create a draft target-state `SPEC.md`.
 2. Use `.ai/02-system-design.md` to compare current and target architecture, approve significant ADRs, and create `ARCHITECTURE.md` plus generated `DECISIONS.md`.
 3. Use `.ai/03-release-planning.md` to present discovered feature, defect, debt, and risk candidates; add only user-approved items to `BACKLOG.md`.
-4. Use `.ai/04-prepare-workspace.md` when the user selects a `PLANNED + READY` Epic for detailed planning. Plan Approval creates a queued `execution/planned/` workspace even when dependencies, blockers, or another active Epic defer the separate Epic Start.
-5. Use `.ai/05-create-platform-adapters.md` to confirm every enabled model mapping and generate Codex, Claude, and enabled OpenCode adapters.
+4. Use `.ai/04-create-platform-adapters.md` to confirm every enabled model mapping and generate Codex, Claude, and enabled OpenCode adapters.
+5. Use `.ai/05-prepare-workspace.md` when the user selects a `PLANNED + READY` Epic for detailed planning. Plan Approval creates a queued `execution/planned/` workspace even when dependencies, blockers, or another active Epic defer the separate Epic Start.
 6. Use `.ai/06-final-validation.md` to validate the adopted repository without changing product code.
 
 Require explicit user approval at every numbered step and every document, ADR, Plan Approval, Replan, Epic Start, and collision gate. Never advance automatically.

@@ -32,7 +32,7 @@ test("Epic and Task templates plan fuzzing without a separate artifact", async (
 test("epic planner requires evidence for every fuzzing applicability assessment", async () => {
   const [planner, workflow, skill] = await Promise.all([
     read(".ai/framework/agents/epic-planner.yaml"),
-    read(".ai/04-prepare-workspace.md"),
+    read(".ai/05-prepare-workspace.md"),
     read(".ai/framework/skills/forge-prepare-epic/SKILL.md")
   ]);
 

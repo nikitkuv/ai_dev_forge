@@ -1,4 +1,4 @@
-# Bootstrap Step 05 — Create Platform Adapters
+# Bootstrap Step 04 — Create Platform Adapters
 
 ## Purpose
 
@@ -39,7 +39,7 @@ Require:
 - `framework_language: en`;
 - an explicit Git policy;
 - resolved model mappings for every enabled platform tier, using bundled Codex and Claude defaults unless the project explicitly overrides them; enabled OpenCode has no bundled provider-independent default and requires explicit provider-qualified mappings from user input or evidenced local `opencode models` output.
-- quality profiles approved in the Epic plan and reusable Task/Epic command catalogs derived only from confirmed repository, build-system, and CI evidence. Keep an unresolved list empty and report the blocker; never invent a command.
+- quality profiles applicable to this project and reusable Task/Epic command catalogs derived only from confirmed repository, build-system, and CI evidence. Keep an unresolved list empty and report the blocker; never invent a command.
 - optional mutation-testing backend, version, baseline, mutation and result-adapter commands only when separately approved and evidenced. Preserve a null/absent configuration as valid; do not install a backend or create mutation history.
 
 Model mappings must provide:

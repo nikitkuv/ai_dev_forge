@@ -202,11 +202,51 @@ BACKLOG.md
 
 `BACKLOG.md` владеет Epic priority, readiness, dependencies, blockers и status. TASK-списков в нём нет.
 
-### Шаг 5. Prepare Workspace → Epic plan и TASK-файлы
+### Шаг 5. Создание Codex, Claude Code и OpenCode adapters
+
+Оркестратор читает `.ai/04-create-platform-adapters.md`.
+
+**Внутреннее действие**
+
+1. Повторно проверяет model mappings в `.ai/project.yaml`.
+2. Проверяет существующие `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.claude/`, `.agents/`, `opencode.json` и `.opencode/` на collision.
+3. Показывает diff до перезаписи любых generated outputs.
+4. Рендерит все enabled adapter-наборы из одних neutral sources; OpenCode переиспользует `AGENTS.md` и `.agents/skills/`.
+5. Проверяет parity: 7 агентов и 14 skills на каждой платформе.
+6. Проверяет лимит root-router в 150 строк.
+7. Создаёт `.ai/framework.lock` с hashes источников и outputs.
+8. Создаёт или минимально дополняет project `README.md` после отдельного collision confirmation.
+
+> **Оркестратор:** Collision не найден. Будут созданы shared `AGENTS.md`, importing `CLAUDE.md`, 16 portable skills для Codex/OpenCode, 16 Claude skills и по 11 agent-файлов для Codex, Claude и OpenCode. `opencode.json` и project-owned `.opencode/` останутся без изменений. Подтверждаете генерацию?
+
+> **Пользователь:** Да.
+
+После генерации оркестратор показывает созданные пути, model mappings, router line counts, parity checks и hashes lock-файла.
+
+> **Оркестратор:** Все enabled adapter-наборы сгенерированы и прошли parity validation. Подтверждаете результат Step 04 и переход к подготовке первого Epic?
+
+> **Пользователь:** Да, Step 04 принимаю.
+
+**Состояние после шага**
+
+```text
+AGENTS.md
+CLAUDE.md
+.codex/agents/*.toml
+.agents/skills/*/SKILL.md
+.claude/agents/*.md
+.claude/skills/*/SKILL.md
+.opencode/agents/*.md
+.ai/framework.lock
+```
+
+Generated adapters вручную не редактируются. Проектные дополнения хранятся в `.ai/custom/` и применяются через adapter sync.
+
+### Шаг 6. Prepare Workspace → Epic plan и TASK-файлы
 
 Оркестратор выбирает `PLANNED + READY` Epic со стабильными requirements, boundaries и declarations зависимостей. Unsatisfied dependencies, blockers или другой active Epic не мешают планированию, но позже блокируют Epic Start. Допустим, выбран `EPIC-001`.
 
-Он вызывает strong read-only `epic-planner`, передаёт approved canonical documents, repository/CI evidence, quality configuration, contracts и templates, затем независимо проверяет предложение. Planner не пишет plan/TASK-файлы и не утверждает их.
+Он вызывает strong read-only `epic-planner` (его описание уже сгенерировано на шаге adapters), передаёт approved canonical documents, repository/CI evidence, quality configuration, contracts и templates, затем независимо проверяет предложение. Planner не пишет plan/TASK-файлы и не утверждает их.
 
 > **Оркестратор:** Для `EPIC-001` предлагаю три TASK:
 >
@@ -247,46 +287,6 @@ execution/planned/EPIC-001-core/
 ```
 
 Позже Epic Start повторно проверит dependencies, `Blocked by` и отсутствие другого active-work Epic, затем атомарно переместит каталог `execution/planned/ → execution/active/` вместе с переходом Backlog `PLANNED → ACTIVE`. Epic Start не является Task Start.
-
-### Шаг 6. Создание Codex, Claude Code и OpenCode adapters
-
-Оркестратор читает `.ai/05-create-platform-adapters.md`.
-
-**Внутреннее действие**
-
-1. Повторно проверяет model mappings в `.ai/project.yaml`.
-2. Проверяет существующие `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.claude/`, `.agents/`, `opencode.json` и `.opencode/` на collision.
-3. Показывает diff до перезаписи любых generated outputs.
-4. Рендерит все enabled adapter-наборы из одних neutral sources; OpenCode переиспользует `AGENTS.md` и `.agents/skills/`.
-5. Проверяет parity: 7 агентов и 14 skills на каждой платформе.
-6. Проверяет лимит root-router в 150 строк.
-7. Создаёт `.ai/framework.lock` с hashes источников и outputs.
-8. Создаёт или минимально дополняет project `README.md` после отдельного collision confirmation.
-
-> **Оркестратор:** Collision не найден. Будут созданы shared `AGENTS.md`, importing `CLAUDE.md`, 16 portable skills для Codex/OpenCode, 16 Claude skills и по 11 agent-файлов для Codex, Claude и OpenCode. `opencode.json` и project-owned `.opencode/` останутся без изменений. Подтверждаете генерацию?
-
-> **Пользователь:** Да.
-
-После генерации оркестратор показывает созданные пути, model mappings, router line counts, parity checks и hashes lock-файла.
-
-> **Оркестратор:** Все enabled adapter-наборы сгенерированы и прошли parity validation. Подтверждаете результат Step 05 и переход к Final Validation?
-
-> **Пользователь:** Да, Step 05 принимаю.
-
-**Состояние после шага**
-
-```text
-AGENTS.md
-CLAUDE.md
-.codex/agents/*.toml
-.agents/skills/*/SKILL.md
-.claude/agents/*.md
-.claude/skills/*/SKILL.md
-.opencode/agents/*.md
-.ai/framework.lock
-```
-
-Generated adapters вручную не редактируются. Проектные дополнения хранятся в `.ai/custom/` и применяются через adapter sync.
 
 ### Шаг 7. Final Validation
 

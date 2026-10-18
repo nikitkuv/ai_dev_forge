@@ -1,4 +1,4 @@
-# Bootstrap Step 04 — Prepare a Planned Epic Workspace
+# Bootstrap Step 05 — Prepare a Planned Epic Workspace
 
 ## Purpose
 

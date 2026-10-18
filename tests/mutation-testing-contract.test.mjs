@@ -133,7 +133,7 @@ test("skill defaults to metrics-only and invokes strong analysis only on current
 test("dual-platform generation declares both mutation roles and portable skill", async () => {
   const [manifest, generation, codexRouter, claudeRouter, sync] = await Promise.all([
     read(".ai/framework/manifest.yaml"),
-    read(".ai/05-create-platform-adapters.md"),
+    read(".ai/04-create-platform-adapters.md"),
     read(".ai/templates/adapters/codex/AGENTS.md"),
     read(".ai/templates/adapters/claude/CLAUDE.md"),
     read(".ai/framework/skills/forge-sync-adapters/SKILL.md")

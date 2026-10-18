@@ -32,7 +32,7 @@ test("Claude native subagents use high effort without changing other route defau
   const [agent, project, generation] = await Promise.all([
     read(".ai/templates/adapters/claude/agent.md"),
     read(".ai/templates/project.yaml"),
-    read(".ai/05-create-platform-adapters.md")
+    read(".ai/04-create-platform-adapters.md")
   ]);
   assert.match(agent, /'high' if role_execution\.mode == 'native_subagents' else/);
   assert.match(project, /claude:\n    strong: \{model: opus, effort: high\}/);
@@ -62,7 +62,7 @@ test("workflow skills require explicit routing and prohibit fallback", async () 
   const [planner, reviewer, preparation] = await Promise.all([
     read(".ai/framework/skills/forge-prepare-epic/SKILL.md"),
     read(".ai/framework/skills/forge-run-task/SKILL.md"),
-    read(".ai/04-prepare-workspace.md")
+    read(".ai/05-prepare-workspace.md")
   ]);
   for (const source of [planner, reviewer, preparation]) {
     assert.match(source, /preflight/i);
