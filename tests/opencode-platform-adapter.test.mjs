@@ -71,7 +71,7 @@ test("OpenCode template renders every neutral agent through deterministic bounda
 
 test("generation, validation, and migration preserve shared and project-owned OpenCode files", async () => {
   const [generation, sync, check, validation, migrate, conventions] = await Promise.all([
-    read(".ai/05-create-platform-adapters.md"),
+    read(".ai/04-create-platform-adapters.md"),
     read(".ai/framework/skills/forge-sync-adapters/SKILL.md"),
     read(".ai/framework/skills/forge-check-framework/SKILL.md"),
     read(".ai/06-final-validation.md"),

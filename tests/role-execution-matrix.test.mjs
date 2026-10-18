@@ -42,7 +42,7 @@ test("planner and reviewer use one exact assignment across every route", async (
 
 test("generation and migration retain both launchers and all native agents", async () => {
   const [generation, sync, migration, validation, contract] = await Promise.all([
-    read(".ai/05-create-platform-adapters.md"),
+    read(".ai/04-create-platform-adapters.md"),
     read(".ai/framework/skills/forge-sync-adapters/SKILL.md"),
     read(".ai/framework/skills/forge-migrate-framework/SKILL.md"),
     read(".ai/06-final-validation.md"),

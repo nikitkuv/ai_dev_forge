@@ -27,7 +27,7 @@ Optional evidence includes existing roadmaps, issue trackers, TODO material, cod
 6. Use readiness:
    - `OUTLINE` when requirements, boundaries, or dependencies are unresolved;
    - `READY` only when requirements, scope boundaries, acceptance direction, and dependencies are approved.
-7. Do not activate an Epic in this step. Epic activation belongs to the separate Epic Start gate in Step 04.
+7. Do not activate an Epic in this step. Epic activation belongs to the separate Epic Start gate in Step 05.
 
 Do not decompose Epics into Tasks or estimate implementation effort.
 
@@ -79,7 +79,7 @@ This step is complete only when:
 - `BACKLOG.md` has explicit user approval and is marked `approved`;
 - no plan, Task file, execution directory, or active Epic was created.
 
-Do not start Step 04 automatically. Report the result and request a separate user confirmation.
+Do not start Step 05 automatically. Report the result and request a separate user confirmation.
 
 ## Output
 

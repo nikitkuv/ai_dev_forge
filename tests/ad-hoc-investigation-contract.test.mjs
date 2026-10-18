@@ -110,7 +110,7 @@ test("bootstrap, migration and adapter generation preserve history and distribut
     read(".ai/MIGRATE.md"),
     read(".ai/framework/skills/forge-migrate-framework/SKILL.md"),
     read(".ai/framework/skills/forge-sync-adapters/SKILL.md"),
-    read(".ai/05-create-platform-adapters.md"),
+    read(".ai/04-create-platform-adapters.md"),
     read(".ai/templates/adapters/codex/AGENTS.md")
   ]);
   assert.match(bootstrap, /no synthetic INV or INT records/i);

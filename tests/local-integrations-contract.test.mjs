@@ -103,7 +103,7 @@ test("Claude imports the canonical router and portable integration contract rema
     read(".ai/templates/adapters/codex/AGENTS.md"),
     read(".ai/templates/adapters/claude/CLAUDE.md"),
     read(".ai/framework/manifest.yaml"),
-    read(".ai/05-create-platform-adapters.md")
+    read(".ai/04-create-platform-adapters.md")
   ]);
   assert.equal(claude.trim(), "@AGENTS.md");
   assert.match(manifest, /- forge-intake-external-work/);
