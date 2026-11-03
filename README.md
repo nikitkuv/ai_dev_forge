@@ -61,7 +61,7 @@ Communicate with me in Russian.
 2. System Design → `ARCHITECTURE.md`, ADR и генерируемый `DECISIONS.md`.
 3. Release Planning → `BACKLOG.md` с Epic Roadmap и Defect Queue.
 4. Create Platform Adapters → enabled native adapter-наборы и `.ai/framework.lock`.
-5. Prepare Workspace → `epic-planner`, approved queued workspace under `execution/planned/`, optional Epic Start.
+5. Prepare Workspace → ступенчатое интервью планирования, `epic-planner`, approved queued workspace under `execution/planned/`, optional Epic Start.
 6. Final Validation → проверка структуры, lifecycle, ownership, parity и восстановления без истории сессии.
 
 Первая TASK после bootstrap остаётся `TODO` и требует отдельного Task Start.
@@ -93,6 +93,12 @@ Bootstrap и migration требуют явного выбора. Недосту�
 Каждая TASK получает ровно один delivery track: `fast` или `standard`. Это отдельная ось от model tier и `risk level`: низкий риск сам по себе не разрешает fast track.
 
 `fast` — только ограниченное, обратимое, однозначное изменение с детерминированной локальной проверкой. Он запрещён для public contract, security/privacy/auth, persistence/data format, schema/migration, concurrency/shared core, dependencies/build/package/deploy/runtime infrastructure, внешних интеграций, critical path, ослабления тестов и любой неопределённости. Оба track используют implementer и TDD. В `fast` reviewer и tester не вызываются: оркестратор проверяет scope и fingerprint, test integrity и повторяет approved checks. В `standard` — implementer → strong reviewer → tester. Любой провал повышает `fast → standard`; обратный переход после Task Start запрещён. Старые TASK без поля track трактуются как `standard`. Task Acceptance, Epic Validation и fuzzing остаются обязательными.
+
+## Планирование эпика: интервью и Contract Sketch
+
+Подготовка эпика проходит ступенчатым интервью: цель и ожидаемый результат → дизайн интерфейса (`Interface Delta`) → риски и критические пути → скелет декомпозиции. Каждая ступень подтверждается пользователем до следующей; отвергнутая дорабатывается и подтверждается заново. Схлопывание ступеней допустимо только для bounded эпиков с записанной rationale в Epic User Validation History. Test cases, change maps, fuzz plans и delivery-track evidence заполняет `epic-planner` только после подтверждения скелета. Plan Approval сверяет заполненный план с интервью и возвращает несогласованные изменения интерфейса или scope обратно на ступени.
+
+TASK с изменением public interfaces несёт `Contract Sketch` — утверждённую форму каждого контракта (сигнатуры/endpoints, поля схем, error behavior); TASK без публичных контрактов записывает явное none. Sketch подтверждается с планом, связывается как boundary constraint на Task Start и проверяется reviewer по каждому контракту; отклонение формы без Replan — production finding. Уже утверждённые планы in-flight эпиков продолжают работу без повторного интервью, а TASK без sketch продолжают обычный affected-contracts flow и не блокируются.
 
 ## Проверка качества
 
@@ -143,7 +149,7 @@ Mutation backend не входит в обязательные зависимо�
 после подтверждения сам примени миграцию. Не проси меня переносить preview_token или собирать команды.
 ```
 
-Preview не пишет ничего и возвращает `preview_token`; apply выполняет одну транзакцию с backup-журналом и rollback. Ручной режим:
+Preview не пишет ничего и возвращает `preview_token`; apply выполняет одну транзакцию с backup-журналом и rollback. Миграция на интервью планирования и Contract Sketch аддитивна: in-flight эпики с уже утверждённым планом продолжают выполнение без повторного интервью, их планы остаются валидными, а TASK без sketch не блокируются — новое поведение действует только для новых эпиков. Ручной режим:
 
 ```text
 python .ai-next/tools/forge.py migrate

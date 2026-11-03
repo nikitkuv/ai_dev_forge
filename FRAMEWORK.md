@@ -6,6 +6,16 @@
 
 План составляется до Plan Approval; код тестов появляется при выполнении разрешённой задачи по циклу RED → GREEN → REFACTOR. План допускает уточнения в пределах задачи; неизвестные ожидания и пробелы покрытия устраняются до утверждения. При проверке ID сценариев сопоставляются с фактическими тестами и результатами запуска.
 
+## Интервью планирования эпика и Contract Sketch
+
+Подготовка эпика проходит ступенчатым интервью с подтверждением каждой ступени: цель и ожидаемый результат → дизайн интерфейса → риски и критические пути → скелет декомпозиции. Артефакт ступени подтверждается пользователем до начала следующей; отвергнутая ступень дорабатывается и подтверждается повторно, пока последующие остаются нетронутыми. Ступени можно объединять только для bounded эпиков с записанной rationale и названием объединённых ступеней в Epic User Validation History; молчаливое схлопывание запрещено.
+
+Ступень интерфейса перечисляет контракты, схемы, форматы данных и границы компонентов с предполагаемой формой в `Interface Delta` внутри Implementation Strategy; значимые решения помечаются ADR-кандидатами с их драйверами. Скелет называет каждую TASK с ровно одним независимо проверяемым результатом и зависимостями, без test cases, change maps и fuzz-деталей. Детали — planned test cases, change maps, fuzz plans, delivery-track evidence — заполняет `epic-planner` только после подтверждения скелета, используя подтверждённый скелет и `Interface Delta` как вход. Plan Approval сверяет заполненный план с артефактами интервью: несогласованное изменение интерфейса или scope возвращает план на ступени интервью, а не утверждается молча.
+
+Каждая TASK с изменением public interfaces несёт `Contract Sketch` рядом с Affected Surface and Risk: контракт и утверждённая форма — сигнатуры/endpoints, поля схем, error behavior; TASK без публичных контрактов записывает явное none. Sketch подтверждается вместе с планом до Plan Approval, связывается как boundary constraint на Task Start и проверяется reviewer по каждому контракту внутри acceptance traceability; доставленная форма, отличающаяся от sketch без Replan, — production finding. Sketch ограничивает только форму контракта, никогда не внутреннюю реализацию; изменение формы проходит через Replan до принятия нового кода.
+
+Миграция для in-flight эпиков: уже утверждённые планы продолжают жизненный цикл без повторного интервью и остаются валидными, TASK без sketch выполняются по существующему affected-contracts flow и никогда не блокируются требованием sketch. Интервью — умолчание только для новых эпиков.
+
 ## Planner/reviewer routing
 
 `epic-planner` и `reviewer` имеют neutral definitions и native agents на Codex, Claude Code и OpenCode. Один обязательный `role_execution.mode` в `.ai/project.yaml` выбирает маршрут для обеих ролей: `claude_with_codex`, `codex_with_claude` или `native_subagents`. OpenCode-led setup предлагает `native_subagents` при отсутствии утверждённого route. Cross-provider preflight или runtime failure никогда не переключает provider неявно.
@@ -172,7 +182,7 @@ PLANNED → ACTIVE → VALIDATING → FUZZING → AWAITING EPIC ACCEPTANCE → C
 
 ## Quality gates и project profiles
 
-Universal Task baseline: approved definition, delivery track, verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected checks, current assurance, manual verification и explicit Task Acceptance. При планировании TASK заполняется `Planned Change Map`: часть системы, пути, символы, действия и причины; косвенно затронутые потребители фиксируются отдельно.
+Universal Task baseline: approved definition, delivery track, verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected checks, current assurance, manual verification и explicit Task Acceptance. При планировании TASK заполняется `Planned Change Map`: часть системы, пути, символы, действия и причины; косвенно затронутые потребители фиксируются отдельно. Для public-interface изменений также заполняется `Contract Sketch` с утверждённой формой контракта; без публичных контрактов записывается явное none.
 
 Universal Epic baseline: все TASK `DONE`, requirement-to-evidence coverage, полный project suite, project-wide checks, critical-path validation, applicable profile gates, допустимый fuzzing outcome и explicit Epic Acceptance.
 

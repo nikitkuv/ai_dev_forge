@@ -45,6 +45,17 @@ research_refs: []
 - **Risk flags:** <Public contract, authorization, persistence, migration, concurrency, shared core, dependency/build, frontend critical path, data/ML, operations, or —.>
 - **Failure impact:** <User, data, compatibility, security, availability, cost, or model-quality impact.>
 
+## Contract Sketch
+
+Record this sketch with the task definition, before Plan Approval, under `contract_sketch` in `.ai/framework/contracts.yaml`. It is required when the affected contracts include public interfaces: name each changed contract and its intended shape — signatures or endpoints, schema fields, and error behavior — sufficient to judge the interface without implementation detail. When this TASK affects no public contracts, record an explicit none. The sketch constrains contract shape only and never internal implementation.
+
+| Contract | Approved shape | References |
+| --- | --- | --- |
+| <Public API, schema, event, storage format, or other public interface> | <Signatures or endpoints, schema fields, error behavior> | <Interface Delta row, ADR, SPEC section, or —> |
+| none | <Explicit none when no public contract changes> | — |
+
+Sketches are confirmed through Plan Approval alongside the task definition and bound as boundary constraints at Task Start. Changing a contract's shape away from the approved sketch requires the Replan gate before implementation adopts the new shape. Independent review reports a conformance result per changed contract; an unapproved shape difference is a production finding. A TASK created before this section existed proceeds without a sketch under the existing affected-contracts flow and is never blocked by the sketch requirement.
+
 ## Planned Change Map
 
 Record this map during Task definition, before Plan Approval. It owns the per-Task implementation forecast; the Epic plan links here. Follow `task_change_map` in `.ai/framework/contracts.yaml`.

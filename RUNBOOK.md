@@ -111,11 +111,11 @@ Skill `forge-reprioritize-backlog` строит dependency graph и сравни
 
 ## 7. Подготовка Epic
 
-Skill `forge-prepare-epic` для Plan Approval требует status `PLANNED`, readiness `READY`, approved requirements и boundaries, явные dependencies/blockers, отсутствие другого workspace для того же Epic. Unsatisfied dependencies блокируют Epic Start, но не подготовку очереди. Оркестратор вызывает `epic-planner`, проверяет предложение и показывает plan и TASK definitions. После Plan Approval создаётся `execution/planned/EPIC-*`; Backlog status остаётся `PLANNED`. Epic Start отдельно проверяет зависимости и перемещает workspace в `execution/active/`.
+Skill `forge-prepare-epic` для Plan Approval требует status `PLANNED`, readiness `READY`, approved requirements и boundaries, явные dependencies/blockers, отсутствие другого workspace для того же Epic. Unsatisfied dependencies блокируют Epic Start, но не подготовку очереди. Подготовка проходит ступенчатым интервью: цель и ожидаемый результат → дизайн интерфейса (`Interface Delta`) → риски и критические пути → скелет декомпозиции. Каждая ступень подтверждается пользователем до следующей, отвергнутая дорабатывается и подтверждается заново, а объединение ступеней допустимо только для bounded эпиков с записанной rationale. После подтверждения скелета оркестратор вызывает `epic-planner` для деталей (test cases, change maps, fuzz plans, delivery-track evidence), проверяет предложение и показывает plan и TASK definitions. Plan Approval сверяет план с подтверждённым интервью: несогласованное изменение интерфейса или scope возвращает план на ступени. TASK с изменениями public interfaces получает `Contract Sketch` — утверждённую форму контракта или явное none; изменение формы относительно sketch требует Replan. Уже утверждённые планы in-flight эпиков продолжают работу без повторного интервью, TASK без sketch не блокируются. После Plan Approval создаётся `execution/planned/EPIC-*`; Backlog status остаётся `PLANNED`. Epic Start отдельно проверяет зависимости и перемещает workspace в `execution/active/`.
 
 ## 8. Запуск и выполнение TASK
 
-Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Verification Plan, review focus и delivery track с rationale.
+Task Start всегда явный. Перед подтверждением покажите goal, scope, acceptance criteria, affected surface, risk flags, Contract Sketch, Verification Plan, review focus и delivery track с rationale. Утверждённый Contract Sketch связывается как boundary constraint; изменение формы контракта уходит в Replan до принятия нового кода.
 
 ```text
 Task Start
@@ -142,7 +142,7 @@ Delivery track — отдельная ось от model tier и `risk level`. `f
 
 ## 10. Replan
 
-Изменение scope, порядка или состава TASK активного Epic требует причины, точного diff plan/TASK, подтверждения пользователя. Опечатки и исправления ссылок Replan не требуют. Новая или изменённая TASK требует собственного Task Start.
+Изменение scope, порядка или состава TASK активного Epic требует причины, точного diff plan/TASK, подтверждения пользователя. Опечатки и исправления ссылок Replan не требуют. Изменение формы контракта относительно утверждённого `Contract Sketch` также требует Replan до принятия нового кода. Новая или изменённая TASK требует собственного Task Start.
 
 ## 11. Завершение Epic, validation и fuzzing
 
