@@ -57,6 +57,7 @@ Ownership is defined by `.ai/framework/manifest.yaml`.
 - Independent mutation history under `quality/mutation-testing/` is optional project-owned state. Bootstrap and adapter synchronization do not create or overwrite it.
 - Ad hoc investigation history under `investigations/` is optional project-owned canonical evidence. Framework installation provides only the template and never creates synthetic `INV-*` records.
 - Product request history under `intents/` is optional project-owned canonical evidence. Framework installation provides only the template and never creates synthetic `INT-*` records.
+- Project rule declarations at `.ai/custom/rules.yaml` (derived from `.ai/templates/rules.yaml`) are project-owned. Framework updates preserve them; rule statements render into the generated router while patterns and scopes stay in the declaration.
 - Generated adapter outputs: `AGENTS.md`, `CLAUDE.md`, and manifest-declared Forge entries under `.codex/`, `.claude/`, `.agents/`, and `.opencode/agents/`. Unlisted entries remain project-owned; `opencode.json` and `.opencode/commands/`, `plugins/`, and `skills/` are never generated.
 
 Generated Forge adapter entries are derived files, not project-owned files. `AGENTS.md` is the single full router shared by Codex and OpenCode; `CLAUDE.md` contains only `@AGENTS.md`. OpenCode discovers Forge skills from `.agents/skills/`, so Forge creates no duplicate `.opencode/skills/`. Do not edit managed outputs manually; put project-specific router additions only in `.ai/custom/router-shared.md`. Adapter synchronization detects manual edits, shows the regeneration diff, and requires explicit confirmation before overwriting a managed collision. The framework provides no default hooks, MCP server, CLI, or external lifecycle layer.
@@ -112,6 +113,7 @@ Framework control text, technical identifiers, statuses, paths, and commands are
 Each kind of information has one canonical owner:
 
 - Product behavior: `SPEC.md`; architecture: `ARCHITECTURE.md`.
+- Project rules and their checkable patterns: optional `.ai/custom/rules.yaml`; the Project Rules block in the generated router is a rendered view of its statements, never a second source.
 - Epic priority, readiness, and lifecycle status, plus bug lifecycle state: `BACKLOG.md`; Epic strategy, Task order, requirement coverage, quality profiles, Epic Verification Plan, Epic Fuzzing Plan, Epic Validation, fuzzing outcome, and Epic user-validation summaries: its `plan.md`.
 - Task scope, acceptance criteria, affected surface, risk flags, approved delivery track and rationale, review focus, Verification Plan including fuzzing impact and Task smoke, lifecycle state, and implementation/fast-assurance-or-standard-review-testing/user-validation summaries: the Task file.
 - Architectural decision content: its ADR; ADR navigation: `DECISIONS.md`.

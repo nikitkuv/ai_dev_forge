@@ -1,0 +1,11 @@
+{
+  "description": "TASKs created before contract sketches existed carry no sketch and must follow the existing affected-contracts flow without ever being blocked by the sketch requirement.",
+  "cases": [
+    { "workspace": "planned", "status": "TODO", "contract_sketch": null, "affected_contracts_include_public_interfaces": true, "expected_flow": "existing_affected_contracts_flow", "blocked_by_sketch_requirement": false },
+    { "workspace": "active", "status": "IN PROGRESS", "contract_sketch": null, "affected_contracts_include_public_interfaces": true, "expected_flow": "existing_affected_contracts_flow", "blocked_by_sketch_requirement": false },
+    { "workspace": "active", "status": "IN REVIEW", "contract_sketch": null, "affected_contracts_include_public_interfaces": true, "expected_flow": "existing_affected_contracts_flow", "blocked_by_sketch_requirement": false },
+    { "workspace": "active", "status": "IN TESTING", "contract_sketch": null, "affected_contracts_include_public_interfaces": true, "expected_flow": "existing_affected_contracts_flow", "blocked_by_sketch_requirement": false },
+    { "workspace": "active", "status": "AWAITING USER ACCEPTANCE", "contract_sketch": null, "affected_contracts_include_public_interfaces": true, "expected_flow": "existing_affected_contracts_flow", "blocked_by_sketch_requirement": false },
+    { "workspace": "active", "status": "IN REVIEW", "contract_sketch": null, "affected_contracts_include_public_interfaces": false, "expected_flow": "existing_affected_contracts_flow", "blocked_by_sketch_requirement": false }
+  ]
+}

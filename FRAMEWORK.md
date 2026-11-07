@@ -6,6 +6,16 @@
 
 План составляется до Plan Approval; код тестов появляется при выполнении разрешённой задачи по циклу RED → GREEN → REFACTOR. План допускает уточнения в пределах задачи; неизвестные ожидания и пробелы покрытия устраняются до утверждения. При проверке ID сценариев сопоставляются с фактическими тестами и результатами запуска.
 
+## Интервью планирования эпика и Contract Sketch
+
+Подготовка эпика проходит ступенчатым интервью с подтверждением каждой ступени: цель и ожидаемый результат → дизайн интерфейса → риски и критические пути → скелет декомпозиции. Артефакт ступени подтверждается пользователем до начала следующей; отвергнутая ступень дорабатывается и подтверждается повторно, пока последующие остаются нетронутыми. Ступени можно объединять только для bounded эпиков с записанной rationale и названием объединённых ступеней в Epic User Validation History; молчаливое схлопывание запрещено.
+
+Ступень интерфейса перечисляет контракты, схемы, форматы данных и границы компонентов с предполагаемой формой в `Interface Delta` внутри Implementation Strategy; значимые решения помечаются ADR-кандидатами с их драйверами. Скелет называет каждую TASK с ровно одним независимо проверяемым результатом и зависимостями, без test cases, change maps и fuzz-деталей. Детали — planned test cases, change maps, fuzz plans, delivery-track evidence — заполняет `epic-planner` только после подтверждения скелета, используя подтверждённый скелет и `Interface Delta` как вход. Plan Approval сверяет заполненный план с артефактами интервью: несогласованное изменение интерфейса или scope возвращает план на ступени интервью, а не утверждается молча.
+
+Каждая TASK с изменением public interfaces несёт `Contract Sketch` рядом с Affected Surface and Risk: контракт и утверждённая форма — сигнатуры/endpoints, поля схем, error behavior; TASK без публичных контрактов записывает явное none. Sketch подтверждается вместе с планом до Plan Approval, связывается как boundary constraint на Task Start и проверяется reviewer по каждому контракту внутри acceptance traceability; доставленная форма, отличающаяся от sketch без Replan, — production finding. Sketch ограничивает только форму контракта, никогда не внутреннюю реализацию; изменение формы проходит через Replan до принятия нового кода.
+
+Миграция для in-flight эпиков: уже утверждённые планы продолжают жизненный цикл без повторного интервью и остаются валидными, TASK без sketch выполняются по существующему affected-contracts flow и никогда не блокируются требованием sketch. Интервью — умолчание только для новых эпиков.
+
 ## Planner/reviewer routing
 
 `epic-planner` и `reviewer` имеют neutral definitions и native agents на Codex, Claude Code и OpenCode. Один обязательный `role_execution.mode` в `.ai/project.yaml` выбирает маршрут для обеих ролей: `claude_with_codex`, `codex_with_claude` или `native_subagents`. OpenCode-led setup предлагает `native_subagents` при отсутствии утверждённого route. Cross-provider preflight или runtime failure никогда не переключает provider неявно.
@@ -68,6 +78,7 @@ project/
 | История ad hoc исследования | `investigations/INV-NNNN-*.md` |
 | История продуктовых запросов | `intents/INT-NNNN-*.md` |
 | История mutation testing | `quality/mutation-testing/` |
+| Правила проекта и их checkable patterns | optional `.ai/custom/rules.yaml` |
 | История файлов | Git |
 
 `README.md`, root routers, agent-файлы и `SKILL.md` — инфраструктура, не владельцы execution-состояния.
@@ -160,6 +171,8 @@ TODO → IN PROGRESS
 
 В `standard` изменение production surface инвалидирует review и test evidence; supporting-only изменение при неизменном production fingerprint сохраняет clean review и повторяет tester gate. В `fast` любое изменение инвалидирует fast assurance. Commit запрещён до Task Acceptance и `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit.
 
+Если пользователь отклонил или поправил сдачу при зелёных проверках, до `DONE` записывается `Process Follow-up` — root cause, fix target, disposition и rationale (enums в `contracts.yaml`); `accept-record` отказывается переводить TASK без этих фактов. Механические классы ошибок направляют в детерминированный helper плюс regression test, judgment-классы — в focused neutral-instruction correction. Применение фикса — всегда отдельное авторизованное изменение; чистая приёмка может записать `no_process_change`; TASK, созданный до появления блока, продолжает работу без него и не блокируется.
+
 ## Epic lifecycle, validation и fuzzing
 
 ```text
@@ -172,7 +185,7 @@ PLANNED → ACTIVE → VALIDATING → FUZZING → AWAITING EPIC ACCEPTANCE → C
 
 ## Quality gates и project profiles
 
-Universal Task baseline: approved definition, delivery track, verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected checks, current assurance, manual verification и explicit Task Acceptance. При планировании TASK заполняется `Planned Change Map`: часть системы, пути, символы, действия и причины; косвенно затронутые потребители фиксируются отдельно.
+Universal Task baseline: approved definition, delivery track, verifiable acceptance criteria, affected surface и risk flags, focused behavior evidence, selected checks, current assurance, manual verification и explicit Task Acceptance. При планировании TASK заполняется `Planned Change Map`: часть системы, пути, символы, действия и причины; косвенно затронутые потребители фиксируются отдельно. Для public-interface изменений также заполняется `Contract Sketch` с утверждённой формой контракта; без публичных контрактов записывается явное none.
 
 Universal Epic baseline: все TASK `DONE`, requirement-to-evidence coverage, полный project suite, project-wide checks, critical-path validation, applicable profile gates, допустимый fuzzing outcome и explicit Epic Acceptance.
 
@@ -186,6 +199,14 @@ Universal Epic baseline: все TASK `DONE`, requirement-to-evidence coverage, �
 | `library_cli` | public API compatibility, packaging, supported runtimes, install/upgrade, CLI exit and stream contracts |
 
 Команды берутся только из repository/build/CI evidence и сохраняются в `.ai/project.yaml`. Пустая конфигурация требует явного `not applicable` или blocker.
+
+## Правила проекта, follow-up и Critical Surfaces
+
+Правила проекта объявляются в project-owned `.ai/custom/rules.yaml` (шаблон `.ai/templates/rules.yaml`): `id`, человеческий `statement`, опциональный `pattern` (Python `re`), `scope`, `exclusions` и `kind` (`code`/`process`). Statements рендерятся компактным блоком Project Rules в router; patterns в router не попадают. Read-only `python .ai/tools/forge.py rules` сопоставляет patterns с scoped-путями без вызова модели и без записей: по каждой норме — violation count и violating paths либо `judgment` для норм без pattern. Каждая нарушенная норма получает ровно одну авторизованную диспозицию — исправить код, изменить или удалить норму, сузить scope; расхождение router-блока и `rules.yaml` чинится adapter sync или правкой декларации.
+
+Process Follow-up в TASK и в Epic User Validation History фиксирует root cause, fix target, disposition и rationale, когда сдача промахнулась мимо цели при зелёных проверках. Неприменённый follow-up (нет applied fix и нет decline rationale) conformance-проверка поднимает как advisory и никогда не блокирует gate.
+
+Critical Surfaces объявляются в `ARCHITECTURE.md` (surface, canonical source, почему критично) и фокусируют остаточное человеческое внимание: `epic-planner` переносит пересекающиеся поверхности в Task Review Focus (или записывает явное none), приёмка группирует Manual Verification по touched surfaces и показывает их первыми. Поверхности не сужают review/testing/gating и не отменяют assurance; пустая декларация не меняет поведение.
 
 ## Defect Queue
 

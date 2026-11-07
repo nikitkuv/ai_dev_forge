@@ -44,6 +44,16 @@ External work-source relationships are traceability metadata only. They never ow
 
 <Describe the high-level delivery approach, boundaries, sequencing rationale, and relevant architecture. Do not include line-by-line coding instructions or execution state.>
 
+### Interface Delta
+
+Record the interface-design stage of the planning interview here, before Plan Approval. List every contract, schema, data format, and component boundary this Epic is expected to change with its intended shape — signatures or endpoints, schema fields, error behavior — at a level the user can judge without implementation detail. Flag interface decisions meeting the project's ADR criteria as ADR candidates with their decision drivers instead of settling them silently. This stage approves contract shapes only; internal implementation is out of scope.
+
+| Interface change | Kind | Intended shape | ADR candidate and drivers |
+| --- | --- | --- | --- |
+| <Contract, schema, data format, or component boundary> | <contract/schema/data format/component boundary> | <Shape change the user confirmed> | <ADR candidate with decision drivers, or —> |
+
+Filled details elsewhere in this plan must match the confirmed rows above; an interface change that appears only in the filled details returns the plan to the interview instead of being approved.
+
 ## Research Context
 
 - **Investigations used:** <INV-NNNN references from `research_refs`, or —.>
@@ -163,6 +173,19 @@ Plan missing fixtures, services and harnesses as owned work with dependencies be
 
 ## Epic User Validation History
 
+This table is the interview record. Record every planning-interview stage confirmation — objective and expected outcome, interface design, risks and critical paths, decomposition skeleton — as its own row with its scope and result before later stages proceed. A rejected stage records its revision and re-confirmation here. When stages are collapsed or merged for a bounded Epic, name the merged stages and the recorded rationale in the Scope cell; nothing collapses silently.
+
 | Date | Validator | Scope | Result | Feedback or follow-up |
 | --- | --- | --- | --- | --- |
 | <YYYY-MM-DD> | <User or role> | <What was validated> | <pending/accepted/changes requested> | <Compact notes or TASK reference> |
+
+### Process Follow-up
+
+Record the same facts a Task-level follow-up records (`process_followup` in `.ai/framework/contracts.yaml`) when the user rejects or corrects an Epic delivery despite green checks, before the Epic reaches `COMPLETED`; a clean Epic Acceptance may record `no_process_change`. Applying the fix is a separate authorized change.
+
+- **Root cause:** <task_ambiguity/missing_repo_context/missing_acceptance_criterion/weak_test_oracle/rule_drift/other, or —>
+- **Fix target:** <skill/template_field/contract/neutral_instruction/regression_test/no_process_change, or —>
+- **Disposition:** <pending/applied/declined, or —>
+- **Rationale:** <Why this cause and target; a decline records its rationale; or —>
+
+A follow-up with no applied fix and no decline rationale is surfaced by conformance checking as advisory only; it never blocks a gate. A plan created before this block existed proceeds without one.

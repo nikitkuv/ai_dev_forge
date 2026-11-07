@@ -47,6 +47,10 @@ enums:
   investigation_outcomes: [no_action, promoted, fixed_directly, unresolved]
   intent_outcomes: [draft, accepted, promoted, rejected, deferred, superseded]
   intent_origins: [conversation, external-work]
+  process_followup_root_causes: [task_ambiguity, missing_repo_context, missing_acceptance_criterion, weak_test_oracle, rule_drift, other]
+  process_followup_fix_targets: [skill, template_field, contract, neutral_instruction, regression_test, no_process_change]
+  process_followup_dispositions: [pending, applied, declined]
+  project_rule_kinds: [code, process]
 
 intent_records:
   invocation: intake_driven
@@ -196,6 +200,36 @@ machine_tokens:
   AWAITING_EPIC_ACCEPTANCE: "AWAITING EPIC ACCEPTANCE"
   AWAITING_USER_ACCEPTANCE: "AWAITING USER ACCEPTANCE"
 
+epic_planning_interview:
+  conductor: orchestrator
+  user_dialogue_owner: orchestrator
+  stages: [objective_and_expected_outcome, interface_design, risks_and_critical_paths, decomposition_skeleton]
+  per_stage_confirmation: required_before_next_stage
+  rejected_stage: revise_and_reconfirm_before_later_stages
+  later_stages_untouched_until_confirmation: true
+  stage_artifacts: [plan.Objective_and_Expected_Outcome, plan.Implementation_Strategy.Interface_Delta, plan.Risks_and_critical_paths, plan.Ordered_Task_Sequence_skeleton_rows]
+  interview_record: plan.Epic_User_Validation_History
+  interface_stage:
+    enumerates: [contracts, schemas, data_formats, component_boundaries]
+    approves: intended_shapes_without_implementation_detail
+    adr_candidates: flagged_with_decision_drivers
+  skeleton:
+    rows: [task_name, one_independently_verifiable_outcome, dependencies]
+    detail_before_confirmation: forbidden
+  deferred_detail_filling:
+    starts_after: skeleton_confirmation
+    input: [confirmed_skeleton, confirmed_interface_delta]
+    fills: [planned_test_cases, change_maps, fuzz_plans, delivery_track_evidence]
+  stage_collapse:
+    allowed_for: bounded_epics
+    requires: [recorded_rationale, named_merged_stages]
+    silent_collapse: forbidden
+  plan_approval_consistency:
+    verify_against: [confirmed_objective, confirmed_interface_delta, confirmed_risks, confirmed_skeleton]
+    unconfirmed_interface_or_scope_change: return_to_interview_stages
+    consistent_plan: confirmed_design_plus_details
+  legacy_approved_plans: continue_without_reinterview
+
 test_planning:
   prepared_at: task_definition_before_plan_approval
   required_for: [new_task_definitions, replanned_task_definitions]
@@ -238,6 +272,59 @@ task_change_map:
   scope_component_or_contract_expansion: requires_replan
   actual_paths_and_deviations: implementation_summary
   legacy_tasks: assess_before_execution_without_bulk_rewriting_accepted_history
+
+contract_sketch:
+  owner: TASK
+  section: Contract Sketch
+  prepared_at: task_definition_before_plan_approval
+  applicability: affected_contracts_include_public_interfaces
+  non_interface_tasks: record_explicit_none
+  row_fields: [contract, approved_shape, references]
+  shape_scope: [signatures_or_endpoints, schema_fields, error_behavior]
+  shape_excludes: internal_implementation
+  approval: plan_approval_with_task_definition
+  bound_at: task_start
+  shape_change: requires_replan_before_adoption
+  review: per_changed_contract_sketch_conformance_in_acceptance_traceability
+  unapproved_shape_difference: production_finding
+  legacy_tasks: follow_existing_affected_contracts_flow
+  missing_sketch_never_blocks: [task_start, review, testing, acceptance]
+  revalidate_at: task_start
+
+project_rules:
+  owner: project
+  declaration: .ai/custom/rules.yaml
+  source_template: .ai/templates/rules.yaml
+  rule_fields: [id, statement, pattern, scope, exclusions, kind]
+  required_fields: [id, statement, scope, kind]
+  optional_fields: [pattern, exclusions]
+  kinds: [code, process]
+  pattern_syntax: python_re
+  statement_authorship: human_authored
+  statement_rendering: compact_Project_Rules_block_in_the_router
+  patterns_rendered_into_router: false
+  unverifiable_rule: judgment
+  drift_check: forge.py rules
+  drift_is_report_only: true
+  drift_never_blocks_on_raw_matches: true
+  violated_rule_dispositions: [fix_code, amend_rule, narrow_scope]
+  disposition_requires: authorized_change_with_recorded_rationale
+
+process_followup:
+  owner: TASK
+  section: Process Follow-up
+  epic_owner: plan.Epic_User_Validation_History
+  fields: [root_cause, fix_target, disposition, rationale]
+  required_when: [user_rejected_or_corrected_delivery_despite_green_checks]
+  optional_on: successful_acceptance
+  successful_acceptance_may_record: no_process_change
+  mechanical_error_preferred_fix: [deterministic_helper, regression_test]
+  judgment_error_preferred_fix: neutral_instruction
+  fix_application: separate_authorized_change
+  acceptance_writes_fix: forbidden
+  unapplied_followup: conformance_advisory_only
+  unapplied_definition: no_applied_fix_and_no_decline_rationale
+  legacy_records: valid_without_backfill
 
 delivery_tracks:
   default: standard
@@ -313,7 +400,12 @@ gates:
     note: Task acceptance and permission to start the next task are separate gates; one message may authorize both only when it explicitly states both decisions.
   epic_plan_approval:
     effect: "write approved plan and TASK definitions under execution/planned without changing Epic lifecycle status"
-    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, valid_epic_fuzzing_plan_proposal, explicit_user_approval]
+    requires: [epic_status_PLANNED, readiness_READY, approved_requirements_and_boundaries, interview_consistency_verified, valid_epic_fuzzing_plan_proposal, explicit_user_approval]
+    interview_consistency_check:
+      verifies: filled_details_match_confirmed_interview_artifacts
+      unconfirmed_interface_or_scope_change: return_to_interview_stages
+      consistent_plan: confirmed_design_plus_details
+      applies_to: plans_prepared_through_the_interview
     permits: [declared_unsatisfied_dependencies, declared_blockers, another_active_work_epic]
   epic_start:
     transition: "PLANNED -> ACTIVE"
@@ -487,6 +579,14 @@ epic_validation:
 
 invariants:
   - material_ad_hoc_investigations_have_durable_INV_records
+  - epic_planning_interview_stages_require_per_stage_user_confirmation
+  - skeleton_confirmation_precedes_all_detail_filling
+  - plan_approval_returns_unconfirmed_interface_changes_to_the_interview
+  - interview_stage_collapse_requires_recorded_rationale
+  - approved_plans_preceding_the_interview_continue_without_reinterview
+  - contract_sketch_shapes_are_approved_before_implementation_and_bound_at_task_start
+  - sketch_shape_changes_route_through_replan
+  - missing_sketch_never_blocks_legacy_tasks
   - investigations_are_orchestrator_only_and_invoke_no_subagents
   - investigation_outcome_is_no_action_promoted_fixed_directly_or_unresolved
   - direct_investigation_fixes_require_explicit_authorization_and_a_verified_change_ledger

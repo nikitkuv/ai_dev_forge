@@ -45,6 +45,17 @@ research_refs: []
 - **Risk flags:** <Public contract, authorization, persistence, migration, concurrency, shared core, dependency/build, frontend critical path, data/ML, operations, or —.>
 - **Failure impact:** <User, data, compatibility, security, availability, cost, or model-quality impact.>
 
+## Contract Sketch
+
+Record this sketch with the task definition, before Plan Approval, under `contract_sketch` in `.ai/framework/contracts.yaml`. It is required when the affected contracts include public interfaces: name each changed contract and its intended shape — signatures or endpoints, schema fields, and error behavior — sufficient to judge the interface without implementation detail. When this TASK affects no public contracts, record an explicit none. The sketch constrains contract shape only and never internal implementation.
+
+| Contract | Approved shape | References |
+| --- | --- | --- |
+| <Public API, schema, event, storage format, or other public interface> | <Signatures or endpoints, schema fields, error behavior> | <Interface Delta row, ADR, SPEC section, or —> |
+| none | <Explicit none when no public contract changes> | — |
+
+Sketches are confirmed through Plan Approval alongside the task definition and bound as boundary constraints at Task Start. Changing a contract's shape away from the approved sketch requires the Replan gate before implementation adopts the new shape. Independent review reports a conformance result per changed contract; an unapproved shape difference is a production finding. A TASK created before this section existed proceeds without a sketch under the existing affected-contracts flow and is never blocked by the sketch requirement.
+
 ## Planned Change Map
 
 Record this map during Task definition, before Plan Approval. It owns the per-Task implementation forecast; the Epic plan links here. Follow `task_change_map` in `.ai/framework/contracts.yaml`.
@@ -106,6 +117,7 @@ Removing or weakening an approved check requires an explicit rationale and orche
 ## Review Focus
 
 - <Acceptance invariant, boundary, failure mode, compatibility concern, or risk that the independent reviewer challenges for standard or the orchestrator assurance challenges for fast.>
+- **Critical surfaces:** <Declared critical surfaces from `ARCHITECTURE.md` this Task's change map intersects, named as the human spot-check target; or an explicit none when no declared surface is affected.>
 
 ## Manual Verification
 
@@ -236,6 +248,17 @@ This section is authoritative only for `delivery_track: fast`; it never claims a
 | <YYYY-MM-DD> | <What the user checked> | <pending/accepted/changes requested> | <Compact notes> |
 
 User-requested fixes before acceptance return this same Task to `IN PROGRESS`. New scope requires the Replan gate; an unrelated defect in previously accepted code is recorded in the Backlog Defect Queue after user confirmation.
+
+## Process Follow-up
+
+Record this block when the user rejects or corrects a delivery despite green checks, before the Task reaches `DONE`; a clean acceptance may record `no_process_change`. Follow `process_followup` in `.ai/framework/contracts.yaml`. Applying the fix is always a separate authorized change and never happens during acceptance.
+
+- **Root cause:** <task_ambiguity/missing_repo_context/missing_acceptance_criterion/weak_test_oracle/rule_drift/other, or —>
+- **Fix target:** <skill/template_field/contract/neutral_instruction/regression_test/no_process_change, or —>
+- **Disposition:** <pending/applied/declined, or —>
+- **Rationale:** <Why this cause and target; a decline records its rationale; or —>
+
+A follow-up with no applied fix and no decline rationale stays visible and is surfaced by conformance checking as advisory only; it never blocks a gate. A Task created before this section existed proceeds without one and is never blocked by it.
 
 ## Iteration History
 
