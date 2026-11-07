@@ -178,3 +178,14 @@ This table is the interview record. Record every planning-interview stage confir
 | Date | Validator | Scope | Result | Feedback or follow-up |
 | --- | --- | --- | --- | --- |
 | <YYYY-MM-DD> | <User or role> | <What was validated> | <pending/accepted/changes requested> | <Compact notes or TASK reference> |
+
+### Process Follow-up
+
+Record the same facts a Task-level follow-up records (`process_followup` in `.ai/framework/contracts.yaml`) when the user rejects or corrects an Epic delivery despite green checks, before the Epic reaches `COMPLETED`; a clean Epic Acceptance may record `no_process_change`. Applying the fix is a separate authorized change.
+
+- **Root cause:** <task_ambiguity/missing_repo_context/missing_acceptance_criterion/weak_test_oracle/rule_drift/other, or —>
+- **Fix target:** <skill/template_field/contract/neutral_instruction/regression_test/no_process_change, or —>
+- **Disposition:** <pending/applied/declined, or —>
+- **Rationale:** <Why this cause and target; a decline records its rationale; or —>
+
+A follow-up with no applied fix and no decline rationale is surfaced by conformance checking as advisory only; it never blocks a gate. A plan created before this block existed proceeds without one.

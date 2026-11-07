@@ -61,3 +61,8 @@ versions:
   "4.12":
     notes:
       - Framework migration becomes a deterministic local command; stage the new bundle at .ai-next/ and run python .ai-next/tools/forge.py migrate. The manual agent-driven path remains the documented fallback when Python is unavailable.
+  "4.13":
+    notes:
+      - Optional project rule declarations (.ai/custom/rules.yaml, template .ai/templates/rules.yaml) render a compact Project Rules block into the router and add a report-only deterministic drift check; absent or empty declarations behave exactly like before and every violated rule requires an authorized disposition.
+      - TASK and plan templates gain an optional Process Follow-up block recorded at acceptance when a delivery missed its goal despite green checks; legacy acceptance records stay valid and are never blocked by its absence.
+      - ARCHITECTURE.md gains an optional Critical Surfaces section that focuses human spot-checks and Task Review Focus without changing any review, testing, or gating requirement.

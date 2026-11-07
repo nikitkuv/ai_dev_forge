@@ -10,7 +10,8 @@ import tomllib
 from jinja2 import StrictUndefined
 from jinja2.sandbox import SandboxedEnvironment
 
-from forge_core import ForgeError, Transaction, atomic_replace, canonical, digest, frontmatter, load_yaml, text, within, yaml_value
+from forge_core import (ForgeError, RULES_DECLARATION, Transaction, atomic_replace, canonical, digest, frontmatter,
+                        load_rules, load_yaml, rules_statement_block, text, within, yaml_value)
 
 _replace = atomic_replace
 
@@ -75,7 +76,11 @@ def render(bundle_root, root, config=None, overlay=None):
     overlay_path = ".ai/custom/router-shared.md"
     if overlay is None:
         overlay = project_source(overlay_path) if within(root, overlay_path).exists() else ""
-    router = env.from_string(bundle_source("templates/adapters/codex/AGENTS.md")).render(custom={"router_shared": overlay})
+    if within(root, RULES_DECLARATION).exists():
+        project_source(RULES_DECLARATION)
+    rules_block = rules_statement_block(load_rules(root))
+    router = env.from_string(bundle_source("templates/adapters/codex/AGENTS.md")).render(
+        custom={"router_shared": overlay, "rules_block": rules_block})
     if len(router.splitlines()) > 150 or "{{" in router:
         raise ForgeError("Router exceeds 150 lines or contains unresolved placeholders")
     outputs["AGENTS.md"] = router.encode()

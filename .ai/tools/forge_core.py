@@ -533,11 +533,192 @@ def context(root, offset=0, limit=30, include_completed=False):
             "read_next": ["BACKLOG.md"] + [r["path"] for r in page if r["path"].startswith(("execution/active/", "execution/paused/"))]}
 
 
+RULES_DECLARATION = ".ai/custom/rules.yaml"
+
+
+def load_rules(root):
+    """Validated project rule declarations; an absent declaration declares no rules."""
+    if not within(root, RULES_DECLARATION).exists():
+        return []
+    data = load_yaml(root, RULES_DECLARATION)
+    if not isinstance(data, dict) or data.get("schema_version") != 1:
+        raise ForgeError("Project rules declaration requires schema_version 1")
+    rules = data.get("rules", [])
+    if rules is None:
+        rules = []
+    if not isinstance(rules, list):
+        raise ForgeError("Project rules declaration requires a rules list")
+    kinds = load_yaml(root, ".ai/framework/contracts.yaml")["enums"]["project_rule_kinds"]
+    seen, validated = set(), []
+    for index, rule in enumerate(rules, start=1):
+        if not isinstance(rule, dict):
+            raise ForgeError(f"Rule {index} must be a mapping")
+        identity = rule.get("id")
+        if not isinstance(identity, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", identity):
+            raise ForgeError(f"Rule {index} requires a stable id of letters, digits, dashes or underscores")
+        if identity in seen:
+            raise ForgeError(f"Duplicate rule id: {identity}")
+        seen.add(identity)
+        statement = rule.get("statement")
+        if not isinstance(statement, str) or not statement.strip() or "\n" in statement:
+            raise ForgeError(f"Rule {identity} requires a single-line statement")
+        if rule.get("kind") not in kinds:
+            raise ForgeError(f"Rule {identity} requires kind {' or '.join(kinds)}")
+        scope, exclusions = rule.get("scope"), rule.get("exclusions") or []
+        for label, values in (("scope", scope), ("exclusions", exclusions)):
+            if not isinstance(values, list) or (label == "scope" and not values) or not all(
+                    isinstance(value, str) and value.strip() for value in values):
+                raise ForgeError(f"Rule {identity} requires {'a non-empty' if label == 'scope' else 'a'} {label} list of path globs")
+            if any(".." in Path(value).parts for value in values):
+                raise ForgeError(f"Rule {identity} {label} refuses parent traversal")
+        pattern = rule.get("pattern")
+        if pattern is not None and not isinstance(pattern, str):
+            raise ForgeError(f"Rule {identity} pattern must be a string")
+        if isinstance(pattern, str) and not pattern.strip():
+            pattern = None
+        validated.append({"id": identity, "statement": statement.strip(), "kind": rule["kind"],
+                          "pattern": pattern, "scope": scope, "exclusions": exclusions})
+    return validated
+
+
+def _glob_files(root, patterns):
+    base = Path(root).resolve()
+    found = set()
+    for pattern in patterns:
+        for match in sorted(base.glob(pattern)):
+            if match.is_file():
+                found.add(match)
+            elif match.is_dir():
+                found.update(path for path in sorted(match.rglob("*"))
+                             if path.is_file() and "__pycache__" not in path.parts)
+    return found
+
+
+def rules_check(root):
+    """Model-free rule drift report: patterns versus scoped paths. Report-only."""
+    rules = load_rules(root)
+    results = []
+    for rule in rules:
+        entry = {"id": rule["id"], "statement": rule["statement"], "kind": rule["kind"], "scope": rule["scope"]}
+        if not rule["pattern"]:
+            entry.update({"status": "judgment", "reason": "no checkable pattern"})
+            results.append(entry)
+            continue
+        try:
+            regex = re.compile(rule["pattern"])
+        except re.error as exc:
+            raise ForgeError(f"Invalid pattern in rule {rule['id']}: {exc}") from exc
+        violating = []
+        for path in _glob_files(root, rule["scope"]) - _glob_files(root, rule["exclusions"]):
+            relative = path.relative_to(Path(root).resolve()).as_posix()
+            try:
+                content = text(root, relative)
+            except UnicodeDecodeError:
+                continue
+            count = sum(1 for line in content.splitlines() if regex.search(line))
+            if count:
+                violating.append({"path": relative, "violations": count})
+        entry.update({"status": "violated" if violating else "clean",
+                      "violation_count": sum(item["violations"] for item in violating),
+                      "violating_paths": violating})
+        results.append(entry)
+    report = {"schema_version": 1, "command": "rules",
+              "scope": "deterministic pattern drift report; report-only, no writes and no model calls",
+              "declaration": RULES_DECLARATION, "rules": results,
+              "summary": {"declared": len(rules),
+                          "violated": sum(1 for entry in results if entry["status"] == "violated"),
+                          "clean": sum(1 for entry in results if entry["status"] == "clean"),
+                          "judgment": sum(1 for entry in results if entry["status"] == "judgment")},
+              "requires_judgment": [entry["id"] for entry in results if entry["status"] == "judgment"],
+              "dispositions": "every violated rule ends with exactly one authorized disposition: "
+                              "fix the code, amend the rule, or narrow its scope",
+              "passed": True}
+    if not rules:
+        report["note"] = "no declared rules"
+    return report
+
+
+def rules_statement_block(rules):
+    """Compact Project Rules block for the router; statements only, never patterns."""
+    if not rules:
+        return ""
+    lines = ["## Project Rules", ""]
+    lines.extend(f"- {rule['id']}: {rule['statement']}" for rule in rules)
+    return "\n".join(lines) + "\n"
+
+
+def router_rule_statements(router_content):
+    """Parse `id -> statement` from a router's Project Rules block; {} when absent."""
+    statements, active = {}, False
+    for line in router_content.splitlines():
+        if line.startswith("## "):
+            active = line.strip() == "## Project Rules"
+            continue
+        if active:
+            match = re.match(r"^- ([A-Za-z0-9_-]+): (.+)$", line.strip())
+            if match:
+                statements[match.group(1)] = match.group(2).strip()
+    return statements
+
+
+def rules_router_divergence(root):
+    """Statement divergence between the router block and rules.yaml; empty when unverifiable."""
+    rules = load_rules(root)
+    if not rules or not within(root, "AGENTS.md").exists():
+        return []
+    rendered = router_rule_statements(text(root, "AGENTS.md"))
+    errors = []
+    for rule in rules:
+        if rule["id"] not in rendered:
+            errors.append(f"Rule statement missing from the router block: {rule['id']}; run adapter sync")
+        elif rendered[rule["id"]] != rule["statement"]:
+            errors.append(f"Rule statement diverges from {RULES_DECLARATION}: {rule['id']}; "
+                          "run adapter sync or amend the declaration")
+    for identity in sorted(set(rendered) - {rule["id"] for rule in rules}):
+        errors.append(f"Router rule statement has no {RULES_DECLARATION} entry: {identity}")
+    return errors
+
+
+def process_followup_values(content):
+    """Recorded Process Follow-up bullet values; {} when no block or nothing recorded.
+
+    Placeholder angles and em-dashes normalize to empty strings so callers can
+    test truthiness for "recorded" facts."""
+    lines = content.splitlines()
+    start = next((index for index, line in enumerate(lines)
+                  if line.strip() in ("## Process Follow-up", "### Process Follow-up")), None)
+    if start is None:
+        return {}
+    values = {}
+    for line in lines[start + 1:]:
+        if line.startswith("## "):
+            break
+        match = re.match(r"^-\s+\*\*(Root cause|Fix target|Disposition|Rationale):\*\*\s*(.*)$", line.strip())
+        if match:
+            value = match.group(2).strip()
+            values[match.group(1)] = "" if value.startswith("<") or value in ("—", "-") else value
+    return values
+
+
+def process_followup_advisory(path, content):
+    """Advisory text for an unapplied recorded follow-up; None when absent or resolved."""
+    values = process_followup_values(content)
+    root_cause, fix_target = values.get("Root cause", ""), values.get("Fix target", "")
+    if not root_cause and not (fix_target and fix_target != "no_process_change"):
+        return None
+    disposition, rationale = values.get("Disposition", ""), values.get("Rationale", "")
+    if disposition == "applied" or (disposition == "declined" and rationale) or (fix_target == "no_process_change" and rationale):
+        return None
+    return (f"Unapplied process follow-up: {path} "
+            f"({root_cause or 'root cause unrecorded'} -> {fix_target or 'fix target unrecorded'})")
+
+
 def conformance_errors(root, contracts):
     """Mechanical shape checks that do not need the record inventory."""
     errors = []
     if within(root, "AGENTS.md").exists() and len(text(root, "AGENTS.md").splitlines()) > 150:
         errors.append("AGENTS.md exceeds the 150-line router budget")
+    errors.extend(rules_router_divergence(root))
     if within(root, "CLAUDE.md").exists() and text(root, "CLAUDE.md").strip() != "@AGENTS.md":
         errors.append("CLAUDE.md must contain exactly @AGENTS.md")
     for pattern in (".claude/agents", ".opencode/agents"):
@@ -687,6 +868,7 @@ def validate(root, project=False):
                     errors.append(f"ID mismatch: {path}")
             except (OSError, ForgeError) as exc:
                 errors.append(f"{path}: {exc}")
+    rule_drift = None
     if project:
         from forge_records import identity_check
         identity_result = identity_check(root)
@@ -697,6 +879,7 @@ def validate(root, project=False):
         records, problems = inventory(root, include_completed=True)
         errors.extend(problems)
         errors.extend(conformance_errors(root, contracts))
+        rule_drift = rules_check(root)
         rows = backlog_rows(root)
         roadmap = {}
         archived = {}
@@ -758,6 +941,9 @@ def validate(root, project=False):
                 if meta.get("origin") not in contracts["enums"]["intent_origins"]:
                     errors.append(f"Invalid intent origin: {path}")
             try:
+                followup = process_followup_advisory(path, text(root, path))
+                if followup:
+                    advisory.append(followup)
                 errors.extend(record_structure_errors(root, record, contracts))
             except (OSError, ForgeError) as exc:
                 errors.append(f"{path}: {exc}")
@@ -786,9 +972,12 @@ def validate(root, project=False):
                     advisory.append(f"Intent record exceeds the one-page bound: {path}")
             except (OSError, ForgeError):
                 pass
-    return {"passed": not errors, "errors": errors, "advisory": advisory,
-            "coverage": "manifest IDs and source syntax" + (", lifecycle inventory, Backlog consistency, and structural conformance" if project else ""),
-            "requires_judgment": ["scope and permissions", "test integrity and coverage", "review protocol and evidence freshness", "integration and mutation semantics"]}
+    result = {"passed": not errors, "errors": errors, "advisory": advisory,
+              "coverage": "manifest IDs and source syntax" + (", lifecycle inventory, Backlog consistency, structural conformance, and project rule drift" if project else ""),
+              "requires_judgment": ["scope and permissions", "test integrity and coverage", "review protocol and evidence freshness", "integration and mutation semantics", "project rule judgment items"]}
+    if project:
+        result["rule_drift"] = rule_drift
+    return result
 
 
 def budget(root, paths):

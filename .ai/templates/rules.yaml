@@ -1,0 +1,25 @@
+schema_version: 1
+
+# Project rule declarations. Copy this template to .ai/custom/rules.yaml and
+# declare project rules there; that file is project-owned and framework updates
+# preserve it. Each rule carries a human-authored statement and an optional
+# machine-checkable Python `re` pattern with a path-glob scope for the
+# deterministic drift check (`python .ai/tools/forge.py rules`). Statements
+# render as the compact Project Rules block in the generated router; patterns
+# and scopes never render into the router. A rule without a pattern is reported
+# as requiring judgment instead of silently passing. Every violated rule ends
+# with exactly one disposition applied as an authorized change: the code is
+# fixed to comply, the rule is amended or removed, or the rule's scope is
+# narrowed. See `project_rules` in .ai/framework/contracts.yaml.
+
+rules: []
+# rules:
+#   - id: no-any-in-sources
+#     statement: Never use the any type in production source files.
+#     kind: code
+#     pattern: ":\\s*any\\b"
+#     scope: ["src/**/*.ts"]
+#     exclusions: ["src/generated/**"]
+#   - id: neutral-instruction-fixes
+#     statement: Recurring judgment errors are corrected in a neutral instruction, never by weakening a gate.
+#     kind: process

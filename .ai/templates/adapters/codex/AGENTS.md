@@ -65,4 +65,5 @@ Resolve `role_execution.mode` first. Prefer `python .ai/tools/forge.py role --or
 
 Generate only manifest-managed entries; preserve unlisted agents/skills, settings, hooks, MCP and project data. Forge generates no hooks or MCP configuration. Optional `.ai/integrations/`: Registration alone grants no tool authority; compatible consumers use only allowed operations. Optional `quality/mutation-testing/` is metrics-only by default and never alters lifecycle. Create no synthetic INV/mutation records during bootstrap/sync/migration and no separate review/testing report Markdown files.
 
+{{ custom.rules_block }}
 {{ custom.router_shared }}

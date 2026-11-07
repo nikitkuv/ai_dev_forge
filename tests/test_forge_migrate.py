@@ -257,6 +257,18 @@ class PreviewTests(Repository):
         touched = {change["path"] for change in result["changes"]} | set(result["deletions"])
         self.assertFalse(any(path.startswith(".ai/integrations/") for path in touched))
 
+    def test_preview_lists_rule_template_as_additive(self):
+        self.consumer()
+        (self.root / ".ai/templates/rules.yaml").unlink()
+        self.stage()
+        shutil.copy(ROOT / ".ai/templates/rules.yaml", self.root / ".ai-next/templates/rules.yaml")
+        result, _ = migration.preview_migrate(self.root)
+        self.assertTrue(result["passed"])
+        changed = [change["path"] for change in result["changes"]]
+        self.assertIn(".ai/templates/rules.yaml", changed)
+        notes = [finding["detail"] for finding in result["findings"]["advisory"] if finding["id"] == "version_note"]
+        self.assertTrue(any("rule declarations" in note for note in notes))
+
     def test_preview_token_binds_inputs_and_writes_nothing(self):
         self.consumer()
         active_version = str(core.load_yaml(self.root, ".ai/framework/manifest.yaml")["framework"]["version"])

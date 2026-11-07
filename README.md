@@ -106,6 +106,8 @@ TASK с изменением public interfaces несёт `Contract Sketch` — 
 
 Epic planner создаёт Epic Fuzzing Plan и оценивает applicability (`applicable`, `not applicable`, `unresolved`). После последней TASK `epic-validator` запускает полный regression suite, project-wide checks, critical-path validation и quality-profile gates. При актуальном approved `not applicable` оркестратор записывает `NOT APPLICABLE` без вызова fuzzer; `applicable`, `unresolved` или противоречивые evidence требуют read-only fuzzer перед Epic Acceptance.
 
+Проект может объявить правила в `.ai/custom/rules.yaml` (statements рендерятся в router, patterns — нет): read-only `forge.py rules` отчитывается о дрейпе кода от норм, и каждая нарушенная норма требует одной авторизованной диспозиции — исправить код или изменить норму. При промахе сдачи при зелёных проверках приёмка записывает `Process Follow-up` (root cause, fix target, disposition, rationale) до `DONE`/`COMPLETED`; неприменённые follow-up-и conformance поднимает как advisory, никогда как блокировку. `Critical Surfaces` в `ARCHITECTURE.md` фокусируют человеческий spot-check: поверхности попадают в Task Review Focus, а Manual Verification группируется по touched surfaces; на assurance это не влияет.
+
 Можно заранее подготовить несколько `PLANNED + READY` Epic. Plan Approval не активирует Epic; Epic Start проверяет dependencies/blockers и перемещает один workspace в `execution/active/`.
 
 ## Python-автоматизация

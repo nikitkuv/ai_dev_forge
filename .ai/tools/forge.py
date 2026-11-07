@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import sys
 
-from forge_core import ForgeError, budget, canonical, context, frontmatter, load_yaml, section, snapshot, text, validate, within
+from forge_core import ForgeError, budget, canonical, context, frontmatter, load_yaml, rules_check, section, snapshot, text, validate, within
 
 
 def authorization(root, task_path):
@@ -52,6 +52,7 @@ def parser():
     for name in ("fingerprint", "budget"):
         c = sub.add_parser(name)
         c.add_argument("paths", nargs="+")
+    sub.add_parser("rules", help="Read-only project rule drift report; no writes and no model calls")
     c = sub.add_parser("validate")
     c.add_argument("--project", action="store_true")
     c.add_argument("--adapters", action="store_true")
@@ -164,6 +165,10 @@ def parser():
     c.add_argument("--decision-ref", required=True)
     c.add_argument("--notes")
     c.add_argument("--resolve-bug")
+    c.add_argument("--follow-up-root-cause", dest="followup_root_cause")
+    c.add_argument("--follow-up-fix-target", dest="followup_fix_target")
+    c.add_argument("--follow-up-rationale", dest="followup_rationale")
+    c.add_argument("--follow-up-disposition", dest="followup_disposition")
     c.add_argument("--apply", metavar="PREVIEW_TOKEN")
     c = sub.add_parser("commit-scoped", help="Stage exactly the recorded TASK scope under the Git policy")
     c.add_argument("path")
@@ -284,7 +289,11 @@ def main(argv=None):
         result = epic_complete(root, args.epic_id, args.apply)
     elif args.command == "accept-record":
         from forge_lifecycle import accept_record
-        result = accept_record(root, args.path, args.by, args.decision_ref, args.notes, args.resolve_bug, args.apply)
+        result = accept_record(root, args.path, args.by, args.decision_ref, notes=args.notes,
+                               resolve_bug=args.resolve_bug, followup_root_cause=args.followup_root_cause,
+                               followup_fix_target=args.followup_fix_target,
+                               followup_rationale=args.followup_rationale,
+                               followup_disposition=args.followup_disposition, apply_token=args.apply)
     elif args.command == "commit-scoped":
         from forge_lifecycle import commit_scoped
         result = commit_scoped(root, args.path, args.message, args.paths, args.authorized)
@@ -296,6 +305,8 @@ def main(argv=None):
     elif args.command == "index":
         from forge_index import rebuild as index_rebuild, status as index_status
         result = index_rebuild(root) if args.index_command == "rebuild" else index_status(root)
+    elif args.command == "rules":
+        result = rules_check(root)
     elif args.command == "validate":
         result = validate(root, args.project)
         if args.adapters:

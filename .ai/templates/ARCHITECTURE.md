@@ -37,6 +37,14 @@ It may define technical boundaries and decisions, but it must not contain task-l
 - **Owned data:** <Data this component authoritatively manages.>
 - **Interfaces:** <Exposed commands, queries, APIs, or events.>
 
+## Critical Surfaces
+
+Named areas where the human's residual spot-check effort belongs. The declaration is project-owned, persists across epics, and changes only as an explicit project change; see `human_review_focus` in `.ai/framework/contracts.yaml`. These surfaces focus human attention only: they never reduce reviewer or tester scope, change production-surface gating, or waive any assurance requirement. An empty list keeps planning and acceptance on their existing flows.
+
+| Surface | Canonical source | Why critical |
+| --- | --- | --- |
+| <Architecture boundaries, billing, data model, ...> | <Section of this document, `SPEC.md` section, or other canonical reference> | <What a silent regression here costs> |
+
 ## Dependency Rules
 
 - <Allowed dependency direction and prohibited coupling.>

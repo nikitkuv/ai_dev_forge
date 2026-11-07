@@ -47,6 +47,10 @@ enums:
   investigation_outcomes: [no_action, promoted, fixed_directly, unresolved]
   intent_outcomes: [draft, accepted, promoted, rejected, deferred, superseded]
   intent_origins: [conversation, external-work]
+  process_followup_root_causes: [task_ambiguity, missing_repo_context, missing_acceptance_criterion, weak_test_oracle, rule_drift, other]
+  process_followup_fix_targets: [skill, template_field, contract, neutral_instruction, regression_test, no_process_change]
+  process_followup_dispositions: [pending, applied, declined]
+  project_rule_kinds: [code, process]
 
 intent_records:
   invocation: intake_driven
@@ -286,6 +290,41 @@ contract_sketch:
   legacy_tasks: follow_existing_affected_contracts_flow
   missing_sketch_never_blocks: [task_start, review, testing, acceptance]
   revalidate_at: task_start
+
+project_rules:
+  owner: project
+  declaration: .ai/custom/rules.yaml
+  source_template: .ai/templates/rules.yaml
+  rule_fields: [id, statement, pattern, scope, exclusions, kind]
+  required_fields: [id, statement, scope, kind]
+  optional_fields: [pattern, exclusions]
+  kinds: [code, process]
+  pattern_syntax: python_re
+  statement_authorship: human_authored
+  statement_rendering: compact_Project_Rules_block_in_the_router
+  patterns_rendered_into_router: false
+  unverifiable_rule: judgment
+  drift_check: forge.py rules
+  drift_is_report_only: true
+  drift_never_blocks_on_raw_matches: true
+  violated_rule_dispositions: [fix_code, amend_rule, narrow_scope]
+  disposition_requires: authorized_change_with_recorded_rationale
+
+process_followup:
+  owner: TASK
+  section: Process Follow-up
+  epic_owner: plan.Epic_User_Validation_History
+  fields: [root_cause, fix_target, disposition, rationale]
+  required_when: [user_rejected_or_corrected_delivery_despite_green_checks]
+  optional_on: successful_acceptance
+  successful_acceptance_may_record: no_process_change
+  mechanical_error_preferred_fix: [deterministic_helper, regression_test]
+  judgment_error_preferred_fix: neutral_instruction
+  fix_application: separate_authorized_change
+  acceptance_writes_fix: forbidden
+  unapplied_followup: conformance_advisory_only
+  unapplied_definition: no_applied_fix_and_no_decline_rationale
+  legacy_records: valid_without_backfill
 
 delivery_tracks:
   default: standard

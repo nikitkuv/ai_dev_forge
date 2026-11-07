@@ -78,6 +78,7 @@ project/
 | История ad hoc исследования | `investigations/INV-NNNN-*.md` |
 | История продуктовых запросов | `intents/INT-NNNN-*.md` |
 | История mutation testing | `quality/mutation-testing/` |
+| Правила проекта и их checkable patterns | optional `.ai/custom/rules.yaml` |
 | История файлов | Git |
 
 `README.md`, root routers, agent-файлы и `SKILL.md` — инфраструктура, не владельцы execution-состояния.
@@ -170,6 +171,8 @@ TODO → IN PROGRESS
 
 В `standard` изменение production surface инвалидирует review и test evidence; supporting-only изменение при неизменном production fingerprint сохраняет clean review и повторяет tester gate. В `fast` любое изменение инвалидирует fast assurance. Commit запрещён до Task Acceptance и `DONE`. При `manual` policy после acceptance требуется отдельное разрешение на commit.
 
+Если пользователь отклонил или поправил сдачу при зелёных проверках, до `DONE` записывается `Process Follow-up` — root cause, fix target, disposition и rationale (enums в `contracts.yaml`); `accept-record` отказывается переводить TASK без этих фактов. Механические классы ошибок направляют в детерминированный helper плюс regression test, judgment-классы — в focused neutral-instruction correction. Применение фикса — всегда отдельное авторизованное изменение; чистая приёмка может записать `no_process_change`; TASK, созданный до появления блока, продолжает работу без него и не блокируется.
+
 ## Epic lifecycle, validation и fuzzing
 
 ```text
@@ -196,6 +199,14 @@ Universal Epic baseline: все TASK `DONE`, requirement-to-evidence coverage, �
 | `library_cli` | public API compatibility, packaging, supported runtimes, install/upgrade, CLI exit and stream contracts |
 
 Команды берутся только из repository/build/CI evidence и сохраняются в `.ai/project.yaml`. Пустая конфигурация требует явного `not applicable` или blocker.
+
+## Правила проекта, follow-up и Critical Surfaces
+
+Правила проекта объявляются в project-owned `.ai/custom/rules.yaml` (шаблон `.ai/templates/rules.yaml`): `id`, человеческий `statement`, опциональный `pattern` (Python `re`), `scope`, `exclusions` и `kind` (`code`/`process`). Statements рендерятся компактным блоком Project Rules в router; patterns в router не попадают. Read-only `python .ai/tools/forge.py rules` сопоставляет patterns с scoped-путями без вызова модели и без записей: по каждой норме — violation count и violating paths либо `judgment` для норм без pattern. Каждая нарушенная норма получает ровно одну авторизованную диспозицию — исправить код, изменить или удалить норму, сузить scope; расхождение router-блока и `rules.yaml` чинится adapter sync или правкой декларации.
+
+Process Follow-up в TASK и в Epic User Validation History фиксирует root cause, fix target, disposition и rationale, когда сдача промахнулась мимо цели при зелёных проверках. Неприменённый follow-up (нет applied fix и нет decline rationale) conformance-проверка поднимает как advisory и никогда не блокирует gate.
+
+Critical Surfaces объявляются в `ARCHITECTURE.md` (surface, canonical source, почему критично) и фокусируют остаточное человеческое внимание: `epic-planner` переносит пересекающиеся поверхности в Task Review Focus (или записывает явное none), приёмка группирует Manual Verification по touched surfaces и показывает их первыми. Поверхности не сужают review/testing/gating и не отменяют assurance; пустая декларация не меняет поведение.
 
 ## Defect Queue
 

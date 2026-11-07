@@ -52,6 +52,8 @@ When fuzzing permits progression:
 
 If the user finds a problem, return the Epic to `ACTIVE`, propose a Replan diff, create a new TASK only after approval, run the full TASK lifecycle, and repeat Epic Validation and fuzzing.
 
+When the user rejects or corrects the Epic delivery despite green checks, record the `Process Follow-up` facts — root cause, fix target, disposition, and rationale per `process_followup` in `.ai/framework/contracts.yaml` — in the plan's Epic User Validation History before `COMPLETED`. A clean Epic Acceptance may record `no_process_change`. Applying the routed fix is a separate authorized change that never happens during acceptance, and a plan whose template predates the block proceeds without one.
+
 ## Complete atomically
 
 After explicit Epic Acceptance:

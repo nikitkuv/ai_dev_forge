@@ -15,8 +15,8 @@ import yaml
 
 from forge_core import (ARCHIVE_PATH, TERMINAL_BUG_STATUSES, TERMINAL_EPIC_STATUSES, ForgeError, Transaction,
                         archived_backlog_rows, archive_append, atomic_replace, backlog_rows, canonical, defect_rows,
-                        digest, frontmatter, git_capture, inventory, load_yaml, sections, snapshot, table_rows, text,
-                        within, workflow_state, yaml_value)
+                        digest, frontmatter, git_capture, inventory, load_yaml, process_followup_values, sections,
+                        snapshot, table_rows, text, within, workflow_state, yaml_value)
 
 ID_FORMATS = {"task": ("TASK-", 3), "bug": ("BUG-", 3), "inv": ("INV-", 4), "int": ("INT-", 4),
               "epic": ("EPIC-", 3), "adr": ("ADR-", 3), "mut": ("MUT-", 4)}
@@ -913,14 +913,61 @@ def _append_table_row(content, heading, row):
     return "".join(lines)
 
 
-def accept_record(root, task_path, accepted_by, decision_ref, notes=None, resolve_bug=None, apply_token=None):
+def _followup_present(content):
+    return any(line.strip() in ("## Process Follow-up", "### Process Follow-up") for line in content.splitlines())
+
+
+def _record_followup(content, contracts, root_cause, fix_target, rationale, disposition):
+    """Fill the Process Follow-up block from explicit acceptance inputs."""
+    enums = contracts["enums"]
+    if fix_target is None:
+        raise ForgeError("Process Follow-up requires a fix target")
+    if fix_target not in enums["process_followup_fix_targets"]:
+        raise ForgeError(f"Invalid process follow-up fix target: {fix_target}")
+    if root_cause is not None and root_cause not in enums["process_followup_root_causes"]:
+        raise ForgeError(f"Invalid process follow-up root cause: {root_cause}")
+    if root_cause is None and fix_target != "no_process_change":
+        raise ForgeError("Process Follow-up requires a root cause unless the fix target is no_process_change")
+    state = disposition or "pending"
+    if state not in enums["process_followup_dispositions"]:
+        raise ForgeError(f"Invalid process follow-up disposition: {state}")
+    values = {"Root cause": root_cause or "—", "Fix target": fix_target,
+              "Disposition": state, "Rationale": (rationale or "—").replace("\n", " ")}
+    if not _followup_present(content):
+        lines = content.splitlines(keepends=True)
+        insert_at = next((index for index, line in enumerate(lines) if line.rstrip() == "## Iteration History"), len(lines))
+        block = ["## Process Follow-up\n", "\n"]
+        block.extend(f"- **{key}:** {value}\n" for key, value in values.items())
+        lines[insert_at:insert_at] = block + ["\n"]
+        return "".join(lines)
+    updated = content
+    for key, value in values.items():
+        updated = _replace_bullet(updated, "Process Follow-up", key, value)
+    return updated
+
+
+def accept_record(root, task_path, accepted_by, decision_ref, notes=None, resolve_bug=None,
+                  followup_root_cause=None, followup_fix_target=None, followup_rationale=None,
+                  followup_disposition=None, apply_token=None):
     """Record explicit user acceptance facts and transition only this TASK to DONE."""
     if not accepted_by or not decision_ref:
         raise ForgeError("Acceptance requires an accepting user/role and a decision reference")
+    contracts = _contracts(root)
     content = text(root, task_path)
     meta = frontmatter(content)
     if meta.get("status") != "AWAITING USER ACCEPTANCE":
         raise ForgeError(f"Acceptance requires AWAITING USER ACCEPTANCE, found {meta.get('status')!r}")
+    if any(value is not None for value in (followup_root_cause, followup_fix_target, followup_rationale, followup_disposition)):
+        content = _record_followup(content, contracts, followup_root_cause, followup_fix_target,
+                                   followup_rationale, followup_disposition)
+    corrected = any("changes requested" in row.get("Result", "")
+                    for row in table_rows(content, "User Validation", {"Result"}, optional=True))
+    if corrected and _followup_present(content):
+        recorded_values = process_followup_values(content)
+        if not (recorded_values.get("Root cause") and recorded_values.get("Fix target")
+                and recorded_values.get("Rationale")):
+            raise ForgeError("A rejected or corrected delivery requires a recorded Process Follow-up "
+                             "(root cause, fix target, rationale) before DONE")
     state = workflow_state(content)
     note = decision_ref + (f"; {notes}" if notes else "")
     updated = _replace_bullet(content, "User Acceptance", "Decision", "accepted")

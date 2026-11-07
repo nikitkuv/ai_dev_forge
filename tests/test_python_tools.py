@@ -1007,6 +1007,75 @@ class MutationTests(Repository):
         with self.assertRaisesRegex(core.ForgeError, "AWAITING USER ACCEPTANCE"):
             lifecycle.accept_record(self.root, task, "user", "decision")
 
+    def _to_acceptance(self, task):
+        for target in ("IN PROGRESS", "AWAITING USER ACCEPTANCE"):
+            lifecycle.transition_task(self.root, task, target,
+                                      apply_token=lifecycle.transition_task(self.root, task, target)["preview_token"])
+
+    def test_accept_record_rejected_delivery_requires_recorded_followup(self):
+        task = self.seeded(active=True)
+        self._to_acceptance(task)
+        self.write(task, core.text(self.root, task).replace("## Iteration History",
+                   "## User Validation\n\n| Date | Scope | Result | Feedback and disposition |\n"
+                   "| --- | --- | --- | --- |\n"
+                   "| 2026-01-02 | behavior | changes requested | wrong output despite green tests |\n\n"
+                   "## Process Follow-up\n\n"
+                   "- **Root cause:** <task_ambiguity/missing_repo_context/missing_acceptance_criterion/weak_test_oracle/rule_drift/other, or —>\n"
+                   "- **Fix target:** <skill/template_field/contract/neutral_instruction/regression_test/no_process_change, or —>\n"
+                   "- **Disposition:** <pending/applied/declined, or —>\n"
+                   "- **Rationale:** <Why this cause and target; a decline records its rationale; or —>\n\n"
+                   "## Iteration History"))
+        with self.assertRaisesRegex(core.ForgeError, "rejected or corrected delivery requires a recorded Process Follow-up"):
+            lifecycle.accept_record(self.root, task, "user", "decision")
+        for kwargs, message in (
+            ({"followup_root_cause": "bogus", "followup_fix_target": "regression_test"}, "Invalid process follow-up root cause"),
+            ({"followup_fix_target": "regression_test"}, "requires a root cause"),
+            ({"followup_root_cause": "weak_test_oracle", "followup_fix_target": "bogus"}, "Invalid process follow-up fix target"),
+            ({"followup_root_cause": "weak_test_oracle", "followup_disposition": "pending"}, "requires a fix target"),
+        ):
+            with self.assertRaisesRegex(core.ForgeError, message):
+                lifecycle.accept_record(self.root, task, "user", "decision", **kwargs)
+        inputs = {"followup_root_cause": "weak_test_oracle", "followup_fix_target": "regression_test",
+                  "followup_rationale": "oracle accepted wrong output"}
+        preview = lifecycle.accept_record(self.root, task, "user", "decision", **inputs)
+        lifecycle.accept_record(self.root, task, "user", "decision", apply_token=preview["preview_token"], **inputs)
+        updated = core.text(self.root, task)
+        self.assertIn("status: DONE", updated)
+        self.assertIn("**Root cause:** weak_test_oracle", updated)
+        self.assertIn("**Fix target:** regression_test", updated)
+        self.assertIn("**Disposition:** pending", updated)
+        self.assertIn("**Rationale:** oracle accepted wrong output", updated)
+
+    def test_accept_record_clean_and_legacy_followup_paths(self):
+        task = self.seeded(active=True)
+        self._to_acceptance(task)
+        preview = lifecycle.accept_record(self.root, task, "user", "decision")
+        lifecycle.accept_record(self.root, task, "user", "decision", apply_token=preview["preview_token"])
+        self.assertIn("status: DONE", core.text(self.root, task))
+        self.assertNotIn("Process Follow-up", core.text(self.root, task))
+
+        task2 = self.write_task_with_state("execution/active/EPIC-001-example/tasks/TASK-002.md",
+                                           "TASK-002", "AWAITING USER ACCEPTANCE")
+        clean = {"followup_fix_target": "no_process_change", "followup_rationale": "clean acceptance"}
+        preview = lifecycle.accept_record(self.root, task2, "user", "decision", **clean)
+        lifecycle.accept_record(self.root, task2, "user", "decision", apply_token=preview["preview_token"], **clean)
+        updated = core.text(self.root, task2)
+        self.assertIn("status: DONE", updated)
+        self.assertIn("**Root cause:** —", updated)
+        self.assertIn("**Fix target:** no_process_change", updated)
+        self.assertIn("**Rationale:** clean acceptance", updated)
+
+        task3 = self.write_task_with_state("execution/active/EPIC-001-example/tasks/TASK-003.md",
+                                           "TASK-003", "AWAITING USER ACCEPTANCE")
+        self.write(task3, core.text(self.root, task3).replace("## Iteration History",
+                   "## User Validation\n\n| Date | Scope | Result | Feedback and disposition |\n"
+                   "| --- | --- | --- | --- |\n"
+                   "| 2026-01-02 | behavior | changes requested | wrong output |\n\n"
+                   "## Iteration History"))
+        preview = lifecycle.accept_record(self.root, task3, "user", "decision")
+        lifecycle.accept_record(self.root, task3, "user", "decision", apply_token=preview["preview_token"])
+        self.assertIn("status: DONE", core.text(self.root, task3))
+
     def test_commit_scoped_policy_and_exclusions(self):
         self.consumer(False)
         subprocess.run(["git", "init", "--quiet"], cwd=self.root, check=True, capture_output=True)
@@ -1416,6 +1485,202 @@ class AuthorizationTests(Repository):
         self.write(".ai/project.yaml", core.canonical({"automation": {"authorization": policy}}))
         with self.assertRaises(core.ForgeError):
             forge.authorization(self.root, task)
+
+
+class ProjectRulesTests(Repository):
+    def declare(self, body):
+        self.write(".ai/custom/rules.yaml", body)
+
+    def test_validate_accepts_project_carrying_rules_template(self):
+        self.consumer(False)
+        self.declare(core.text(ROOT, ".ai/templates/rules.yaml"))
+        self.write("BACKLOG.md", "## Epic Roadmap\n"
+                   "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                   "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                   "## Defect Queue\n"
+                   "| ID | Problem | Severity | User priority | Related requirement | Sources | Research | Status | Scheduled TASK |\n"
+                   "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
+        result = core.validate(self.root, True)
+        self.assertTrue(result["passed"], result["errors"])
+        self.assertEqual(core.rules_check(self.root)["summary"]["declared"], 0)
+
+    def test_rules_check_reports_violations_judgment_and_exclusions(self):
+        self.consumer(False)
+        self.declare(
+            "schema_version: 1\nrules:\n"
+            "  - id: no-any\n    statement: Never use any type.\n    kind: code\n"
+            "    pattern: 'any'\n    scope: ['src/**']\n    exclusions: ['src/generated/**']\n"
+            "  - id: short-notes\n    statement: Keep notes short.\n    kind: process\n    scope: ['.ai/**']\n")
+        self.write("src/app.py", "first: any = None\nsecond: any = None\n")
+        self.write("src/generated/api.py", "generated: any = None\n")
+        self.write("src/util.py", "ok: int = 1\n")
+        scope = ["src/app.py", "src/generated/api.py", "src/util.py", ".ai/custom/rules.yaml"]
+        before = core.snapshot(self.root, scope)
+        report = core.rules_check(self.root)
+        self.assertEqual(before, core.snapshot(self.root, scope), "the drift check must write nothing")
+        self.assertTrue(report["passed"], "raw pattern matches never fail the report")
+        by_id = {entry["id"]: entry for entry in report["rules"]}
+        self.assertEqual(by_id["no-any"]["status"], "violated")
+        self.assertEqual(by_id["no-any"]["violation_count"], 2)
+        self.assertEqual(by_id["no-any"]["violating_paths"], [{"path": "src/app.py", "violations": 2}])
+        self.assertEqual(by_id["short-notes"]["status"], "judgment")
+        self.assertEqual(by_id["short-notes"]["reason"], "no checkable pattern")
+        self.assertEqual(report["requires_judgment"], ["short-notes"])
+        self.assertEqual(report["summary"], {"declared": 2, "violated": 1, "clean": 0, "judgment": 1})
+
+    def test_clean_scope_and_no_declared_rules(self):
+        self.consumer(False)
+        report = core.rules_check(self.root)
+        self.assertEqual(report["note"], "no declared rules")
+        self.assertEqual(report["rules"], [])
+        self.declare("schema_version: 1\nrules:\n"
+                     "  - id: no-any\n    statement: Never use any type.\n    kind: code\n"
+                     "    pattern: 'any'\n    scope: ['src/**']\n")
+        self.write("src/app.py", "ok: int = 1\n")
+        entry = core.rules_check(self.root)["rules"][0]
+        self.assertEqual(entry["status"], "clean")
+        self.assertEqual(entry["violating_paths"], [])
+
+    def test_rules_declaration_rejects_malformed_input(self):
+        self.consumer(False)
+        cases = [
+            ("schema_version: 2\nrules: []\n", "schema_version 1"),
+            ("schema_version: 1\nrules:\n  - id: 'bad id'\n    statement: x\n    kind: code\n    scope: ['src']\n", "stable id"),
+            ("schema_version: 1\nrules:\n  - id: a\n    statement: x\n    kind: code\n    scope: ['src']\n"
+             "  - id: a\n    statement: y\n    kind: code\n    scope: ['src']\n", "Duplicate rule id"),
+            ("schema_version: 1\nrules:\n  - id: a\n    statement: x\n    kind: magic\n    scope: ['src']\n", "requires kind"),
+            ("schema_version: 1\nrules:\n  - id: a\n    statement: x\n    kind: code\n    scope: []\n", "scope"),
+            ("schema_version: 1\nrules:\n  - id: a\n    statement: x\n    kind: code\n    scope: ['../outside']\n", "traversal"),
+            ("schema_version: 1\nrules:\n  - id: a\n    statement: x\n    kind: code\n    scope: ['src']\n    pattern: '('\n", "Invalid pattern"),
+        ]
+        for body, message in cases:
+            self.declare(body)
+            with self.assertRaisesRegex(core.ForgeError, message):
+                core.rules_check(self.root)
+
+    def test_statement_block_round_trips_and_keeps_patterns_out(self):
+        rules = [{"id": "no-any", "statement": "Never use any type.", "kind": "code",
+                  "pattern": "zz-internal-never", "scope": ["src"], "exclusions": []}]
+        block = core.rules_statement_block(rules)
+        self.assertEqual(block, "## Project Rules\n\n- no-any: Never use any type.\n")
+        self.assertNotIn("zz-internal-never", block)
+        self.assertEqual(core.router_rule_statements("# Router\n" + block + "## Other\n"),
+                         {"no-any": "Never use any type."})
+        self.assertEqual(core.rules_statement_block([]), "")
+
+    def test_adapter_render_carries_statements_without_patterns(self):
+        self.consumer(False)
+        self.declare("schema_version: 1\nrules:\n"
+                     "  - id: no-any\n    statement: Never use any type.\n    kind: code\n"
+                     "    pattern: 'zz-internal-never'\n    scope: ['src/**']\n")
+        self.write(".ai/custom/router-shared.md", "# Project rules\n\nKeep examples in Russian.\n")
+        outputs, inputs = adapters.render(self.root / ".ai", self.root)
+        router = outputs["AGENTS.md"].decode()
+        self.assertIn("## Project Rules", router)
+        self.assertIn("- no-any: Never use any type.", router)
+        self.assertNotIn("zz-internal-never", router)
+        self.assertIn("Keep examples in Russian.", router)
+        self.assertIn(".ai/custom/rules.yaml", [item["path"] for item in inputs["files"]])
+        self.declare("schema_version: 1\nrules: []\n")
+        outputs, _ = adapters.render(self.root / ".ai", self.root)
+        self.assertNotIn("## Project Rules", outputs["AGENTS.md"].decode())
+
+    def test_validate_reports_drift_and_router_divergence(self):
+        self.consumer(False)
+        self.write("BACKLOG.md", "## Epic Roadmap\n"
+                   "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                   "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
+        self.declare("schema_version: 1\nrules:\n"
+                     "  - id: no-any\n    statement: Never use any type.\n    kind: code\n"
+                     "    pattern: 'any'\n    scope: ['src/**']\n")
+        self.write("src/app.py", "first: any = None\n")
+        result = core.validate(self.root, True)
+        self.assertTrue(result["passed"], result["errors"])
+        self.assertEqual(result["rule_drift"]["summary"]["violated"], 1)
+        self.assertIn("project rule drift", result["coverage"])
+        adapters.apply(self.root, adapters.preview(self.root)[0]["preview_token"])
+        result = core.validate(self.root, True)
+        self.assertTrue(result["passed"], result["errors"])
+        self.declare("schema_version: 1\nrules:\n"
+                     "  - id: no-any\n    statement: A different statement.\n    kind: code\n"
+                     "    pattern: 'any'\n    scope: ['src/**']\n")
+        result = core.validate(self.root, True)
+        self.assertFalse(result["passed"])
+        self.assertTrue(any("diverges" in error for error in result["errors"]), result["errors"])
+        self.declare("schema_version: 1\nrules:\n"
+                     "  - id: other-rule\n    statement: Something else.\n    kind: process\n    scope: ['.ai']\n")
+        result = core.validate(self.root, True)
+        self.assertTrue(any("missing from the router block" in error for error in result["errors"]), result["errors"])
+
+    def test_cli_rules_subcommand_is_report_only(self):
+        self.consumer(False)
+        self.declare("schema_version: 1\nrules:\n"
+                     "  - id: short-notes\n    statement: Keep notes short.\n    kind: process\n    scope: ['.ai']\n"
+                     "  - id: no-any\n    statement: Never use any type.\n    kind: code\n"
+                     "    pattern: 'any'\n    scope: ['src/**']\n")
+        self.write("src/app.py", "first: any = None\n")
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            code = forge.main(["--root", str(self.root), "rules"])
+        self.assertEqual(code, 0, "raw pattern matches never block a gate")
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["summary"], {"declared": 2, "violated": 1, "clean": 0, "judgment": 1})
+
+
+class ProcessFollowupTests(Repository):
+    def backlog_active_epic(self):
+        self.write("BACKLOG.md", "## Epic Roadmap\n"
+                   "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                   "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+                   "| EPIC-001 | Example | TBD | — | — | P0 | READY | — | ACTIVE | — |\n")
+
+    def followup_task(self, root_cause="weak_test_oracle", fix_target="regression_test",
+                      disposition="pending", rationale="—"):
+        self.write("execution/active/EPIC-001-example/tasks/TASK-001.md",
+                   "---\ndocument_type: task\nid: TASK-001\nepic_id: EPIC-001\ndefinition_status: approved\n"
+                   "status: DONE\ndelivery_track: standard\nstarted_at: 2026-01-01\n---\n\n# TASK-001 — Example\n\n"
+                   "## Workflow State\n\n```yaml\ncurrent_gate: done\nimplementation_revision: 1\n"
+                   "review_packet:\n  changed_paths: []\n  production_review_paths: []\n```\n\n"
+                   "## Process Follow-up\n\n"
+                   f"- **Root cause:** {root_cause}\n- **Fix target:** {fix_target}\n"
+                   f"- **Disposition:** {disposition}\n- **Rationale:** {rationale}\n")
+
+    def unapplied(self, result):
+        return [note for note in result["advisory"] if "Unapplied process follow-up" in note]
+
+    def test_unapplied_followup_is_advisory_and_never_blocks(self):
+        self.consumer(False)
+        self.write("BACKLOG.md", "## Epic Roadmap\n"
+                   "| ID | Epic and intended outcome | Requirements | Sources | Research | Priority | Readiness | Dependencies | Status | Blocked by |\n"
+                   "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
+        self.followup_task()
+        result = core.validate(self.root, True)
+        self.assertTrue(result["passed"], result["errors"])
+        self.assertTrue(any("TASK-001" in note for note in self.unapplied(result)), result["advisory"])
+        self.followup_task(disposition="applied", rationale="fix shipped in a separate change")
+        self.assertFalse(self.unapplied(core.validate(self.root, True)))
+        self.followup_task(disposition="declined", rationale="one-off mistake, no process change")
+        self.assertFalse(self.unapplied(core.validate(self.root, True)))
+        self.followup_task(fix_target="no_process_change", rationale="clean acceptance")
+        self.assertFalse(self.unapplied(core.validate(self.root, True)))
+        self.followup_task(root_cause="—", fix_target="—", disposition="—", rationale="—")
+        self.assertFalse(self.unapplied(core.validate(self.root, True)))
+
+    def test_epic_plan_followup_is_surfaced_too(self):
+        self.consumer(False)
+        self.backlog_active_epic()
+        self.write("execution/active/EPIC-001-example/plan.md",
+                   "---\ndocument_type: epic_plan\nepic_id: EPIC-001\ndocument_status: approved\n---\n# Plan\n\n"
+                   "## Epic User Validation History\n\n"
+                   "| Date | Validator | Scope | Result | Feedback or follow-up |\n"
+                   "| --- | --- | --- | --- | --- |\n"
+                   "| 2026-01-02 | user | epic acceptance | changes requested | wrong output |\n\n"
+                   "### Process Follow-up\n\n"
+                   "- **Root cause:** task_ambiguity\n- **Fix target:** template_field\n"
+                   "- **Disposition:** pending\n- **Rationale:** —\n")
+        result = core.validate(self.root, True)
+        self.assertTrue(result["passed"], result["errors"])
+        self.assertTrue(any("plan.md" in note for note in self.unapplied(result)), result["advisory"])
 
 
 if __name__ == "__main__":

@@ -2,13 +2,13 @@
 
 ## Локальные операции без вызова модели
 
-Восстановление начинайте с `python .ai/tools/forge.py context`: прочитайте metadata, затем Backlog и текущие evidence. `section` извлекает разделы, `fingerprint` хеширует scope, `validate --project --adapters` проверяет структуру, drift и конформанс. `evidence-check <TASK-path>` возвращает вердикты review-freshness/testing/fast-assurance; `evidence-check --epic <EPIC-ID>` — готовность Epic gate. `next-id --kind <task|bug|inv|epic|adr|mut>` выделяет идентификаторы.
+Восстановление начинайте с `python .ai/tools/forge.py context`: прочитайте metadata, затем Backlog и текущие evidence. `section` извлекает разделы, `fingerprint` хеширует scope, `validate --project --adapters` проверяет структуру, drift и конформанс (включая отчёт `rule_drift` и расхождения router-блока с `.ai/custom/rules.yaml`). `rules` — read-only отчёт о дрейпе правил без вызова модели: violations с путями либо `judgment` для норм без pattern. `evidence-check <TASK-path>` возвращает вердикты review-freshness/testing/fast-assurance; `evidence-check --epic <EPIC-ID>` — готовность Epic gate. `next-id --kind <task|bug|inv|epic|adr|mut>` выделяет идентификаторы.
 
 Поиск: `query "<термины>" [--kind ...] [--area ...] [--since YYYY-MM]` — ранжированные указатели по durable-записям, включая `execution/completed/` и архив Backlog. Индекс `.ai/local/index.db` пересобирается автоматически и не является evidence.
 
 Для sync используйте `adapters --diff` и утверждённый preview token. Для проверок — `checks <packet.json> --execute`. `role --assignment-file` подставляет нейтральный контракт и выполняет bounded preflight. Нельзя автоматически сменить provider после ошибки.
 
-Статусные правки идут через helpers: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row|archive-row|archive-all`, `inv-create`, `commit-scoped`. Мутирующие команды показывают preview и применяются по `--apply TOKEN` с journal-откатом. Терминальные переходы переносят строку в `BACKLOG-ARCHIVE.md` той же транзакцией. `backlog stale-rows --older-than <N>` — read-only отчёт об устаревших строках. Форматы команд: [.ai/tools/USAGE.md](.ai/tools/USAGE.md).
+Статусные правки идут через helpers: `transition task|epic`, `epic-start`, `epic-complete`, `accept-record`, `backlog add-bug|update-row|archive-row|archive-all`, `inv-create`, `commit-scoped`. При отклонённой или исправленной сдаче `accept-record --follow-up-root-cause <cause> --follow-up-fix-target <target> --follow-up-rationale <why>` записывает `Process Follow-up` в той же транзакции; без фактов переход в `DONE` для такой сдачи отклоняется. Мутирующие команды показывают preview и применяются по `--apply TOKEN` с journal-откатом. Терминальные переходы переносят строку в `BACKLOG-ARCHIVE.md` той же транзакцией. `backlog stale-rows --older-than <N>` — read-only отчёт об устаревших строках. Форматы команд: [.ai/tools/USAGE.md](.ai/tools/USAGE.md).
 
 При bounded Task Start grant выполните `task-start-check <TASK-path>`. Приёмка и Git gates остаются отдельными.
 
