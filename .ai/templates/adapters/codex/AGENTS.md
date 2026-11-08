@@ -10,6 +10,8 @@ Bootstrap: read `.ai/BOOTSTRAP.md`. Staged upgrade: read `.ai-next/MIGRATE.md`. 
 
 Canonical owners: SPEC = behavior; ARCHITECTURE = architecture; BACKLOG = Epic priority/readiness/status, dependencies and defects; ADR = decision; plan = Task order and Epic evidence; TASK = Task state/evidence; INV = research. Git supplies actual changes. History, caches and external systems are not authoritative. Report contradictions; do not silently reconcile them.
 
+For prior experience, follow CONVENTIONS.md, Evidence-backed knowledge: bounded source-first retrieval, applicability checks and provenance; no automatic memory promotion.
+
 ## Python automation
 
 Use `.ai/tools/forge.py` for context, sections, fingerprints, validation, adapters, checks, external roles, budgets and metrics. Read only the relevant `.ai/tools/USAGE.md` section; execute helpers without loading their source. If Python/dependencies are unavailable, report that limitation and use manual workflows; do not install implicitly.
@@ -45,7 +47,7 @@ Explicitly invoke the matching bundled skill using platform-native syntax. When 
 - Intake and priority: `forge-intake-feature`, `forge-intake-bug`, `forge-intake-external-work`, `forge-reprioritize-backlog`.
 - Execution: `forge-prepare-epic`, `forge-resume-development`, `forge-run-task`, `forge-complete-task`, `forge-complete-epic`.
 - Diagnostics: `forge-investigate`, `forge-security-audit`, `forge-mutation-test`.
-- Maintenance: `forge-migrate-framework`, `forge-check-framework`, `forge-sync-adapters`.
+- Maintenance: `forge-migrate-framework`, `forge-check-framework`, `forge-sync-adapters`, `forge-consolidate-knowledge`.
 
 Resolve model tiers from `.ai/project.yaml` and boundaries from the selected neutral role contract. Never silently change mappings. Planner/reviewer provide independent semantic judgment; implementer writes code; tester checks integrity/coverage; epic-validator checks aggregate assurance. Research/fuzzing/security specialists run only when applicable. `mutation-runner` runs metrics; `mutation-analyzer` requires separate authorization and current candidates. Independent read-only research may run in parallel.
 

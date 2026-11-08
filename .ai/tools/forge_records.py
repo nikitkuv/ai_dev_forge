@@ -196,6 +196,8 @@ def identity_check(root):
                     actual = target_identity(target)
                     if label and actual and label[1] != actual:
                         report("link_id_mismatch", path, "markdown_link", label[1], actual)
+    from forge_knowledge import knowledge_advisories
+    advisory.extend(knowledge_advisories(contents, declarations))
     return {"passed": not findings and not errors, "findings": findings, "errors": errors,
             "advisory": advisory,
             "declarations": declarations, "scanned_files": len(paths),

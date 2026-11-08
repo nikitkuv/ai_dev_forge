@@ -1,0 +1,45 @@
+{
+  "cases": [
+    {
+      "case": "rediscovery",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "successful-transfer",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "changed-dependency",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "canonical-conflict",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "irrelevant-history",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "empty-history",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "repeated-hypothesis",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    },
+    {
+      "case": "moved-source",
+      "mechanical": "passed",
+      "agent_outcome": "unmeasured"
+    }
+  ],
+  "note": "Mechanical checks only; A/B/C agent comparisons and costs remain unmeasured."
+}

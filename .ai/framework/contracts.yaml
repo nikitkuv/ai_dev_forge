@@ -633,3 +633,29 @@ invariants:
   - planned_applicable_unresolved_or_contradictory_evidence_invokes_fuzzer
   - task_commit_never_precedes_explicit_user_acceptance
   - next_epic_never_starts_automatically
+
+agent_knowledge:
+  owners: [task, investigation]
+  optional_fields: [reusable_findings, knowledge_refs]
+  finding_id: 'RF-[0-9]{2,}'
+  statuses: [hypothesis, verified, obsolete]
+  required_finding_fields: [id, claim, applicability, status, evidence_refs, verified_at, verified_revision, dependencies, recheck_when]
+  verification_requires: [supporting_evidence, verification_date, verification_revision, semantic_judgment]
+  dependency_verdicts: [unchanged, changed, unknown]
+  reference_fields: [ref, rationale, checked_revision]
+  correction_reference_field: correction_of
+  identity_errors: advisory_only
+  lifecycle_authority: none
+  legacy_backfill: forbidden
+  discovery_budget: {queries: 2, pointers_per_query: 20, additional_records: 5}
+  mandatory_evidence_truncation: forbidden
+  consolidation:
+    skill: forge-consolidate-knowledge
+    invocation: explicit_user_request
+    owner: orchestrator
+    record_budget: 20
+    generated_subagents: forbidden
+    default_writes: forbidden
+    application: existing_authorized_workflow
+    historical_corrections: additive_with_provenance
+    automatic_promotion: forbidden

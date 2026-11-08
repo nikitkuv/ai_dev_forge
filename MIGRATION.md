@@ -127,3 +127,11 @@ Apply выполняет одну охраняемую транзакцию: bac
 После миграции advisory-находки (например, терминальные строки живого Backlog) исправляются отдельными командами backfill по явному решению. Для проекта со старым planned/active/paused Epic команда отдельно покажет compatibility findings: отсутствующие quality profiles, Epic Verification/Fuzzing Plans, Review Packets, planned-workspace mapping и Epic Validation evidence. Они исправляются через `forge-resume-development` и требуемые user gates; миграция не создаёт `execution/planned/` из строк Backlog и не перемещает execution-каталоги. Старый Epic в `FUZZING` или `AWAITING EPIC ACCEPTANCE` нельзя завершить, пока полный Epic Validation не пройдёт на текущем aggregate fingerprint.
 
 Старая поддерживаемая integration schema мигрируется только отдельным действием после framework upgrade: `older_migratable` classification показывает точный diff, recoverable backup и отдельное подтверждение; ошибка откатывает только integration migration. Framework rollback не удаляет external identities или canonical Epic/Task records.
+
+## Память и повторное использование опыта
+
+Forge 4.14 хранит необязательные `reusable_findings` в TASK/INV и `knowledge_refs` в использующих их записях. Вывод содержит основание, область применимости, статус (`hypothesis`, `verified`, `obsolete`) и условия перепроверки. `knowledge-check` сравнивает объявленные зависимости, но не доказывает истинность вывода; изменившиеся или неизвестные входы требуют проверки. Старые записи работают без заполнения новых полей.
+
+При планировании, исследовании и выполнении задачи агент сначала читает явные ссылки, затем при необходимости ищет опыт в INV/ADR и завершённых TASK/PLAN/BUG. SQLite вызывается через `query`, а не на каждом ходе. `--match any` расширяет лексический поиск, `--workflow` отмечает источник вызова. `metrics` отдельно показывает вызовы поиска; это не доказательство полезного применения знаний.
+
+Запрос «консолидируй опыт EPIC-001» вызывает `forge-consolidate-knowledge`: ограниченный обзор с предложениями и доказательствами в разговоре. Изменения применяются через существующий авторизованный workflow. Автоматическая wiki, фоновый агент, новые gates и накопление заметок в router не вводятся. Подробный контракт и формат полей: `.ai/CONVENTIONS.md`, раздел Evidence-backed knowledge.

@@ -346,6 +346,9 @@ def inventory(root, include_completed=False):
                               "relevant_paths", "origin", "promoted_to", "sources")
                     record = {"path": path, "sha256": digest(content.encode()),
                               "metadata": {key: meta[key] for key in fields if key in meta}}
+                    if "reusable_findings" in meta:
+                        from forge_knowledge import finding_summary
+                        record["metadata"]["findings"] = finding_summary(meta)
                     records.append(record)
                 except (ForgeError, OSError, UnicodeError) as exc:
                     errors.append(f"{path}: {exc}")

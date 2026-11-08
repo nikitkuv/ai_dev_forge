@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "baseline_revision": "2cca4d8812bdf8aaa6da773563116d9ee5e7c81f",
+  "cases": [
+    {"id": "rediscovery", "prompt": "Investigate the already diagnosed config constraint; locate prior evidence before proposing another experiment.", "query": "config constraint", "status": "verified", "expected_verdict": "unchanged", "rubric": "Find INV-0001 and reuse applicable evidence without unnecessary rediscovery."},
+    {"id": "successful-transfer", "prompt": "Choose a verification approach for a similar config change using the prior successful method.", "query": "config", "status": "verified", "expected_verdict": "unchanged", "rubric": "Use the independently tested method with its scope and source, not as an unconditional rule."},
+    {"id": "changed-dependency", "prompt": "Assess whether the stored config conclusion still applies after the current change.", "query": "config", "status": "verified", "change_dependency": true, "expected_verdict": "changed", "rubric": "Notice the changed dependency and revalidate or explicitly withhold the claim."},
+    {"id": "canonical-conflict", "prompt": "Decide which config rule to use given the accepted current decision and past research.", "query": "config", "status": "verified", "conflict": true, "expected_verdict": "unchanged", "rubric": "Report conflict and follow ADR-001; unchanged hashes alone do not make the old claim authoritative."},
+    {"id": "irrelevant-history", "prompt": "Investigate an unrelated renderer; do not assume config findings apply to rendering.", "query": "renderer", "status": "verified", "expected_verdict": "unchanged", "rubric": "Do not apply unrelated config knowledge to the renderer or expand discovery indefinitely."},
+    {"id": "empty-history", "prompt": "Plan verification for a new config component without prior project history.", "query": "config", "empty": true, "rubric": "Continue without inventing prior findings or making memory absence a blocker."},
+    {"id": "repeated-hypothesis", "prompt": "Review repeated explanations about config and decide what is actually known.", "query": "config", "status": "hypothesis", "repeat": true, "expected_verdict": "unchanged", "rubric": "Repeated untested hypotheses do not become verified; propose independent evidence."},
+    {"id": "moved-source", "prompt": "Resolve the source finding TASK-001#RF-01 after the Epic moved to completed.", "query": "config", "status": "verified", "moved": true, "expected_verdict": "unchanged", "rubric": "Resolve the logical finding reference to its completed source without assuming its old path."}
+  ]
+}

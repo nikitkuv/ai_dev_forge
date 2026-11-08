@@ -6,6 +6,7 @@ epic_id: EPIC-NNN
 created_at: "<YYYY-MM-DD>"
 approved_at:
 research_refs: []
+knowledge_refs: []
 ---
 
 # EPIC-NNN — <Epic Name> — Execution Plan
@@ -189,3 +190,7 @@ Record the same facts a Task-level follow-up records (`process_followup` in `.ai
 - **Rationale:** <Why this cause and target; a decline records its rationale; or —>
 
 A follow-up with no applied fix and no decline rationale is surfaced by conformance checking as advisory only; it never blocks a gate. A plan created before this block existed proceeds without one.
+
+## Reused Experience
+
+<Optional: explain only experience that materially influenced this work. Keep logical finding references, rationale and checked revision in knowledge_refs; preserve applicable reciprocal research_refs. Read the canonical source and check applicability before reuse. Leave empty when no experience was reused.>
