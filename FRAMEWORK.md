@@ -243,3 +243,11 @@ Adapter sync пересоздаёт enabled platform adapters, проверяе�
 Hooks, MCP/API/CLI-конфигурация и credentials не генерируются. Optional registry — `.ai/integrations/` с semantic capability profiles, operation allowlist, scope, consumers и bindings. Регистрация не даёт implicit tool authority. `work_source` нормализует тикеты и хранит связи с Backlog/TASK/Epic. Framework update и integration-schema migration — две операции. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
 Пользовательские сценарии: [RUNBOOK.md](RUNBOOK.md).
+
+## Память и повторное использование опыта
+
+Forge 4.14 хранит необязательные `reusable_findings` в TASK/INV и `knowledge_refs` в использующих их записях. Вывод содержит основание, область применимости, статус (`hypothesis`, `verified`, `obsolete`) и условия перепроверки. `knowledge-check` сравнивает объявленные зависимости, но не доказывает истинность вывода; изменившиеся или неизвестные входы требуют проверки. Старые записи работают без заполнения новых полей.
+
+При планировании, исследовании и выполнении задачи агент сначала читает явные ссылки, затем при необходимости ищет опыт в INV/ADR и завершённых TASK/PLAN/BUG. SQLite вызывается через `query`, а не на каждом ходе. `--match any` расширяет лексический поиск, `--workflow` отмечает источник вызова. `metrics` отдельно показывает вызовы поиска; это не доказательство полезного применения знаний.
+
+Запрос «консолидируй опыт EPIC-001» вызывает `forge-consolidate-knowledge`: ограниченный обзор с предложениями и доказательствами в разговоре. Изменения применяются через существующий авторизованный workflow. Автоматическая wiki, фоновый агент, новые gates и накопление заметок в router не вводятся. Подробный контракт и формат полей: `.ai/CONVENTIONS.md`, раздел Evidence-backed knowledge.

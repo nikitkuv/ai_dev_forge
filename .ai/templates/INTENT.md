@@ -11,6 +11,7 @@ author: "<Requesting user>"
 promoted_to:
 sources: []
 research_refs: []
+knowledge_refs: []
 ---
 
 # INT-NNNN — <Request Subject>
@@ -48,3 +49,7 @@ research_refs: []
 | Date | Outcome | Reason or reference |
 | --- | --- | --- |
 | <YYYY-MM-DD> | <draft/accepted/promoted/rejected/deferred/superseded> | <Reason, user decision, or linked work> |
+
+## Reused Experience
+
+<Optional: explain only experience that materially influenced this work. Keep logical finding references, rationale and checked revision in knowledge_refs; preserve applicable reciprocal research_refs. Read the canonical source and check applicability before reuse. Leave empty when no experience was reused.>

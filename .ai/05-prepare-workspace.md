@@ -35,13 +35,15 @@ An `OUTLINE` Epic or an Epic with unresolved requirements or boundaries cannot r
 
 ## Prepare the Proposed Plan
 
+Invoke `forge-prepare-epic` for this step: its staged interview is the shared planning workflow for bootstrap and later Epics. The orchestrator conducts the interview and records its confirmations before planner detail filling. The planner assignment must include the confirmed decomposition skeleton and confirmed Interface Delta. Do not invoke the planner or produce test cases, change maps, or fuzz detail before skeleton confirmation. Previously approved plans continue without re-interview.
+
 Invoke the strong read-only `epic-planner` with the approved canonical documents, selected Epic, explicit and clearly relevant INV records chosen by the orchestrator, relevant repository and CI evidence, project quality configuration, framework contracts, conventions, and templates. Before invocation, check each INV baseline and relevant paths, confirm uncertain matches with the user, and reuse applicable evidence rather than repeating the complete investigation. Require `.ai/project.yaml` to contain one valid `role_execution.mode`: `claude_with_codex` requires Claude Code and the managed stable `codex exec` route, `codex_with_claude` requires Codex and the managed headless Claude Code route, and `native_subagents` uses the active Codex, Claude Code, or OpenCode platform's generated planner without external preflight. OpenCode-led bootstrap proposes the existing `native_subagents` value by default when no approved route exists, but it remains an explicit approved project value and adds no new mode. Active-orchestrator mismatch, unavailable selected prerequisites, or any started external-run failure blocks planning; there is no fallback. Every route receives the complete neutral contract and identical evidence. The selected executor returns a proposal only; it does not write files, approve definitions, activate the Epic, or contact the user.
 
 The orchestrator must independently check the proposal against canonical sources and repository evidence, resolve blockers with the user, and remain responsible for the final displayed plan. Build the proposal with:
 
-1. define the Epic objective and expected outcome;
-2. identify dependencies, risks, implementation strategy, and Research Context listing every used INV plus its applicability check;
-3. create an ordered Task sequence with explicit `Depends on` relationships;
+1. retain the confirmed Epic objective and expected outcome;
+2. fill the implementation strategy using the confirmed Interface Delta and risks, and add dependencies and Research Context listing every used INV plus its applicability check;
+3. fill details behind the confirmed ordered Task skeleton with its explicit `Depends on` relationships;
 4. define Epic acceptance criteria;
 5. map requirements to planned Task and Epic-level evidence;
 6. select applicable quality profiles and risk flags;
@@ -66,6 +68,7 @@ For every TASK:
 - define one clear outcome, context, scope, out of scope, and constraints;
 - add objectively verifiable acceptance criteria;
 - record affected components and contracts, risk level and flags, and review focus;
+- record the approved Contract Sketch for each changed public contract, or explicit none, following the confirmed Interface Delta;
 - fill the TASK template's `Planned Change Map` under `task_change_map`: inspected repository paths, actions and reasons, proposed new files, indirect impact and verification coverage, and explicit uncertainties with resolution steps; resolve unknown component or contract boundaries before Plan Approval;
 - record `delivery_track: fast|standard` and its rationale; for fast, record bounded scope, reversibility, low risk, unambiguous behavior, deterministic verification, and explicit absence of all disqualifiers; low risk alone is never enough and uncertainty selects standard;
 - add required Task-specific, affected-component, and scoped quality checks;
@@ -84,6 +87,8 @@ The planner's proposed track and verification selection are not self-approving. 
 Do not run a mandatory atomicity classifier. Split or reshape work only when the user requests it or when actual planning or execution reveals a concrete need.
 
 ## Plan Review and Plan Approval Gate
+
+Before Plan Approval, verify the filled details against the confirmed interview artifacts under `forge-prepare-epic`. Return unconfirmed interface or scope changes to the affected interview stages for revision and confirmation before approval.
 
 Before writing planned execution state:
 

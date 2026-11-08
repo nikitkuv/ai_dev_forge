@@ -4,6 +4,22 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
+test("both bootstrap entry points route through the interview before planner detail filling", async () => {
+  for (const mode of ["new", "existing"]) {
+    const skill = await read(`.ai/framework/skills/forge-bootstrap-${mode}/SKILL.md`);
+    assert.match(skill, /forge-prepare-epic/);
+    assert.match(skill, /interview/);
+  }
+  const step = await read(".ai/05-prepare-workspace.md");
+  const route = step.indexOf("forge-prepare-epic");
+  const invocation = step.indexOf("Invoke the strong read-only");
+  assert.ok(route >= 0 && route < invocation, "Step 05 must route through the interview before invoking the planner");
+  assert.match(step, /confirmed decomposition skeleton and confirmed Interface Delta/);
+  assert.match(step, /Before Plan Approval, verify.*confirmed interview/);
+  assert.match(step, /separate.*Epic Start gate/i);
+  assert.match(step, /separate Task Start gate/i);
+});
+
 test("epic preparation is a four-stage interview with per-stage confirmation gates", async () => {
   const [skill, contracts] = await Promise.all([
     read(".ai/framework/skills/forge-prepare-epic/SKILL.md"),

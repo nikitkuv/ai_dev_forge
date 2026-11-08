@@ -13,6 +13,8 @@ risk_flags: []
 delivery_track: standard
 external_sources: []
 research_refs: []
+knowledge_refs: []
+reusable_findings: []
 ---
 
 # TASK-NNN — <Task Title>
@@ -274,3 +276,11 @@ A follow-up with no applied fix and no decline rationale stays visible and is su
 - **Notes:** <Compact acceptance note>
 
 Task Acceptance and permission to start the next Task are separate explicit gates.
+
+## Reused Experience
+
+<Optional: explain only experience that materially influenced this work. Keep logical finding references, rationale and checked revision in knowledge_refs; preserve applicable reciprocal research_refs. Read the canonical source and check applicability before reuse. Leave empty when no experience was reused.>
+
+## Reusable Findings
+
+<Optional: capture materially reusable successful strategies, constraints or failed approaches in reusable_findings frontmatter; see CONVENTIONS.md, Evidence-backed knowledge. Add nuance here only when needed, without duplicating structured claims. No lesson is required after routine work. Hypotheses are not verified rules; preserve original evidence in additive corrections.>

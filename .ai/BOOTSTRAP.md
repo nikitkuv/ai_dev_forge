@@ -56,7 +56,7 @@ Run these files in order and read each one in full before acting:
 2. [System Design](02-system-design.md) — create approved `ARCHITECTURE.md`, ADRs, and generated `DECISIONS.md`.
 3. [Release Planning](03-release-planning.md) — create approved Epic Roadmap and Defect Queue in `BACKLOG.md`.
 4. [Create Platform Adapters](04-create-platform-adapters.md) — write project configuration and generate every enabled native adapter set.
-5. [Prepare Workspace](05-prepare-workspace.md) — use the strong read-only Epic planner, approve one queued workspace under `execution/planned/`, and optionally use the separate Epic Start gate to move it to active state.
+5. [Prepare Workspace](05-prepare-workspace.md) — invoke `forge-prepare-epic` for the staged interview, then use the strong read-only Epic planner to fill confirmed inputs, approve one queued workspace under `execution/planned/`, and optionally use the separate Epic Start gate to move it to active state.
 6. [Final Validation](06-final-validation.md) — verify canonical state, lifecycle, ownership, adapters, and recovery.
 
 Each step has its own explicit user approval. Report its proposed outputs and wait before entering the next step. Approval of one step never implies Task Start or another later gate.

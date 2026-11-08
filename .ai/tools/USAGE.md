@@ -245,7 +245,7 @@ python .ai/tools/forge.py index status
 python .ai/tools/forge.py commit-scoped execution/active/EPIC-001-example/tasks/TASK-001.md --authorized
 ```
 
-Stages exactly the TASK's recorded `review_packet.changed_paths` plus the TASK file (or an explicit `--paths` list), reports unrelated working-tree changes it excludes, and proposes the commit message. Under `manual` policy or without `--authorized` it commits nothing and reports what it would stage. Under `auto_commit_after_acceptance` with `--authorized` it requires the TASK to be `DONE` and commits only the staged scope. It never uses `git add -A`; unrelated user work stays out of the commit by construction.
+Stages exactly the TASK's recorded `review_packet.changed_paths` plus the TASK file (or an explicit `--paths` list), reports unrelated working-tree changes it excludes, and proposes the commit message. Under `manual` policy or without `--authorized` it stages and commits nothing and reports what it would stage. Under `auto_commit_after_acceptance` with `--authorized` it requires the TASK to be `DONE`. Unrelated staged paths cause refusal before staging or committing; their index contents remain untouched and must be handled separately. Tracked deletions are supported, including already staged deletions; missing unknown paths are rejected. Directory scope includes descendants, and paths are literal, including spaces and non-ASCII names. The staged set is checked again before commit. Run without concurrent Git writers; the helper does not hold the index lock across separate Git commands.
 
 ## Bounded authorization
 
@@ -270,3 +270,15 @@ Do not invent or auto-enable this grant. `task-start-check <path>` checks defini
 `budget <files...>` reports bytes, lines and a characters/4 token estimate, explicitly not a model tokenizer or billed usage. Use it to keep shared routers compact and detect prompt growth. Do not discard required evidence merely to hit a budget.
 
 `metrics-record <event.json>` stores only supplied metrics under `.ai/local/metrics/`; `metrics` aggregates by track/stage without a model. Supported fields: task, track, stage, model, duration_seconds, input_tokens, output_tokens, cached_input_tokens, reused_checks, review_iterations, escalation_reason, post_acceptance_fix. Missing usage stays unknown, never estimated as zero cost. Do not put prompts, credentials or repository content in metrics. Compare similar task classes and quality outcomes before changing role policies.
+
+## Evidence-backed knowledge and search measurements
+
+```text
+python .ai/tools/forge.py knowledge-check execution/active/EPIC-001-example/tasks/TASK-001.md --finding RF-01
+python .ai/tools/forge.py query "migration rollback" --kind INV,ADR,TASK,PLAN,BUG --match any --workflow forge-prepare-epic
+python .ai/tools/forge.py metrics
+```
+
+`knowledge-check` is read-only and requires a canonical TASK/INV. It returns declared-input `unchanged`, `changed` or `unknown` verdicts, reasons, optional-field problems and additive correction pointers. It runs no stored commands. An unchanged verified finding is only a candidate: the orchestrator must assess evidence, assumptions and scope. Missing dependencies, unreadable sources and unobserved environment inputs remain unknown; unsupported findings are advisory and cannot become factual premises. See CONVENTIONS.md for `reusable_findings`, `knowledge_refs` and `correction_of` examples/ownership. Source identity survives Epic directory moves.
+
+Search defaults to literal all-term matching; `--match any` uses literal OR. Filters and exact BM25 ordering apply before limits. No embeddings or semantic recall are implied. CLI query attempts best-effort record isolated `search_query` events under `.ai/local/metrics/search/` with timestamp, known workflow ID (or unknown), matching mode, duration, known result count and success/error. No query text, source content, snippets, prompts or raw exceptions are stored. A telemetry failure warns on stderr and preserves the query outcome. `metrics.search` aggregates separately from role/task metrics, reporting unknown counts and zero-result rates. Manual searches and direct library calls are not measured; invocation counts do not establish reads, reuse or task quality. The index and metrics are disposable caches, never lifecycle evidence.

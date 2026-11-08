@@ -78,7 +78,8 @@ def render(bundle_root, root, config=None, overlay=None):
         overlay = project_source(overlay_path) if within(root, overlay_path).exists() else ""
     if within(root, RULES_DECLARATION).exists():
         project_source(RULES_DECLARATION)
-    rules_block = rules_statement_block(load_rules(root))
+    rule_contract = yaml_value(bundle_source("framework/contracts.yaml"))
+    rules_block = rules_statement_block(load_rules(root, contracts=rule_contract))
     router = env.from_string(bundle_source("templates/adapters/codex/AGENTS.md")).render(
         custom={"router_shared": overlay, "rules_block": rules_block})
     if len(router.splitlines()) > 150 or "{{" in router:

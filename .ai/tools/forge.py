@@ -74,6 +74,9 @@ def parser():
     c.add_argument("--reuse", action="store_true")
     c.add_argument("--task", help="Record observed check metrics for this canonical TASK")
     sub.add_parser("metrics")
+    c = sub.add_parser("knowledge-check", help="Read-only finding applicability; never proof of truth")
+    c.add_argument("path")
+    c.add_argument("--finding")
     c = sub.add_parser("metrics-record")
     c.add_argument("packet")
     c = sub.add_parser("task-start-check")
@@ -139,6 +142,8 @@ def parser():
     c.add_argument("--area")
     c.add_argument("--since", help="YYYY-MM or YYYY-MM-DD floor on recorded dates")
     c.add_argument("--limit", type=int, default=20)
+    c.add_argument("--match", default="all", help="Literal term matching: all (default) or any")
+    c.add_argument("--workflow", help="Known Forge skill ID for local search telemetry")
     index = sub.add_parser("index", help="Derived search index maintenance")
     index_sub = index.add_subparsers(dest="index_command", required=True)
     index_sub.add_parser("rebuild")
@@ -298,10 +303,13 @@ def main(argv=None):
         from forge_lifecycle import commit_scoped
         result = commit_scoped(root, args.path, args.message, args.paths, args.authorized)
     elif args.command == "query":
-        from forge_index import query as index_query
+        from forge_index import query_observed
         kinds = ([value.strip().upper() for value in args.kind.split(",") if value.strip()]
                  if args.kind else None)
-        result = index_query(root, args.text, kinds, args.area, args.since, args.limit)
+        result = query_observed(root, args.text, kinds, args.area, args.since, args.limit, args.match, args.workflow)
+    elif args.command == "knowledge-check":
+        from forge_knowledge import knowledge_check
+        result = knowledge_check(root, args.path, args.finding)
     elif args.command == "index":
         from forge_index import rebuild as index_rebuild, status as index_status
         result = index_rebuild(root) if args.index_command == "rebuild" else index_status(root)

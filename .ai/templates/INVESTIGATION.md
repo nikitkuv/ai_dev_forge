@@ -9,6 +9,8 @@ updated_at: "<YYYY-MM-DD>"
 baseline_revision: "<Git revision or explicit working-tree description>"
 relevant_paths: []
 research_refs: []
+knowledge_refs: []
+reusable_findings: []
 ---
 
 # INV-NNNN — <Investigation Subject>
@@ -84,3 +86,11 @@ Complete this section only for `outcome: fixed_directly`. Git remains authoritat
 | Date | Outcome | Reason or reference |
 | --- | --- | --- |
 | <YYYY-MM-DD> | <no_action/promoted/fixed_directly/unresolved> | <Reason or linked work> |
+
+## Reused Experience
+
+<Optional: explain only experience that materially influenced this work. Keep logical finding references, rationale and checked revision in knowledge_refs; preserve applicable reciprocal research_refs. Read the canonical source and check applicability before reuse. Leave empty when no experience was reused.>
+
+## Reusable Findings
+
+<Optional: capture materially reusable successful strategies, constraints or failed approaches in reusable_findings frontmatter; see CONVENTIONS.md, Evidence-backed knowledge. Add nuance here only when needed, without duplicating structured claims. No lesson is required after routine work. Hypotheses are not verified rules; preserve original evidence in additive corrections.>

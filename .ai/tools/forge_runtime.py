@@ -244,10 +244,32 @@ def metrics_record(root, event):
     return {"recorded": path.relative_to(root).as_posix()}
 
 
+def search_metrics_record(root, *, workflow, match, duration_seconds, result_count, outcome):
+    event = dict(event_type="search_query", recorded_at=time.time(), workflow=workflow, match=match,
+                 duration_seconds=duration_seconds, result_count=result_count, outcome=outcome)
+    # Older bundles scan only root metric files; keep rollback compatible.
+    path = within(root, f".ai/local/metrics/search/{uuid.uuid4().hex}.json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(canonical(event), encoding="utf-8")
+
+
 def metrics(root):
-    groups = {}
-    for path in sorted(within(root, ".ai/local/metrics").glob("*.json")):
+    groups, searches = {}, {}
+    paths = list(within(root, ".ai/local/metrics").glob("*.json"))
+    paths.extend(within(root, ".ai/local/metrics/search").glob("*.json"))
+    for path in sorted(paths):
         event = json.loads(within(root, path).read_text(encoding="utf-8"))
+        if event.get("event_type") == "search_query":
+            entry = searches.setdefault(event.get("workflow", "unknown"), dict(
+                invocations=0, successes=0, failures=0, zero_results=0, unknown_result_count=0, duration_seconds=0))
+            entry["invocations"] += 1
+            entry["successes"] += event.get("outcome") == "success"
+            entry["failures"] += event.get("outcome") == "error"
+            entry["zero_results"] += event.get("result_count") == 0
+            entry["unknown_result_count"] += event.get("result_count") is None
+            entry["duration_seconds"] += event.get("duration_seconds") or 0
+            entry["zero_result_rate"] = entry["zero_results"] / entry["successes"] if entry["successes"] else None
+            continue
         key = event["track"] + ":" + str(event.get("stage", "unknown"))
         group = groups.setdefault(key, {"events": 0, "known_input_tokens": 0, "known_output_tokens": 0,
                                         "events_missing_usage": 0, "duration_seconds": 0})
@@ -275,7 +297,9 @@ def metrics(root):
         if event.get("escalation_reason"):
             reason = event["escalation_reason"]
             reasons[reason] = reasons.get(reason, 0) + 1
-    return {"groups": groups, "note": "Observed usage only; missing usage is unknown, not zero cost. Compare similar tasks."}
+    return {"groups": groups, "search": searches,
+            "search_coverage": "CLI query invocations only; not proof of reads, useful reuse or task success. Manual/library search is unmeasured.",
+            "note": "Observed usage only; missing usage is unknown, not zero cost. Compare similar tasks."}
 
 
 def record_observation(root, task, operation, result):

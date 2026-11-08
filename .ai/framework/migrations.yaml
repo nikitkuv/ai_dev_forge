@@ -63,6 +63,14 @@ versions:
       - Framework migration becomes a deterministic local command; stage the new bundle at .ai-next/ and run python .ai-next/tools/forge.py migrate. The manual agent-driven path remains the documented fallback when Python is unavailable.
   "4.13":
     notes:
+      - Epic planning uses the staged interview in bootstrap and ordinary preparation; Contract Sketch constrains public contract shape. Previously approved plans and legacy TASKs continue without backfill or re-interview.
+      - Scoped commits refuse unrelated staged changes without altering the index and support tracked deletions. Acceptance ignores template choice rows, rule conformance detects removed declarations, and migration renders rules against the staged bundle contract.
       - Optional project rule declarations (.ai/custom/rules.yaml, template .ai/templates/rules.yaml) render a compact Project Rules block into the router and add a report-only deterministic drift check; absent or empty declarations behave exactly like before and every violated rule requires an authorized disposition.
       - TASK and plan templates gain an optional Process Follow-up block recorded at acceptance when a delivery missed its goal despite green checks; legacy acceptance records stay valid and are never blocked by its absence.
       - ARCHITECTURE.md gains an optional Critical Surfaces section that focuses human spot-checks and Task Review Focus without changing any review, testing, or gating requirement.
+
+  "4.14":
+    notes:
+      - Optional evidence-backed findings and knowledge references require no legacy backfill and add no lifecycle gates. Completed history remains protected; corrections use new source-linked records.
+      - Search adds explicit all/any matching and disposable local invocation metrics; no new dependency or database migration is required.
+      - Explicit forge-consolidate-knowledge reviews bounded history without automatic instruction changes; adapter synchronization adds the skill while preserving project-owned content.

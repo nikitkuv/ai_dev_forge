@@ -15,7 +15,7 @@ from forge_core import (ARCHIVE_PATH, ForgeError, archived_backlog_rows, backlog
                         digest, frontmatter, text, within)
 
 INDEX_PATH = ".ai/local/index.db"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # Rebuild older caches that may retain replaced FTS rows.
 INVENTORY_ROOTS = ["execution/planned", "execution/active", "execution/paused", "execution/completed",
                    "investigations", "intents"]
 KIND_BY_TYPE = {"task": "TASK", "investigation": "INV", "intent": "INT", "epic_plan": "PLAN"}
@@ -71,7 +71,9 @@ def _first_heading(content):
 def _record(path, ident, kind, body, subject=None, area=None, status=None, outcome=None,
             created_at=None, updated_at=None, epic_id=None, refs=None, mtime=0.0):
     fields = {"id": ident, "kind": kind, "subject": subject, "area": area, "status": status, "outcome": outcome,
-              "created_at": created_at, "updated_at": updated_at, "epic_id": epic_id, "refs": refs, "body": body}
+              "created_at": str(created_at) if created_at is not None else None,
+              "updated_at": str(updated_at) if updated_at is not None else None,
+              "epic_id": epic_id, "refs": refs, "body": body}
     sha = digest(canonical(fields).encode())
     return {"path": path, "mtime": float(mtime), "sha256": sha,
             "fts_rowid": int(sha[:15], 16), **{key: value for key, value in fields.items() if key != "body"},
@@ -225,6 +227,9 @@ def _write(conn, fresh, removed):
             conn.execute("DELETE FROM records_fts WHERE rowid = ?", (row[0],))
         conn.execute("DELETE FROM records WHERE path = ?", (path,))
     for record in fresh.values():
+        old = conn.execute("SELECT fts_rowid FROM records WHERE path = ?", (record["path"],)).fetchone()
+        if old:
+            conn.execute("DELETE FROM records_fts WHERE rowid = ?", (old[0],))
         conn.execute("""INSERT OR REPLACE INTO records(path, id, kind, subject, area, status, outcome,
                         created_at, updated_at, epic_id, refs, mtime, sha256, fts_rowid)
                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
@@ -277,51 +282,69 @@ def status(root):
         conn.close()
 
 
-def _match_expression(query_text):
+def _match_expression(query_text, match="all"):
     """Quote every term so user text can never inject FTS operators."""
+    if match not in ("all", "any"):
+        raise ForgeError("Matching mode must be all or any")
     tokens = []
     for token in query_text.split():
         tokens.extend(part for part in token.replace('"', " ").split() if part)
     if not tokens:
         raise ForgeError("Query needs at least one non-empty term")
-    return " ".join(f'"{token}"' for token in tokens)
+    return (" AND " if match == "all" else " OR ").join(f'"{token}"' for token in tokens)
 
 
-def query(root, query_text, kinds=None, area=None, since=None, limit=20):
+def query(root, query_text, kinds=None, area=None, since=None, limit=20, match="all"):
     """Ranked pointers into canonical files; never bodies, never a judgment."""
     if kinds is not None and not kinds:
         raise ForgeError("Empty --kind filter")
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+        raise ForgeError("Query limit must be positive")
+    expression = _match_expression(query_text, match)
     freshness = reconcile(root)
     conn = _connect(root)
     try:
-        expression = _match_expression(query_text)
-        matches = conn.execute("SELECT id, bm25(records_fts) FROM records_fts WHERE records_fts MATCH ? LIMIT 500",
-                               (expression,)).fetchall()
-        catalog = conn.execute("""SELECT path, id, kind, subject, area, status, outcome, created_at, updated_at,
-                                  fts_rowid FROM records""").fetchall()
-        by_id = {}
-        for row in catalog:
-            by_id.setdefault(row[1], []).append(row)
-        results = []
-        for ident, score in matches:
-            for (path, _, kind, subject, row_area, row_status, outcome, created_at, updated_at, fts_rowid) in by_id.get(ident, ()):
-                if kinds is not None and kind not in kinds:
-                    continue
-                if area is not None and (row_area or "") != area:
-                    continue
-                if since is not None:
-                    date = created_at or updated_at
-                    if not date or str(date) < since:
-                        continue
-                snippet = conn.execute(
-                    "SELECT snippet(records_fts, 0, '', '', '…', 16) FROM records_fts WHERE rowid = ?",
-                    (fts_rowid,)).fetchone()
-                results.append({"id": ident, "kind": kind, "path": path, "score": round(score, 4) + 0.0,
-                                "subject": subject, "status": row_status, "outcome": outcome,
-                                "snippet": snippet[0] if snippet else None})
-        results.sort(key=lambda item: (item["score"], item["id"], item["path"]))
+        filters, parameters = ["records_fts MATCH ?"], [expression]
+        if kinds is not None:
+            filters.append("r.kind IN (" + ",".join("?" for _ in kinds) + ")")
+            parameters.extend(kinds)
+        if area is not None:
+            filters.append("coalesce(r.area, '') = ?")
+            parameters.append(area)
+        if since is not None:
+            filters.append("coalesce(nullif(r.created_at, ''), r.updated_at) >= ?")
+            parameters.append(since)
+        rows = conn.execute("""SELECT r.id, r.kind, r.path, bm25(records_fts), r.subject, r.status,
+            r.outcome, snippet(records_fts, 0, '', '', '…', 16)
+            FROM records_fts JOIN records r ON r.fts_rowid = records_fts.rowid WHERE """
+            + " AND ".join(filters) + " ORDER BY bm25(records_fts), r.id, r.path LIMIT ?",
+            [*parameters, limit]).fetchall()
+        results = [dict(zip(("id", "kind", "path", "score", "subject", "status", "outcome", "snippet"), row)) for row in rows]
         return {"query": query_text, "filters": {"kind": kinds, "area": area, "since": since},
-                "freshness": freshness, "results": results[:limit], "returned": min(len(results), limit),
+                "match": match, "freshness": freshness, "results": results, "returned": len(results),
                 "note": "Ranked pointers only; read the canonical file before relying on any record"}
     finally:
         conn.close()
+
+
+def query_observed(root, query_text, kinds=None, area=None, since=None, limit=20, match="all", workflow=None):
+    """CLI-only measurement. Query text and exception messages never enter telemetry."""
+    import sys
+    import time
+    from forge_core import load_yaml
+    from forge_runtime import search_metrics_record
+    start, count, outcome, label = time.monotonic(), None, "error", "unknown"
+    try:
+        if workflow is not None:
+            if workflow not in load_yaml(root, ".ai/framework/manifest.yaml").get("skills", []):
+                raise ForgeError("Unknown search workflow")
+            label = workflow
+        result = query(root, query_text, kinds, area, since, limit, match)
+        count, outcome = result["returned"], "success"
+        return result
+    finally:
+        try:
+            search_metrics_record(root, workflow=label, match=match if match in ("all", "any") else "unknown",
+                                  duration_seconds=time.monotonic() - start, result_count=count, outcome=outcome)
+        except (OSError, ForgeError, ValueError):
+            print("Warning: search telemetry unavailable; search outcome is unchanged", file=sys.stderr)
