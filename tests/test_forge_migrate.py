@@ -40,7 +40,7 @@ class Repository(unittest.TestCase):
         return target
 
     def consumer(self, mode="native_subagents"):
-        """A realistic 4.11 consumer: template-shaped project.yaml plus a shared overlay."""
+        """A consumer using the current project template and a shared overlay."""
         shutil.copytree(ROOT / ".ai", self.root / ".ai", ignore=shutil.ignore_patterns("local", "__pycache__"))
         config = core.text(ROOT, ".ai/templates/project.yaml")
         if mode is None:
@@ -259,8 +259,14 @@ class PreviewTests(Repository):
 
     def test_preview_lists_rule_template_as_additive(self):
         self.consumer()
+        shipped = core.load_yaml(ROOT, ".ai/framework/manifest.yaml")["framework"]["version"]
+        manifest = core.load_yaml(self.root, ".ai/framework/manifest.yaml")
+        manifest["framework"]["version"] = "4.12.0"
+        self.write(".ai/framework/manifest.yaml", core.canonical(manifest))
+        self.write(".ai/project.yaml", migration.update_yaml_text(
+            core.text(self.root, ".ai/project.yaml"), "version", "4.12.0"))
         (self.root / ".ai/templates/rules.yaml").unlink()
-        self.stage()
+        self.stage(version=shipped, modify=False)
         shutil.copy(ROOT / ".ai/templates/rules.yaml", self.root / ".ai-next/templates/rules.yaml")
         result, _ = migration.preview_migrate(self.root)
         self.assertTrue(result["passed"])

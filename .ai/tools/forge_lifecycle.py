@@ -960,7 +960,7 @@ def accept_record(root, task_path, accepted_by, decision_ref, notes=None, resolv
     if any(value is not None for value in (followup_root_cause, followup_fix_target, followup_rationale, followup_disposition)):
         content = _record_followup(content, contracts, followup_root_cause, followup_fix_target,
                                    followup_rationale, followup_disposition)
-    corrected = any("changes requested" in row.get("Result", "")
+    corrected = any(recorded(row.get("Result", "")) == "changes requested"
                     for row in table_rows(content, "User Validation", {"Result"}, optional=True))
     if corrected and _followup_present(content):
         recorded_values = process_followup_values(content)
@@ -997,6 +997,30 @@ def accept_record(root, task_path, accepted_by, decision_ref, notes=None, resolv
     return mutation_apply(root, "accept-record", updates, apply_token, validator=_validate_project)
 
 
+def _commit_git(root, arguments):
+    result = git_capture(root, ["--literal-pathspecs"] + arguments)
+    if result["exit_code"]:
+        raise ForgeError("Git scope inspection failed: " + result["stderr"].strip())
+    return result["stdout"]
+
+
+def _git_paths(root, arguments):
+    return {path for path in _commit_git(root, arguments).split("\0") if path}
+
+
+def _head_paths(root):
+    head = git_capture(root, ["rev-parse", "--verify", "--quiet", "HEAD"])
+    if head["exit_code"] == 0:
+        return _git_paths(root, ["ls-tree", "-r", "--name-only", "-z", "HEAD"])
+    if head["exit_code"] == 1:
+        # A missing HEAD is expected only for a symbolic, unborn branch.
+        branch = _commit_git(root, ["symbolic-ref", "-q", "HEAD"]).strip()
+        ref = git_capture(root, ["show-ref", "--verify", "--quiet", branch])
+        if ref["exit_code"] == 1:
+            return set()
+    raise ForgeError("Git scope inspection failed: cannot read HEAD; " + head["stderr"].strip())
+
+
 def commit_scoped(root, task_path, message=None, paths=None, authorized=False):
     """Stage exactly the recorded scope; commit only under the configured policy."""
     config = within(root, ".ai/project.yaml")
@@ -1006,15 +1030,29 @@ def commit_scoped(root, task_path, message=None, paths=None, authorized=False):
     state = workflow_state(content)
     recorded_paths = [p for p in ((state.get("review_packet") or {}).get("changed_paths") or []) if recorded(p)]
     scoped = [task_path] + list(paths or recorded_paths)
-    scoped = list(dict.fromkeys(scoped))
-    missing = [p for p in scoped if not within(root, p).exists()]
+    scoped = list(dict.fromkeys(within(root, p).relative_to(Path(root).resolve()).as_posix() for p in scoped))
+    index_paths = _git_paths(root, ["ls-files", "--cached", "-z"])
+    tracked = index_paths | _head_paths(root)
+
+    def under(path, scope):
+        return scope == "." or path == scope or path.startswith(scope.rstrip("/") + "/")
+
+    missing = [p for p in scoped if not within(root, p).exists() and not any(under(t, p) for t in tracked)]
     if missing:
         raise ForgeError("Scoped paths missing from disk: " + ", ".join(missing))
     title = next((line[2:].strip() for line in content.splitlines() if line.startswith("# ")), meta.get("id", "task"))
     proposed = message or f"{meta.get('id', 'TASK')}: {title}"
-    status = git_capture(root, ["status", "--porcelain=v1", "--untracked-files=all"])
-    changed = [line[3:].strip('"') for line in status["stdout"].splitlines() if line.strip()]
-    excluded = sorted(set(changed) - set(scoped))
+
+    def outside_scope(paths):
+        return sorted(path for path in paths if not any(under(path, scope) for scope in scoped))
+
+    def staged_paths():
+        return _git_paths(root, ["diff", "--cached", "--name-only", "--no-renames", "-z"])
+
+    staged_before = staged_paths()
+    changed = (staged_before | _git_paths(root, ["diff", "--name-only", "--no-renames", "-z"])
+               | _git_paths(root, ["ls-files", "--others", "--exclude-standard", "-z"]))
+    excluded = outside_scope(changed)
     report = {"policy": policy, "authorized": authorized, "scoped": scoped, "excluded_unrelated": excluded,
               "proposed_message": proposed, "committed": False}
     if policy != "auto_commit_after_acceptance" or not authorized:
@@ -1023,9 +1061,19 @@ def commit_scoped(root, task_path, message=None, paths=None, authorized=False):
         return report
     if meta.get("status") != "DONE":
         raise ForgeError("The auto-commit policy requires the TASK to be DONE after explicit acceptance")
-    staged = git_capture(root, ["add", "--"] + scoped)
-    if staged["exit_code"]:
-        raise ForgeError("git add failed: " + staged["stderr"].strip())
+    unrelated = outside_scope(staged_before)
+    if unrelated:
+        raise ForgeError("Unrelated staged paths; preserve or commit them separately: " + ", ".join(unrelated))
+    # Already staged deletions are absent from both disk and index: git add
+    # cannot match them again, and the intended removal is already staged.
+    to_stage = [p for p in scoped if within(root, p).exists() or any(under(t, p) for t in index_paths)]
+    if to_stage:
+        staged = git_capture(root, ["--literal-pathspecs", "add", "--"] + to_stage)
+        if staged["exit_code"]:
+            raise ForgeError("git add failed: " + staged["stderr"].strip())
+    unrelated = outside_scope(staged_paths())
+    if unrelated:
+        raise ForgeError("Unrelated staged paths appeared before commit: " + ", ".join(unrelated))
     committed = git_capture(root, ["commit", "-m", proposed], timeout=120)
     if committed["exit_code"]:
         raise ForgeError("git commit failed: " + committed["stderr"].strip())

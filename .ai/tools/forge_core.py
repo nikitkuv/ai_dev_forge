@@ -536,8 +536,12 @@ def context(root, offset=0, limit=30, include_completed=False):
 RULES_DECLARATION = ".ai/custom/rules.yaml"
 
 
-def load_rules(root):
-    """Validated project rule declarations; an absent declaration declares no rules."""
+def load_rules(root, contracts=None):
+    """Validate project rules using the supplied bundle contract or the active one.
+
+    An absent declaration declares no rules. Staged renderers supply their own
+    contract so migration never depends on the old bundle's rule support.
+    """
     if not within(root, RULES_DECLARATION).exists():
         return []
     data = load_yaml(root, RULES_DECLARATION)
@@ -548,7 +552,9 @@ def load_rules(root):
         rules = []
     if not isinstance(rules, list):
         raise ForgeError("Project rules declaration requires a rules list")
-    kinds = load_yaml(root, ".ai/framework/contracts.yaml")["enums"]["project_rule_kinds"]
+    if contracts is None:
+        contracts = load_yaml(root, ".ai/framework/contracts.yaml")
+    kinds = contracts["enums"]["project_rule_kinds"]
     seen, validated = set(), []
     for index, rule in enumerate(rules, start=1):
         if not isinstance(rule, dict):
@@ -664,7 +670,7 @@ def router_rule_statements(router_content):
 def rules_router_divergence(root):
     """Statement divergence between the router block and rules.yaml; empty when unverifiable."""
     rules = load_rules(root)
-    if not rules or not within(root, "AGENTS.md").exists():
+    if not within(root, "AGENTS.md").exists():
         return []
     rendered = router_rule_statements(text(root, "AGENTS.md"))
     errors = []

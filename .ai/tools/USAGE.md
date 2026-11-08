@@ -245,7 +245,7 @@ python .ai/tools/forge.py index status
 python .ai/tools/forge.py commit-scoped execution/active/EPIC-001-example/tasks/TASK-001.md --authorized
 ```
 
-Stages exactly the TASK's recorded `review_packet.changed_paths` plus the TASK file (or an explicit `--paths` list), reports unrelated working-tree changes it excludes, and proposes the commit message. Under `manual` policy or without `--authorized` it commits nothing and reports what it would stage. Under `auto_commit_after_acceptance` with `--authorized` it requires the TASK to be `DONE` and commits only the staged scope. It never uses `git add -A`; unrelated user work stays out of the commit by construction.
+Stages exactly the TASK's recorded `review_packet.changed_paths` plus the TASK file (or an explicit `--paths` list), reports unrelated working-tree changes it excludes, and proposes the commit message. Under `manual` policy or without `--authorized` it stages and commits nothing and reports what it would stage. Under `auto_commit_after_acceptance` with `--authorized` it requires the TASK to be `DONE`. Unrelated staged paths cause refusal before staging or committing; their index contents remain untouched and must be handled separately. Tracked deletions are supported, including already staged deletions; missing unknown paths are rejected. Directory scope includes descendants, and paths are literal, including spaces and non-ASCII names. The staged set is checked again before commit. Run without concurrent Git writers; the helper does not hold the index lock across separate Git commands.
 
 ## Bounded authorization
 

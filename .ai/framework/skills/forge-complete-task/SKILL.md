@@ -44,7 +44,7 @@ The commit gate follows Task Acceptance; it never precedes or constitutes user a
 - `manual`: after explicit Task Acceptance and transition to `DONE`, show the exact scoped files and proposed commit message, then wait for separate explicit commit authorization.
 - `auto_commit_after_acceptance`: commit only the accepted TASK's scoped changes after current track-specific evidence (passing fast assurance or clean standard review plus selected testing, including any accepted exception), explicit Task Acceptance, and transition to `DONE`.
 
-Never include unrelated user changes in the commit.
+Never include unrelated user changes in the commit. If `commit-scoped` reports unrelated staged paths, leave their index contents untouched and resolve their disposition separately; never bypass the refusal with an unscoped commit. Tracked deletions in the accepted scope are supported.
 
 ## Preserve the next gate
 
