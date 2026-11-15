@@ -804,6 +804,8 @@ def conformance_errors(root, contracts):
                 errors.append(f"Missing mutation run record: {identity}")
         for identity in sorted(on_disk - set(identities)):
             errors.append(f"Unregistered mutation run record: {identity}")
+        from forge_mutation import campaign_errors
+        errors.extend(campaign_errors(root, data))
     return errors
 
 

@@ -1,6 +1,11 @@
 schema_version: 1
 next_id: MUT-0001
 runs: []
+next_campaign_id: MTC-0001
+campaigns: []
+
+# Campaign keys are optional in existing schema-1 registries. Add lazily on the
+# first campaign; campaigns/MTC-NNNN.yaml owns the ordered queue and return point.
 
 # Allocate IDs monotonically from next_id and never reuse a deleted or cancelled
 # identity. The orchestrator updates this registry atomically with the matching

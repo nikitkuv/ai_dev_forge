@@ -1,14 +1,18 @@
 ---
 name: forge-mutation-test
-description: Run or analyze an explicitly requested lifecycle-independent mutation-testing audit, preserve a durable MUT record, and never change development state automatically.
+description: Plan, run, resume or close an explicitly requested mutation campaign, analyze retained results, and return from approved fixes without changing development state automatically.
 ---
 
 # Run On-Demand Mutation Testing
 
+Read `.ai/framework/mutation-testing.md` for campaign planning, batching, checkpoints, development handoff, verification and closure. Use `.ai/templates/mutation-campaign.yaml` for new campaigns. New requests use a campaign even when one batch suffices; historical standalone MUT records remain supported without conversion.
+
+For resume/return/closure, reconstruct the campaign, linked run records and relevant canonical work first. Honor recorded scope and remaining authority/budget. Select the persisted next action: remaining initial batch, unanalyzed candidate slice, finding disposition, approved repair return, affected-batch verification, or objective-specific closure. Never restart all batches just because the session changed, treat Task completion as mutation verification, or silently stop after the first batch.
+
 ## Establish the independent request
 
 1. Require an explicit user request and exact repository scope. Mutation testing may run with no Epic or TASK and during any Epic or TASK status.
-2. Distinguish three requests:
+2. Distinguish new campaigns and campaign resume/return/closure; within them distinguish three execution/analysis requests:
    - a new metrics-only run, which is the default;
    - a new run with explicitly authorized immediate analysis;
    - deferred analysis of one existing `MUT-NNNN` record.
@@ -30,13 +34,17 @@ Do not create a Markdown report. Keep raw backend artifacts untracked by default
 
 Metrics-only is the default. Without explicit analysis authorization, set `analysis.authorized: false` and `analysis.status: not_requested`, present the compact metrics, persist the record, and stop without invoking a strong model.
 
+Here stopping ends this run's analysis stage. Continue other already authorized campaign batches within budget. Use `audit_first` unless the recorded policy is `batch_then_fix`; that policy waits for finding disposition and approved repair verification before advancing. Neither policy authorizes remediation on its own.
+
 ## Invoke strong analysis only when authorized and useful
 
 For immediate analysis, continue only when the user explicitly authorized it and current normalized results contain surviving, no-coverage, or explicitly configured candidates. Skip the analyzer and record `skipped_no_candidates` when all mutants are killed or no configured candidate exists. Also skip it after baseline failure, SETUP REQUIRED, cancellation, unusable or stale artifacts, or zero analysis budget.
 
-For deferred analysis, read the requested existing run, verify its fingerprint and retained normalized artifact checksum against current scope, and never repeat the mutation campaign. If evidence is stale or missing, record `stale` or `blocked` and ask whether the user wants a new run; do not invoke the analyzer.
+For deferred analysis, read the requested existing run, verify its fingerprint and retained normalized artifact checksum against current scope, and never repeat the mutation campaign merely to analyze current artifacts. If evidence is stale or missing, record `stale` or `blocked`; do not invoke the analyzer. Route a fresh run through existing campaign refresh/verification authority when it covers the exact scope and remaining budget; otherwise ask whether the user wants a new run.
 
 Build one bounded Analysis Packet and invoke `mutation-analyzer` at strong tier. Validate classifications, confidence, locations, relevant tests, rationales, candidate counts, budget, fingerprint and artifact checksum. Record `completed` or `partial`, compact findings and exact remaining count in the same `MUT-NNNN` file. Never allocate another run ID for deferred analysis.
+
+Persist exact analyzed and remaining candidate IDs and a slice ledger. Resume only remaining candidates within cumulative campaign budget; counts alone are not a continuation cursor. Retain normalized results needed for deferred analysis. After scoped inputs change, create a new authorized verification/refresh run and reconcile findings; do not analyze old candidates as current evidence.
 
 ## Preserve lifecycle isolation and route later decisions
 
@@ -45,3 +53,5 @@ Starting, running, cancelling, blocking, recording or analyzing mutation testing
 Present scope, fingerprint, commands, budgets, backend version, baseline, normalized metrics, analysis invocation or skip rationale, compact findings, limitations and record path. Do not automatically remediate anything.
 
 Only after a separate user request may accepted follow-up use an existing Forge workflow: current unaccepted Task feedback, bug intake for an observable defect in accepted code, Replan into compatible work, or a new test-hardening Epic. Update `disposition` with informational references only after that workflow approves the identities; mutation history never controls their state.
+
+Persist reciprocal references to campaign, batch, MUT and candidate IDs in the approved work's existing context/verification sections. Store the return action before handing off. On return, recheck all affected batch fingerprints, run new verification attempts within authority, then resume the first unfinished/stale batch. Close only under the objective-specific rules in `mutation-testing.md`; record accepted exceptions separately from a fully verified outcome. Task/Epic acceptance and campaign closure are independent.

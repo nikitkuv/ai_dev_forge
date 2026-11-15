@@ -6,6 +6,70 @@ Provide reproducible, explicitly requested mutation-testing audits of existing t
 
 ## Requirements
 
+### Requirement: Campaigns preserve ordered bounded execution and continuation
+New mutation audits SHALL persist an independent `MTC-NNNN` campaign with exact ordered batches, objective, policy, authorization, finite cumulative execution/analysis budgets, verification-round limit and recovery checkpoint. Small scopes SHALL use one batch; larger scopes SHALL use backend-supported component/file selections with a planning target of 200 mutants per batch, documented exceptions and explicit coverage of the declared scope. Unknown cost SHALL use a small scoped pilot. Legacy standalone MUT records SHALL remain valid without conversion.
+
+#### Scenario: Two thousand estimated mutants
+- **WHEN** the selected scope is estimated at 2000 mutants and backend selection supports partitioning
+- **THEN** the orchestrator records approximately ten bounded batches before execution and continues authorized batches within budget without repeating permission requests
+- **AND** the number of ordinary tests is not used as a mutant count
+
+#### Scenario: Unknown backend partition capability
+- **WHEN** the backend cannot shard an oversized file or report an exact remainder
+- **THEN** the orchestrator records the limitation and uses an explicit bounded full selection rather than inventing commands or claiming complete partial coverage
+
+### Requirement: Campaign policy determines when findings enter development
+The default policy SHALL be `audit_first`, collecting and analyzing all authorized batches before consolidating remediation. Explicit `batch_then_fix` SHALL preserve a return point after the current batch's analysis, route approved fixes through existing development workflows, and verify that batch before proceeding. Metrics-only SHALL never imply analysis or remediation. Finding classifications SHALL remain separate from dispositions and approval.
+
+#### Scenario: Survivors in the first batch
+- **WHEN** the first batch contains survivors under `audit_first`
+- **THEN** the orchestrator completes the bounded batch, records authorized analysis and continues the remaining audit queue without automatically creating development work
+
+#### Scenario: Incremental test hardening
+- **WHEN** `batch_then_fix` finds actionable gaps and the user approves repair work
+- **THEN** the orchestrator stores campaign/batch/run/candidate references and a return action in campaign and approved work records, waits for fixes, and does not require a separate Epic for each batch
+
+### Requirement: Analysis and execution resume from durable identities
+The system SHALL retain exact analyzed and remaining candidate IDs scoped to a MUT run, analysis slices and consumed budgets. Continuation SHALL use remaining candidates without rerunning a current backend result or reanalyzing completed slices. Interrupted or partial execution SHALL retain known completed and remaining selections and SHALL NOT count incomplete coverage as a completed batch. Session history SHALL NOT be required to reconstruct the next action.
+
+#### Scenario: Analysis resumes in another session
+- **WHEN** one analysis slice is complete and its normalized artifact and scoped inputs remain current
+- **THEN** the next slice updates the same MUT record using only remaining IDs and remaining cumulative budget
+
+#### Scenario: Execution budget exhausted
+- **WHEN** a campaign reaches its execution, analysis or verification limit with work remaining
+- **THEN** it pauses with the exact remainder and resumes only within an authorized extension, never silently completing or repeating indefinitely
+
+### Requirement: Development completion returns to fresh mutation verification
+Linked Task/Epic completion and development resume SHALL surface the campaign return point without running a backend or adding a lifecycle gate. Accepted fixes SHALL NOT count as killed mutants. Each verification/refresh SHALL allocate a new MUT record, recheck all potentially affected batch fingerprints including shared inputs, and reconcile old/new findings by behavioral evidence rather than backend numeric ID. Full affected-batch evidence SHALL be required for ordinary hardening closure.
+
+#### Scenario: First batch fixed and verified
+- **WHEN** approved B001 repairs have current full-batch verification under `batch_then_fix`
+- **THEN** the campaign continues the first unfinished or stale batch from its persisted queue, including B002 when it is next, without losing other batches
+
+#### Scenario: Shared fixture changes
+- **WHEN** a repair changes a shared test fixture used by previously measured batches
+- **THEN** every affected batch is marked stale and refreshed before its evidence contributes to ordinary closure
+
+#### Scenario: Mutant disappears after a fix
+- **WHEN** a prior mutant ID is absent from the new backend output
+- **THEN** the finding remains unresolved until a behavior/location/operator mapping or an explicit disposition explains it; absence alone is not a kill
+
+### Requirement: Campaign closure reflects the requested objective and residual work
+Campaigns SHALL close as `metrics_collected`, `analyzed`, or `verified` only with complete current evidence appropriate to `metrics_only`, `audit`, or `hardening` respectively. Retries SHALL NOT be double-counted; incomparable results SHALL NOT be presented as one current score. Omitted work or unverified promised fixes SHALL require an explicit `accepted_exceptions` decision identifying the residual risk. Cancellation SHALL preserve remaining work as cancellation rather than success. Closed history SHALL remain available and subsequent campaigns SHALL link to it rather than rewriting it.
+
+#### Scenario: Metrics-only campaign has survivors
+- **WHEN** all planned measurements are complete/current but analysis was not requested
+- **THEN** the campaign may close as `metrics_collected` while explicitly reporting unanalyzed survivors and making no hardening claim
+
+#### Scenario: Repair Epic accepted with verification pending
+- **WHEN** a repair Epic is accepted but required campaign verification is missing or stale
+- **THEN** development acceptance remains independent and the campaign stays unfinished unless the user explicitly accepts the named exceptions
+
+#### Scenario: Complete hardening with equivalent mutants
+- **WHEN** every actionable finding is verified, remaining nonactionable findings have reasoned dispositions and full required evidence is current
+- **THEN** the campaign may close as `verified` without demanding a 100 percent mutation score
+
 ### Requirement: Mutation testing is an independent on-demand operation
 The system SHALL start mutation testing only after an explicit user request that identifies or approves the production-code scope, and SHALL permit the operation regardless of whether any Epic or TASK exists or which lifecycle status it has. Starting, completing, blocking, cancelling, or analyzing a mutation run MUST NOT change Backlog, Epic, TASK, review, testing, validation, fuzzing, acceptance, or commit state; satisfy a development quality gate; or invalidate development evidence.
 

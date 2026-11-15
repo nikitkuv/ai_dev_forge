@@ -21,8 +21,8 @@ test("project template requires an explicit valid role mode", async () => {
   assert.match(project, /schema_version: 2/);
   assert.match(project, /role_execution:\n  mode: null/);
   assert.match(project, /strong: \{model: gpt-6.1-sol, reasoning_effort: high\}/);
-  assert.match(project, /balanced: \{model: gpt-6-luna, reasoning_effort: xhigh\}/);
-  assert.match(project, /fast: \{model: gpt-5\.6-luna, reasoning_effort: medium\}/);
+  assert.match(project, /balanced: \{model: gpt-6\.1-terra, reasoning_effort: high\}/);
+  assert.match(project, /fast: \{model: gpt-6-luna, reasoning_effort: medium\}/);
   const valid = new Set(["claude_with_codex", "codex_with_claude", "native_subagents"]);
   for (const mode of valid) assert.equal(valid.has(mode), true);
   for (const mode of [undefined, null, "auto", "claude", "reviewer:codex"]) assert.equal(valid.has(mode), false);

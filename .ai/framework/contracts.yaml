@@ -145,6 +145,24 @@ mutation_testing:
   invocation: explicit_user_request_only
   lifecycle_coupling: forbidden
   default_mode: metrics_only
+  process: .ai/framework/mutation-testing.md
+  campaigns:
+    id_format: MTC-NNNN
+    template: .ai/templates/mutation-campaign.yaml
+    record_glob: quality/mutation-testing/campaigns/MTC-*.yaml
+    default_policy: audit_first
+    policies: [audit_first, batch_then_fix]
+    objectives: [metrics_only, audit, hardening]
+    states: [planned, running, awaiting_analysis, awaiting_decision, waiting_for_fixes, verifying, paused, blocked, completed, cancelled]
+    closure_outcomes: [metrics_collected, analyzed, verified, accepted_exceptions]
+    target_mutants_per_batch: 200
+    partition: backend_supported_exact_selections
+    finite_cumulative_budgets_required: true
+    continue_authorized_batches: true
+    resume_cursor: persisted_batch_and_candidate_ids
+    verification: fresh_run_after_affected_input_changes
+    completion: objective_specific_current_coverage_or_explicit_exceptions
+    legacy_standalone_runs: preserved_without_conversion
   optional_registry: quality/mutation-testing/
   clean_project_requires_registry: false
   backend_required_by_default: false
@@ -188,6 +206,8 @@ mutation_testing:
     raw_artifacts_tracked_by_default: false
     run_required_fields: [schema_version, id, started_at, run, scope, fingerprint, tool, budget, baseline, results, artifacts, analysis, disposition]
     analysis_updates_same_run: true
+    campaign_links: reciprocal_when_present
+    analysis_continuation: remaining_candidate_ids_with_slice_ledger
   development_effects:
     lifecycle_status_changes: forbidden
     gate_satisfaction: forbidden

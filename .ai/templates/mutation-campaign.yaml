@@ -1,0 +1,57 @@
+schema_version: 1
+id: MTC-NNNN
+previous_campaign_id: null
+created_at: null
+updated_at: null
+status: planned
+objective: metrics_only # metrics_only | audit | hardening
+policy: audit_first # audit_first | batch_then_fix
+request_ref: null
+authorization:
+  execution_ref: null
+  analysis_ref: null
+  remediation_refs: []
+scope:
+  production_paths: []
+  test_paths: []
+  dependency_inputs: []
+  exclusions: []
+partition:
+  target_mutants: 200
+  estimate: null
+  rationale: null
+budget:
+  execution_seconds: null
+  consumed_execution_seconds: 0
+  per_run_timeout_seconds: null
+  workers: null
+  analysis_candidates: null
+  consumed_analysis_candidates: 0
+  maximum_verification_rounds: null
+# Ordered stable IDs. Instantiate entries only for concrete approved selections.
+batches: []
+# Each batch: id (B001...), selection (production_paths, test_paths, exclusions,
+# backend_selector), status (pending/running/partial/measured/analyzed/closed/deferred),
+# stale (boolean), run_ids, current_run_ids, remaining_selection,
+# finding_refs (run_id + candidate_id), work_refs, verification_rounds,
+# exceptions (reason + decision_ref). Do not count overlapping attempts twice.
+findings: []
+# Each finding: run_id, candidate_id, batch_id, classification, disposition
+# (pending/no_change/deferred/fix_requested/verified/accepted_risk), rationale,
+# decision_ref, work_refs, verification_run_ids, verification_mapping.
+checkpoint:
+  batch_id: null
+  next_action: null
+  resume_state: null
+  reason: null
+  remaining_candidate_refs: []
+  return_after_work: []
+decisions: [] # dated policy/scope/budget changes, authority and rationale
+closure:
+  completed_at: null
+  outcome: null # metrics_collected | analyzed | verified | accepted_exceptions
+  decision_ref: null
+  evidence_refs: []
+  exceptions: []
+  remaining_work: []
+  summary: null

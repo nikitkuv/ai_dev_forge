@@ -48,8 +48,8 @@ Model mappings must provide:
 models:
   codex:
     strong: {model: gpt-6.1-sol, reasoning_effort: high}
-    balanced: {model: gpt-6-luna, reasoning_effort: xhigh}
-    fast: {model: gpt-5.6-luna, reasoning_effort: medium}
+    balanced: {model: gpt-6.1-terra, reasoning_effort: high}
+    fast: {model: gpt-6-luna, reasoning_effort: medium}
   claude:
     strong: {model: opus, effort: high}
     balanced: {model: sonnet, effort: high}

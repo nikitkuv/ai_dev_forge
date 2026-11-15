@@ -48,6 +48,8 @@ Never include unrelated user changes in the commit. If `commit-scoped` reports u
 
 ## Preserve the next gate
 
+If this Task carries approved mutation-finding references, include the campaign ID, repaired finding IDs and return action in the completion summary. Point back to `forge-mutation-test` for fresh affected-batch verification under `.ai/framework/mutation-testing.md`; when a batch depends on other repair Tasks, identify the remaining work first. Do not mark findings verified, close the campaign, or invoke a mutation backend during acceptance. This return point does not replace normal Task/Epic gates or authorize new work.
+
 Task Acceptance and permission to start the next TASK are separate decisions. An existing user-approved bounded Task Start grant may satisfy the latter for an exact unchanged definition: run `task-start-check` and verify remaining preconditions. Otherwise obtain explicit authorization. Never infer acceptance, scope expansion, commit or Epic Start from that grant.
 
 If accepted work was the final TASK in the Epic, hand control to `forge-complete-epic` for automatic Epic Validation followed by the fuzzing gate; the fuzzer is invoked only for planned `applicable`, `unresolved`, or contradictory final evidence. Otherwise continue the next eligible TASK when its explicit authorization is already valid, or report the next required decision.
