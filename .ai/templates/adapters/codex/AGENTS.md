@@ -55,6 +55,8 @@ Resolve model tiers from `.ai/project.yaml` and boundaries from the selected neu
 
 ## Planner and reviewer execution mode
 
+Start `forge-prepare-epic` in chat. Ask about material choices before drafting affected Epic or TASK details.
+
 Resolve `role_execution.mode` first. Prefer `python .ai/tools/forge.py role --orchestrator <active> --role <role> --prompt-file <path>` for external routes. It runs one bounded preflight internally; separate `--preflight` is diagnostic only. Legacy .mjs launchers remain compatible.
 
 `claude_with_codex` requires Claude, fresh ephemeral read-only `codex exec` and pinned `gpt-6.1-sol/high`; never copy wrappers into user directories, create `BASH_ENV` or manipulate broker/app-server state. `codex_with_claude` requires Codex, Claude Code 2.1.203+, configured strong model/effort, fresh non-persistent plan mode and restricted tools. Supply the complete neutral contract and exact assignment through stdin, using a secure temporary prompt file and removing it afterwards.

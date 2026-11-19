@@ -76,7 +76,7 @@ Communicate with me in Russian.
 
 Нейтральные определения находятся в `.ai/framework/`. Router генерируется в `AGENTS.md` и используется Codex и OpenCode; `CLAUDE.md` содержит только `@AGENTS.md`. OpenCode обнаруживает portable skills в `.agents/skills/`. Проектные дополнения к router — `.ai/custom/router-shared.md`. Сгенерированные adapters не редактируются вручную и применяются через синхронизацию.
 
-Framework defaults для субагентов: Codex `strong = gpt-6.1-sol/high`, `balanced = gpt-6-luna/xhigh`, `fast = gpt-5.6-luna/medium`; Claude Code `strong = opus/high`, `balanced = sonnet/high`, `fast = haiku/high`. Для OpenCode универсальных defaults нет: включённый adapter требует три явно подтверждённых `provider/model-id`. Forge не устанавливает OpenCode и не хранит credentials. В режиме `native_subagents` Claude Code agent-файлы получают override `effort: high`.
+Framework defaults для субагентов: Codex `strong = gpt-6.1-sol/high`, `balanced = gpt-6.1-terra/high`, `fast = gpt-6-luna/medium`; Claude Code `strong = opus/high`, `balanced = sonnet/high`, `fast = haiku/high`. Для OpenCode универсальных defaults нет: включённый adapter требует три явно подтверждённых `provider/model-id`. Forge не устанавливает OpenCode и не хранит credentials. В режиме `native_subagents` Claude Code agent-файлы получают override `effort: high`.
 
 ## Planner/reviewer route
 
@@ -95,6 +95,8 @@ Bootstrap и migration требуют явного выбора. Недосту�
 `fast` — только ограниченное, обратимое, однозначное изменение с детерминированной локальной проверкой. Он запрещён для public contract, security/privacy/auth, persistence/data format, schema/migration, concurrency/shared core, dependencies/build/package/deploy/runtime infrastructure, внешних интеграций, critical path, ослабления тестов и любой неопределённости. Оба track используют implementer и TDD. В `fast` reviewer и tester не вызываются: оркестратор проверяет scope и fingerprint, test integrity и повторяет approved checks. В `standard` — implementer → strong reviewer → tester. Любой провал повышает `fast → standard`; обратный переход после Task Start запрещён. Старые TASK без поля track трактуются как `standard`. Task Acceptance, Epic Validation и fuzzing остаются обязательными.
 
 ## Планирование эпика: интервью и Contract Sketch
+
+Оркестратор начинает в чате с короткой сверки цели и границ эпика. Если есть развилка, он задаёт один вопрос, объясняет, что зависит от ответа, и ждёт. Например, «Какой из двух сценариев должен заработать первым?» Для отдельной TASK вопрос нужен, когда открытый выбор меняет результат или условия приёмки. Если это выясняется при детализации, `epic-planner` передаёт вопрос оркестратору. Ответ попадает в план и определяет ожидаемое поведение в тестах. Решённые вопросы агент берёт из предыдущих ответов и документов проекта.
 
 Подготовка эпика проходит ступенчатым интервью: цель и ожидаемый результат → дизайн интерфейса (`Interface Delta`) → риски и критические пути → скелет декомпозиции. Каждая ступень подтверждается пользователем до следующей; отвергнутая дорабатывается и подтверждается заново. Схлопывание ступеней допустимо только для bounded эпиков с записанной rationale в Epic User Validation History. Test cases, change maps, fuzz plans и delivery-track evidence заполняет `epic-planner` только после подтверждения скелета. Plan Approval сверяет заполненный план с интервью и возвращает несогласованные изменения интерфейса или scope обратно на ступени.
 
@@ -132,6 +134,8 @@ node --test tests/*.test.mjs
 - Framework upgrade работает offline и сохраняет project-owned profiles. Подробнее: [локальные интеграции](docs/local-integrations.md).
 
 Mutation backend не входит в обязательные зависимости; Forge не устанавливает backend автоматически. Отсутствие backend не мешает обычной разработке и даёт `SETUP REQUIRED` только при явном mutation-запросе. `mutation-runner` возвращает metrics-only; strong `mutation-analyzer` запускается только по отдельному разрешению.
+
+Новый аудит сохраняется как кампания `MTC-NNNN` с очередью пачек и точкой возврата. Маленькая область проверяется целиком, большая делится по компонентам/файлам с ориентиром около 200 мутантов на пачку и явным бюджетом. По умолчанию сначала проверяются все пачки, затем находки объединяются для исправлений; режим `batch_then_fix` позволяет исправлять и перепроверять каждую пачку до следующей. Завершение Task/Epic возвращает к свежему мутационному прогону, а затем к оставшейся очереди. Полный порядок, исключения и критерии завершения: [мутационные кампании](.ai/framework/mutation-testing.md), [объяснение процесса](FRAMEWORK.md#мутационные-кампании-и-возврат-после-исправлений).
 
 ## Intent records
 

@@ -74,3 +74,6 @@ versions:
       - Optional evidence-backed findings and knowledge references require no legacy backfill and add no lifecycle gates. Completed history remains protected; corrections use new source-linked records.
       - Search adds explicit all/any matching and disposable local invocation metrics; no new dependency or database migration is required.
       - Explicit forge-consolidate-knowledge reviews bounded history without automatic instruction changes; adapter synchronization adds the skill while preserving project-owned content.
+  "4.14.1":
+    notes:
+      - New Epic plans open with an in-chat scope check. Material Task questions discovered during detail filling return to the orchestrator before the planner drafts the affected criteria or tests.

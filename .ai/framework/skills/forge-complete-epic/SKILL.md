@@ -5,6 +5,8 @@ description: Complete a Forge Epic after its final TASK is accepted by running m
 
 # Complete an Epic
 
+For an Epic linked to a mutation campaign, preserve its campaign/batch/finding references through completion and show the return action to `forge-mutation-test` in the final summary. Epic acceptance does not close the campaign or prove repaired mutants killed. Fresh verification and remaining batches follow `.ai/framework/mutation-testing.md` within their own recorded authority; they are not an additional Epic acceptance gate.
+
 Use Python fingerprints and `checks` with `stage: epic` to execute the approved aggregate commands and return compact evidence. Epic command reuse is disabled even with `--reuse`. Gather gate inputs mechanically: `evidence-check --epic <EPIC-ID>` reports all-DONE coverage, final fuzz evidence presence, and the aggregate fingerprint; `transition epic <EPIC-ID> --to <status>` executes each approved Backlog status edit (preview, then apply); `epic-complete <EPIC-ID>` performs the final atomic move to `execution/completed/` plus the Backlog row's archival to `BACKLOG-ARCHIVE.md`, with rollback. The epic-validator still independently assesses requirement/critical-path coverage and profile gates; a mechanical pass alone cannot complete this skill.
 
 ## Enter Epic Validation

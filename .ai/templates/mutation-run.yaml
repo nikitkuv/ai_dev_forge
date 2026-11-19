@@ -3,6 +3,13 @@ id: MUT-NNNN
 started_at: null
 completed_at: null
 
+# Optional for legacy standalone runs; populated for every campaign attempt.
+campaign:
+  id: null
+  batch_id: null
+  purpose: null # initial | retry | verification | refresh
+  predecessor_run_ids: []
+
 run:
   outcome: null
   reason: null
@@ -66,6 +73,9 @@ analysis:
   budget: null
   analyzed_candidates: 0
   remaining_candidates: 0
+  analyzed_candidate_ids: []
+  remaining_candidate_ids: []
+  slices: [] # candidate IDs, timestamp, fingerprint, artifact checksum, budget used
   actionable: 0
   likely_equivalent: 0
   unresolved: 0

@@ -26,6 +26,8 @@ description: Recover planned, active, or paused Forge development state after in
 
 ## Determine the safe continuation point
 
+For work explicitly linked to mutation findings, read the linked `MTC-NNNN` campaign checkpoint and MUT dispositions. Report pending fix work, verification and the first unfinished/stale batch. Canonical Task/Epic records determine work status; campaign records determine only audit progress. When relevant fixes have completed, surface the return to `forge-mutation-test <MTC-ID>` under `.ai/framework/mutation-testing.md`. Do not run a backend from this skill, create a campaign for unrelated work, or treat accepted fixes as verified mutants. Existing bounded mutation authority remains valid for its recorded unchanged scope/budget; otherwise report the missing decision. Mutation history never blocks ordinary development resume.
+
 - For identity/link failures, use `python .ai/tools/forge.py identity-check` for exact fields, declarations and byte hashes. Do not reread every document to reconstruct the same inventory. `links-repair` previews only uniquely resolvable Markdown target repairs; apply within existing correction authority. Conflicting IDs require an explicit authoritative mapping, not automatic renumbering. Historical archive references are preserved. Re-run `validate --project` after an authorized repair.
 
 - Treat an agent stage as incomplete when its result was not persisted into the applicable TASK or Epic plan.

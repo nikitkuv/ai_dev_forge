@@ -45,6 +45,8 @@ Source mode checks manifest uniqueness, source IDs and YAML/frontmatter syntax. 
 
 ## Identifier allocation
 
+Optional mutation campaigns are structurally checked by `validate --project`: MTC registry/record identity, monotonic next ID, reciprocal batch/run links, finite budgets, candidate continuation IDs and basic closure consistency. Full scope coverage, fingerprint freshness, user authority, equivalence and verification still require the semantic checks in `.ai/framework/mutation-testing.md`. The helper never schedules batches or runs a mutation backend. Legacy run-only registries remain valid. MTC allocation is orchestrator-owned through the campaign registry; it is not a supported `next-id --kind` option.
+
 ```text
 python .ai/tools/forge.py next-id --kind task|bug|inv|epic|adr|mut
 ```

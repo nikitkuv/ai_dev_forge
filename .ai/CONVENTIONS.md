@@ -17,6 +17,7 @@ Identifiers are globally unique within a project. Epic, Task, Bug, and Decision 
 | Investigation | `INV-0001` | `investigations/INV-0001-<short-name>.md` |
 | Intent | `INT-0001` | `intents/INT-0001-<short-name>.md` |
 | Mutation run | `MUT-0001` | `quality/mutation-testing/runs/MUT-0001.yaml` |
+| Mutation campaign | `MTC-0001` | `quality/mutation-testing/campaigns/MTC-0001.yaml` |
 
 `<short-name>` is stable, lowercase kebab-case, and one to four words. An Epic folder name must match its Epic name in `BACKLOG.md`; each Task belongs to exactly one Epic.
 
@@ -91,6 +92,10 @@ Every INV records exactly one current outcome: `no_action`, `promoted`, `fixed_d
 Investigations are evidence history, not target product or architecture truth and not lifecycle gates. Planning may reuse a referenced or obviously relevant INV after checking its baseline, relevant paths, and assumptions. Creating or completing an INV never implies acceptance or commit authorization.
 
 ## Independent mutation testing
+
+The complete campaign process is defined in `.ai/framework/mutation-testing.md`. New audits use `MTC-NNNN` campaigns containing ordered, exact batches and durable return points; actual executions retain separate `MUT-NNNN` IDs. Default policy is `audit_first`; `batch_then_fix` supports incremental approved remediation. The planning target is 200 mutants per batch where backend selection permits, with one batch for small scopes and explicit finite budgets. A campaign grant can cover its remaining unchanged batches without repeated permission.
+
+Campaign registry keys are optional for existing run-only history. Campaign state, analyzed/remaining candidate identities, approved work links, verification attempts and objective-specific closure survive new sessions. Completed development work returns to fresh mutation verification and then the remaining queue; it does not close the campaign. Default metrics-only, explicit analysis/remediation authority, and lifecycle independence remain unchanged. See the campaign template for fields and the process for stale inputs, partial results, exceptions and cancellation.
 
 `quality/mutation-testing/registry.yaml` indexes monotonically allocated `MUT-NNNN` records under `quality/mutation-testing/runs/`. These records own mutation scope, exact fingerprints, backend commands and versions, budgets, baseline evidence, normalized metrics, optional strong-model analysis, artifact retention, and informational disposition references.
 
