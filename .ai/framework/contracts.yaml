@@ -223,6 +223,10 @@ machine_tokens:
 epic_planning_interview:
   conductor: orchestrator
   user_dialogue_owner: orchestrator
+  first_planning_turn: discuss_objective_and_scope_in_chat
+  material_choices: [scope, observable_behavior, public_contract, delivery_order, risk_tradeoff, acceptance_criteria]
+  unresolved_choice: ask_one_focused_question_and_wait_before_dependent_drafting
+  task_questions: only_for_material_choices_unanswered_by_sources_or_prior_answers
   stages: [objective_and_expected_outcome, interface_design, risks_and_critical_paths, decomposition_skeleton]
   per_stage_confirmation: required_before_next_stage
   rejected_stage: revise_and_reconfirm_before_later_stages
@@ -239,6 +243,8 @@ epic_planning_interview:
   deferred_detail_filling:
     starts_after: skeleton_confirmation
     input: [confirmed_skeleton, confirmed_interface_delta]
+    material_question: return_decision_needed_to_orchestrator
+    resume_with: updated_assignment_including_resolved_decisions
     fills: [planned_test_cases, change_maps, fuzz_plans, delivery_track_evidence]
   stage_collapse:
     allowed_for: bounded_epics

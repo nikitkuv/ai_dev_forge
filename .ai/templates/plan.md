@@ -176,6 +176,8 @@ Plan missing fixtures, services and harnesses as owned work with dependencies be
 
 This table is the interview record. Record every planning-interview stage confirmation — objective and expected outcome, interface design, risks and critical paths, decomposition skeleton — as its own row with its scope and result before later stages proceed. A rejected stage records its revision and re-confirmation here. When stages are collapsed or merged for a bounded Epic, name the merged stages and the recorded rationale in the Scope cell; nothing collapses silently.
 
+For a material planning choice, use Scope to identify the stage or affected TASK and Feedback or follow-up to record the user's decision and what it changes. Record a late TASK answer here before resuming detail filling.
+
 | Date | Validator | Scope | Result | Feedback or follow-up |
 | --- | --- | --- | --- | --- |
 | <YYYY-MM-DD> | <User or role> | <What was validated> | <pending/accepted/changes requested> | <Compact notes or TASK reference> |

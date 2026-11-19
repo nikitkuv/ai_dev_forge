@@ -6,6 +6,24 @@ Makes epic planning a staged interview where the human approves the epic's inter
 
 ## Requirements
 
+### Requirement: Discuss material decisions before drafting dependent work
+
+The orchestrator SHALL open planning for each new Epic in chat with its intended outcome and scope. For a material choice still open after reading approved sources and prior answers, the orchestrator SHALL ask one focused question, explain its consequences and wait for the answer before drafting the affected portion. An already settled objective and boundary need only a short confirmation. Routine implementation choices SHALL be resolved from repository evidence.
+
+#### Scenario: Delivery order affects the first usable outcome
+- **WHEN** both delivery orders meet the approved scope and the sources leave the priority open
+- **THEN** the orchestrator asks which outcome users need first and uses the answer to shape the decomposition
+
+#### Scenario: Task behavior is ambiguous during detail filling
+- **WHEN** the planner cannot determine an acceptance criterion from the assignment, such as whether an invalid row rejects an entire import
+- **THEN** it returns the affected TASK, question and consequences to the orchestrator and leaves dependent criteria and tests open
+- **AND** the orchestrator resolves the question from an authoritative source or asks the user, records the decision, and resumes on the configured route with updated context
+- **AND** any change to a confirmed stage is reconfirmed together with affected downstream stages before dependent work resumes
+
+#### Scenario: The answer already exists
+- **WHEN** an approved source or prior answer already specifies the Task behavior
+- **THEN** planning reuses that decision for every affected TASK without a separate Task interview
+
 ### Requirement: Epic preparation proceeds as a staged interview with confirmation gates
 
 Epic preparation SHALL proceed through stages — objective and expected outcome, interface design, risks and critical paths, decomposition skeleton — where each stage's artifact is presented for user confirmation before the next stage begins. A stage rejected by the user SHALL be revised and re-confirmed before later stages proceed.

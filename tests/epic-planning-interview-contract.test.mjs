@@ -4,6 +4,29 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
+test("the interview opens in chat and waits before drafting a decision", async () => {
+  const skill = await read(".ai/framework/skills/forge-prepare-epic/SKILL.md");
+  const interview = skill.split("## Conduct the staged interview")[1].split("## Fill details")[0];
+  assert.match(interview, /first planning turn[\s\S]*?in chat/i);
+  assert.match(interview, /one focused question[\s\S]*?wait for the user's answer[\s\S]*?before drafting/i);
+  assert.match(interview, /already settled[\s\S]*?confirm/i);
+  assert.match(interview, /routine implementation choices/i);
+});
+
+test("a material Task question can interrupt detail filling and resume with the answer", async () => {
+  const [skill, planner, step] = await Promise.all([
+    read(".ai/framework/skills/forge-prepare-epic/SKILL.md"),
+    read(".ai/framework/agents/epic-planner.yaml"),
+    read(".ai/05-prepare-workspace.md")
+  ]);
+  assert.match(planner, /decision needed[\s\S]*?affected TASK[\s\S]*?question[\s\S]*?consequences/i);
+  assert.match(planner, /leave the dependent details open/i);
+  const details = skill.split("## Fill details after skeleton confirmation")[1];
+  assert.match(details, /decision needed[\s\S]*?ask[\s\S]*?wait[\s\S]*?resume[\s\S]*?updated assignment/i);
+  assert.match(details, /reconfirm the affected stage/i);
+  assert.match(step, /decision needed[\s\S]*?forge-prepare-epic/i);
+});
+
 test("both bootstrap entry points route through the interview before planner detail filling", async () => {
   for (const mode of ["new", "existing"]) {
     const skill = await read(`.ai/framework/skills/forge-bootstrap-${mode}/SKILL.md`);

@@ -56,6 +56,8 @@ Use the plan template without adding Task lifecycle state or a duplicated execut
 
 Apply `test_planning` in the framework contracts: populate Planned Epic Scenarios within the Epic Verification Plan and Planned Test Cases within each TASK Verification Plan before Plan Approval. Require criterion/risk coverage, concrete inputs and observable independently sourced expectations, test levels, existing/proposed targets and expected RED reasons or justified non-RED checks. Map cross-Task scenarios to owning Tasks and execution gates, without duplicating Task case lists. Inspect existing tests before proposing new ones. Unknown expectations or material coverage gaps block approval; missing commands, fixtures or harnesses need explicit resolution Tasks before dependent execution. Planning writes scenario lists, not executable tests or claimed test results.
 
+If the planner returns a "Decision needed" blocker during TASK detailing, follow the question and resume procedure in `forge-prepare-epic` before preparing the dependent TASK definitions. The first planning exchange and any unresolved material choices belong in the chat before plan review.
+
 ## Prepare the Initial TASK Definitions
 
 Create one proposed TASK definition per planned unit of work.
