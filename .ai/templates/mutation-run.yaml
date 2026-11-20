@@ -9,6 +9,7 @@ campaign:
   batch_id: null
   purpose: null # initial | retry | verification | refresh
   predecessor_run_ids: []
+  full_batch_selection: null # Exact completed selection for full verification/refresh.
 
 run:
   outcome: null

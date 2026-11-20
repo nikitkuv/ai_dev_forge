@@ -21,6 +21,8 @@ For resume/return/closure, reconstruct the campaign, linked run records and rele
 
 ## Allocate and persist every attempt
 
+Before the baseline, discuss the exact files, tests, exclusions, shared dependencies, ordered batch selectors, backend/version/commands and budgets with the user. Follow the schema-2 plan discussion and decision recording in `.ai/framework/mutation-testing.md`. Run `forge.py mutation-plan <campaign-path> --check-approval` before dispatch, compare the packet to that batch and stop on mismatch. Resume unchanged approved work within its remaining budget. Revised plans return to the user.
+
 For a new run, lazily create `quality/mutation-testing/registry.yaml` from the framework template and `runs/` only when absent. Allocate the next monotonic `MUT-NNNN` without reusing gaps. Stage the registry update and new run record together, preserving every required field even when setup or execution later fails. Agents never edit these records; the orchestrator owns atomic writes.
 
 Do not create a Markdown report. Keep raw backend artifacts untracked by default. Retain compact normalized evidence in the run record or an explicitly retained structured artifact with path and checksum.

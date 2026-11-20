@@ -47,6 +47,8 @@ Source mode checks manifest uniqueness, source IDs and YAML/frontmatter syntax. 
 
 Optional mutation campaigns are structurally checked by `validate --project`: MTC registry/record identity, monotonic next ID, reciprocal batch/run links, finite budgets, candidate continuation IDs and basic closure consistency. Full scope coverage, fingerprint freshness, user authority, equivalence and verification still require the semantic checks in `.ai/framework/mutation-testing.md`. The helper never schedules batches or runs a mutation backend. Legacy run-only registries remain valid. MTC allocation is orchestrator-owned through the campaign registry; it is not a supported `next-id --kind` option.
 
+Use `python .ai/tools/forge.py mutation-plan quality/mutation-testing/campaigns/MTC-0001.yaml` to inspect a schema-2 plan before discussing it with the user. The command prints the proposed selections, commands, limits and their hash. After the decision is recorded, add `--check-approval` to check the decision reference and hash before dispatch. Project validation also checks current evidence links for repaired findings at hardening closure.
+
 ```text
 python .ai/tools/forge.py next-id --kind task|bug|inv|epic|adr|mut
 ```

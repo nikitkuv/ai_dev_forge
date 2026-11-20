@@ -47,6 +47,7 @@ Explicitly invoke the matching bundled skill using platform-native syntax. When 
 - Intake and priority: `forge-intake-feature`, `forge-intake-bug`, `forge-intake-external-work`, `forge-reprioritize-backlog`.
 - Execution: `forge-prepare-epic`, `forge-resume-development`, `forge-run-task`, `forge-complete-task`, `forge-complete-epic`.
 - Diagnostics: `forge-investigate`, `forge-security-audit`, `forge-mutation-test`.
+- Confirm the mutation plan with the user before baseline.
 - Maintenance: `forge-migrate-framework`, `forge-check-framework`, `forge-sync-adapters`, `forge-consolidate-knowledge`.
 
 Resolve model tiers from `.ai/project.yaml` and boundaries from the selected neutral role contract. Never silently change mappings. Planner/reviewer provide independent semantic judgment; implementer writes code; tester checks integrity/coverage; epic-validator checks aggregate assurance. Research/fuzzing/security specialists run only when applicable. `mutation-runner` runs metrics; `mutation-analyzer` requires separate authorization and current candidates. Independent read-only research may run in parallel.

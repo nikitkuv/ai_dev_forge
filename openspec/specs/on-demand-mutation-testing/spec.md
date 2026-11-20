@@ -6,6 +6,19 @@ Provide reproducible, explicitly requested mutation-testing audits of existing t
 
 ## Requirements
 
+### Requirement: Discuss and approve the concrete execution plan
+Before starting the baseline the orchestrator SHALL discuss the exact proposed files, tests, inputs, exclusions, backend selectors and commands, ordered batches and resource limits with the user. Approval SHALL identify both the user decision and the specific plan. Existing approval SHALL carry across unchanged batches. A revised plan SHALL return to the user before execution.
+
+#### Scenario: The agent selects files
+- **WHEN** a user asks for an audit and delegates file selection
+- **THEN** the orchestrator presents the selection and rationale and waits for approval before baseline or mutation execution
+- **AND** a changed file selection or increased limit fails the original approval check
+
+#### Scenario: A repaired finding returns from development
+- **WHEN** an approved repair returns from Task completion
+- **THEN** ordinary hardening closure requires mapped evidence from a successful current full-batch verification or refresh linked to the source run and batch
+- **AND** the checkpoint preserves the next unfinished batch
+
 ### Requirement: Campaigns preserve ordered bounded execution and continuation
 New mutation audits SHALL persist an independent `MTC-NNNN` campaign with exact ordered batches, objective, policy, authorization, finite cumulative execution/analysis budgets, verification-round limit and recovery checkpoint. Small scopes SHALL use one batch; larger scopes SHALL use backend-supported component/file selections with a planning target of 200 mutants per batch, documented exceptions and explicit coverage of the declared scope. Unknown cost SHALL use a small scoped pilot. Legacy standalone MUT records SHALL remain valid without conversion.
 

@@ -24,6 +24,14 @@ If size/cost is unknown, start with a small explicit component as a pilot; keep 
 
 Persist ordered batch IDs, exact selections, exclusions and reasons before execution. New batches append stable IDs; do not renumber old ones. A changed partition preserves previous attempts and records replaced/remaining selections. Scope expansion or a budget increase requires authority beyond the original grant. Record finite campaign execution time, per-run timeout/workers, analysis candidate budget and maximum verification rounds. Exhaustion pauses the campaign with exact remaining work; it never means completion.
 
+### Discuss the proposed files with the user
+
+The orchestrator presents the proposed plan in chat before starting even the baseline. Explain why each production selection and test suite belongs in scope, which shared inputs affect freshness, what is excluded, the backend version and commands, batch order, objective, policy and cumulative limits. Ask for corrections or approval and wait. A request to investigate or to choose files opens this discussion. If the user already approved this exact plan in the conversation, use that decision once for all its batches.
+
+For new campaigns use the schema-2 template. Run `python .ai/tools/forge.py mutation-plan quality/mutation-testing/campaigns/MTC-NNNN.yaml` to see the exact plan and hash. After agreement, store the user's decision reference in `authorization.execution_ref` and its matching hash in `authorization.plan_hash`. Before each baseline/backend dispatch, run the same command with `--check-approval`, check remaining budget and match the packet to the approved batch. When the plan changes, present the changes and bind the next decision to the revised hash. Execution counters, findings and checkpoint updates leave approval intact. With missing setup, record the blocker and resume planning when the commands are known.
+
+Existing standalone runs and completed schema-1 campaigns retain their history. Before a new execution in an open schema-1 campaign, preserve its IDs and progress, populate the schema-2 plan and bind approval for the remaining execution. Deferred analysis of prior evidence needs only the existing analysis authorization and freshness checks.
+
 ## 3. Durable records and checkpoints
 
 Use `quality/mutation-testing/registry.yaml` with optional `next_campaign_id` and `campaigns`, plus `campaigns/MTC-NNNN.yaml` from the campaign template. Allocate MTC identities monotonically, independently of MUT identities. Existing schema-1 registries with only runs and standalone MUT records remain valid; do not invent campaigns for historical runs. On first campaign creation initialize the optional keys from the largest retained identity.
@@ -78,6 +86,8 @@ Create a new MUT verification attempt for the repaired batch with a fresh baseli
 Under `batch_then_fix`, once the batch has current verification and every finding is verified or explicitly dispositioned, return to the FIRST unfinished batch in persisted order (or a stale earlier batch), not to the start of the whole campaign. Under `audit_first`, verify affected batches after the consolidated fixes. Prior fixes do not erase the queue in either policy.
 
 ## 7. Close honestly
+
+For schema-2 hardening, record each analyzed test gap under the same run and candidate identity in the campaign findings. For each approved repair, retain the behavioral verification mapping and current verification run IDs. The successful verification/refresh run names the original run among its predecessors and records the exact completed batch selection in `campaign.full_batch_selection`. Populate this field only after the runner demonstrates full coverage. Check the persisted records through project conformance before reporting verified closure.
 
 Before closure, reconcile the full scope/partition, run coverage, current fingerprints, candidate ledger, findings, exceptions and remaining budgets. Select current non-overlapping evidence per batch; retain superseded attempts in history and never count retries twice. Report per-batch revisions if no single snapshot was tested. Summed counts require compatible backend semantics and disjoint mutation selections; do not average percentages. Missing, timed-out, invalid or unexecuted selections remain explicit limitations.
 
