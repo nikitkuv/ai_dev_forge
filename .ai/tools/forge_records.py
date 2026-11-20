@@ -67,6 +67,7 @@ def cell_id(value):
 
 
 def canonical_files(root):
+    root = Path(root).resolve()
     records, errors = inventory(root, include_completed=True)
     paths = {r["path"] for r in records}
     base = within(root, "decisions")
