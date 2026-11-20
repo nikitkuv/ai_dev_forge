@@ -319,6 +319,7 @@ def section(root, name, heading=None, offset=0, limit=12000):
 
 
 def inventory(root, include_completed=False):
+    root = Path(root).resolve()
     roots = ["execution/planned", "execution/active", "execution/paused", "investigations", "intents"]
     if include_completed:
         roots.append("execution/completed")

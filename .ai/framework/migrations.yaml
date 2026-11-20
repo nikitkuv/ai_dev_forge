@@ -77,3 +77,6 @@ versions:
   "4.14.1":
     notes:
       - New Epic plans open with an in-chat scope check. Material Task questions discovered during detail filling return to the orchestrator before the planner drafts the affected criteria or tests.
+  "4.14.2":
+    notes:
+      - Mutation campaigns discuss the exact plan before baseline and bind approval to its hash. Keep historical records intact. Open campaigns adopt schema 2 before further execution.

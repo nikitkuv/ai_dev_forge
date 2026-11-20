@@ -157,6 +157,9 @@ mutation_testing:
     closure_outcomes: [metrics_collected, analyzed, verified, accepted_exceptions]
     target_mutants_per_batch: 200
     partition: backend_supported_exact_selections
+    execution_plan: discuss_exact_selection_and_commands_before_baseline
+    approval_evidence: [execution_ref, plan_hash]
+    preflight_command: mutation-plan --check-approval
     finite_cumulative_budgets_required: true
     continue_authorized_batches: true
     resume_cursor: persisted_batch_and_candidate_ids

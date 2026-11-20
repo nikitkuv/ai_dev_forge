@@ -238,6 +238,20 @@ class KnowledgeIntegrationTests(Repository):
         self.assertEqual(before, (self.root / "investigations/INV-0001-original.md").read_bytes())
         self.assertEqual(core.frontmatter(core.text(self.root, "investigations/INV-0002-correction.md"))["outcome"], "unresolved")
 
+    def test_record_discovery_with_noncanonical_project_root(self):
+        investigation = "investigations/INV-0001-config.md"
+        decision = "decisions/ADR-001-config.md"
+        self.write(investigation, "---\nid: INV-0001\n---\n")
+        self.write(decision, "# Config decision\n")
+        # Two spellings of the same existing directory on every test platform.
+        root = self.root / "decisions" / ".."
+        entries, errors = core.inventory(root)
+        self.assertEqual(errors, [])
+        self.assertIn(investigation, [entry["path"] for entry in entries])
+        paths, errors = records.canonical_files(root)
+        self.assertEqual(errors, [])
+        self.assertIn(decision, paths)
+
     def test_evaluation_oracles_and_unknown_measurements(self):
         result = evaluation.mechanical()
         self.assertEqual(len(result["cases"]), 8)

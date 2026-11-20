@@ -40,6 +40,9 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", default=".", help="Target project root; never bootstraps it")
     sub = p.add_subparsers(dest="command", required=True)
+    c = sub.add_parser("mutation-plan", help="Show the planned selection and check recorded user approval")
+    c.add_argument("campaign", help="Campaign YAML path relative to the project root")
+    c.add_argument("--check-approval", action="store_true")
     c = sub.add_parser("context", help="Compact metadata inventory; no model invocation")
     c.add_argument("--offset", type=int, default=0)
     c.add_argument("--limit", type=int, default=30)
@@ -315,6 +318,9 @@ def main(argv=None):
         result = index_rebuild(root) if args.index_command == "rebuild" else index_status(root)
     elif args.command == "rules":
         result = rules_check(root)
+    elif args.command == "mutation-plan":
+        from forge_mutation import mutation_plan
+        result = mutation_plan(load_yaml(root, args.campaign), args.check_approval)
     elif args.command == "validate":
         result = validate(root, args.project)
         if args.adapters:

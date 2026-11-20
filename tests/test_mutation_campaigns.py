@@ -9,8 +9,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / ".ai/tools"))
-from forge_core import conformance_errors
-from forge_mutation import campaign_errors
+from forge_core import ForgeError, conformance_errors
+from forge_mutation import campaign_errors, mutation_plan
 
 
 class CampaignTests(unittest.TestCase):
@@ -117,6 +117,64 @@ class CampaignTests(unittest.TestCase):
     def test_legacy_run_registry_needs_no_campaign(self):
         self.write("runs/MUT-0001.yaml", {"id": "MUT-0001", "analysis": {"remaining_candidates": 7}})
         self.assertEqual(campaign_errors(self.root, {"runs": ["MUT-0001"]}), [])
+
+    def prepare_plan(self):
+        tests = ["tests/test_ab.py"]
+        self.campaign.update(schema_version=2, objective="hardening", findings=[],
+                             tool=dict(backend="fixture", version="1", baseline_command="test",
+                                       mutation_command="mutate"),
+                             scope=dict(production_paths=["a.py", "b.py"], test_paths=tests,
+                                        exclusions=[], dependency_inputs=["shared.py"]))
+        for batch, path in zip(self.campaign["batches"], ["a.py", "b.py"]):
+            batch["selection"] = dict(production_paths=[path], test_paths=tests, backend_selector=path)
+        self.campaign["authorization"] = {"execution_ref": "user-plan-1",
+                                          "plan_hash": mutation_plan(self.campaign)["plan_hash"]}
+
+    def test_approval_covers_files_commands_order_and_limits_across_resume(self):
+        self.prepare_plan()
+        self.campaign["budget"]["consumed_execution_seconds"] += 5
+        self.assertEqual(self.check(), [])
+        for key, value in (("tool", {"version": "2"}), ("budget", {"workers": 3}),
+                           ("scope", {"dependency_inputs": ["other.py"]}),
+                           ("authorization", {"execution_ref": ""})):
+            changed = copy.deepcopy(self.campaign)
+            changed[key].update(value)
+            with self.subTest(key=key), self.assertRaises(ForgeError):
+                mutation_plan(changed, require_approval=True)
+        self.campaign["batches"].reverse()
+        self.assertIn("matching the current plan", " ".join(self.check()))
+
+    def test_fix_returns_to_verification_then_next_batch(self):
+        self.prepare_plan()
+        first, second = self.campaign["batches"]
+        finding = dict(run_id=self.run["id"], candidate_id="m1", batch_id=first["id"],
+                       classification="actionable_test_gap", disposition="fix_requested",
+                       work_refs=["TASK-001"])
+        self.campaign.update(status="waiting_for_fixes", findings=[finding])
+        self.assertEqual(self.check(), [])
+        verify = copy.deepcopy(self.run)
+        verify.update(id="MUT-0002", analysis={"status": "skipped_no_candidates"},
+                      run={"outcome": "COMPLETED"}, baseline={"outcome": "passed"})
+        verify["campaign"].update(purpose="verification", predecessor_run_ids=[self.run["id"]],
+                                  full_batch_selection=first["selection"])
+        self.registry.update(next_id="MUT-0004", runs=[self.run["id"], verify["id"], "MUT-0003"])
+        self.write("runs/MUT-0002.yaml", verify)
+        first.update(status="closed", current_run_ids=[verify["id"]])
+        first["run_ids"].append(verify["id"])
+        self.campaign["checkpoint"]["batch_id"] = second["id"]
+        self.campaign["status"] = "running"
+        self.assertEqual(self.check(), [])
+        second.update(status="closed", run_ids=["MUT-0003"], current_run_ids=["MUT-0003"], remaining_selection=[])
+        self.write("runs/MUT-0003.yaml", dict(verify, id="MUT-0003", campaign=dict(self.run["campaign"], batch_id="B002")))
+        self.campaign.update(status="completed", closure=dict(completed_at="2026-11-20", outcome="verified",
+                                                             evidence_refs=["MUT-0002", "MUT-0003"]))
+        self.assertIn("mapped verification", " ".join(self.check()))
+        finding.update(disposition="verified", verification_mapping="Boundary assertion killed the mapped mutant",
+                       verification_run_ids=[verify["id"]])
+        self.assertEqual(self.check(), [])
+        verify["campaign"]["full_batch_selection"] = {"backend_selector": "one mutant"}
+        self.write("runs/MUT-0002.yaml", verify)
+        self.assertIn("full-batch verification", " ".join(self.check()))
 
     def test_malformed_campaign_and_nested_fields_report_errors(self):
         self.campaign["budget"] = "not a mapping"

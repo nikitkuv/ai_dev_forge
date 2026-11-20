@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 id: MTC-NNNN
 previous_campaign_id: null
 created_at: null
@@ -9,6 +9,7 @@ policy: audit_first # audit_first | batch_then_fix
 request_ref: null
 authorization:
   execution_ref: null
+  plan_hash: null # From forge.py mutation-plan, recorded with the user's decision.
   analysis_ref: null
   remediation_refs: []
 scope:
@@ -16,6 +17,11 @@ scope:
   test_paths: []
   dependency_inputs: []
   exclusions: []
+tool:
+  backend: null
+  version: null
+  baseline_command: null
+  mutation_command: null
 partition:
   target_mutants: 200
   estimate: null
